@@ -51,3 +51,15 @@ User time (seconds): 23.50
 Maximum resident set size (kbytes): 194288
 ```
 
+###Input file:
+```
+-rw-r--r--  1 mvickers JIC_c1  14G Jul 10 22:17 70SC_1_val_1.fq.gz_bismark_bt2_pe.CHH.w1.gff
+mvickers@n108379:/mnt/ssd/mvickers/massive_speed_test$ wc -l 70SC_1_val_1.fq.gz_bismark_bt2_pe.CHH.w1.gff
+358238974 70SC_1_val_1.fq.gz_bismark_bt2_pe.CHH.w1.gff
+```
+
+###My program - new way
+```
+User time (seconds): 415.12
+Maximum resident set size (kbytes): 308248
+```
