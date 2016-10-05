@@ -15,17 +15,17 @@ struct WindowValues
 
 seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
 {
-	seqan::ArgumentParser parser("w50_creator");
+	seqan::ArgumentParser parser("w1/(soon w50)_creator");
 	addOption(parser, seqan::ArgParseOption("i", "input-file", "Path to the input file", seqan::ArgParseArgument::INPUT_FILE, "IN"));
 	setRequired(parser, "input-file");
 	setShortDescription(parser, "Methylation Tools");
 	setVersion(parser, "0.0.1");
-	setDate(parser, "July 2016");
-	addUsageLine(parser, "-i sequence.fastq [\\fIOPTIONS\\fP] ");
+	setDate(parser, "October 2016");
+	addUsageLine(parser, "-i CX_report.txt [\\fIOPTIONS\\fP] ");
 	addOption(parser, seqan::ArgParseOption("l", "window-length", "Size of window",seqan::ArgParseArgument::INTEGER, "INT"));
 	setDefaultValue(parser, "window-length", "50");
 
-	addDescription(parser, "Create a w50 file from a w1 file.");
+	addDescription(parser, "Create a w1 (and soon w50) file from a CX report.");
 	seqan::ArgumentParser::ParseResult res = seqan::parse(parser, argc, argv);
 
 	// If parsing was not successful then exit with code 1 if there were errors.
@@ -40,33 +40,6 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 
 }
 
-static uintmax_t wc(char const *fname)
-{
-    static const auto BUFFER_SIZE = 16*1024;
-    int fd = open(fname, O_RDONLY);
-    if(fd == -1)
-        cout << "Error opening"<< endl;
-
-    /* Advise the kernel of our access pattern.  */
-    posix_fadvise(fd, 0, 0, 1);  // FDADVICE_SEQUENTIAL
-
-    char buf[BUFFER_SIZE + 1];
-    uintmax_t lines = 0;
-
-    while(size_t bytes_read = read(fd, buf, BUFFER_SIZE))
-    {
-        if(bytes_read == (size_t)-1)
-            cout << "Error reading"<< endl;
-        if (!bytes_read)
-            break;
-
-        for(char *p = buf; (p = (char*) memchr(p, '\n', (buf + bytes_read) - p)); ++p)
-            ++lines;
-    }
-
-    return lines;
-}
-
 int roundUp(int numToRound, int multiple)
 {
 	if (multiple == 0)
@@ -78,6 +51,8 @@ int roundUp(int numToRound, int multiple)
 
 	return numToRound + multiple - remainder;
 }
+
+
 
 /*
 Aim: Read in a bismark CX report and output a w1 file
@@ -96,9 +71,6 @@ DATA FORMAT:
 1	22	+	0	0	CHH	CAT
 1	25	+	0	0	CHG	CAG
 1	27	-	0	0	CHG	CTG
-
-
-
 */
 int main(int argc, char const ** argv)
 {
