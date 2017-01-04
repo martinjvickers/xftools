@@ -120,6 +120,7 @@ int main(int argc, char const ** argv)
 	                                cerr << "ERROR: The input file " << currentRef << " is not sorted by chromosome."<< endl;
 	                                cerr << "To resolve this you need to sort your file by Chromosome order, something like; sort -k1n " << toCString(options.inputFileName) << " > " << toCString(options.inputFileName) << "_sorted.w1.gff"<< endl;
 	                                cerr << "And then rerun this program using the " << toCString(options.inputFileName) << "_sorted.w1.gff file" << endl;
+					return 1;
 	                        }
 	                }
 	
@@ -230,6 +231,7 @@ int main(int argc, char const ** argv)
                         	cerr << "ERROR: The input file " << currentRef << " is not sorted by chromosome."<< endl;
                                 cerr << "To resolve this you need to sort your file by Chromosome order, something like; sort -k1n " << toCString(options.inputFileName) << " > " << toCString(options.inputFileName) << "_sorted.w1.gff"<< endl;
 				cerr << "And then rerun this program using the " << toCString(options.inputFileName) << "_sorted.w1.gff file" << endl;
+				return 1;
                         }
                 }
 
