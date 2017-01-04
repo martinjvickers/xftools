@@ -21,7 +21,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	setShortDescription(parser, "Methylation Tools");
 	setVersion(parser, "0.0.2");
 	setDate(parser, "Jan 2017");
-	addUsageLine(parser, "-i sequence.fastq [\\fIOPTIONS\\fP] ");
+	addUsageLine(parser, "-i input_w1.gff [\\fIOPTIONS\\fP] ");
 	addOption(parser, seqan::ArgParseOption("s", "window-size", "Size of window",seqan::ArgParseArgument::INTEGER, "INT"));
 	setDefaultValue(parser, "window-size", "50");
 
