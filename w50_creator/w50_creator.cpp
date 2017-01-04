@@ -112,16 +112,17 @@ int main(int argc, char const ** argv)
 		if(record.ref != currentRef)
 		{
 			
-			//search to see if we've already seen this chromosome
-			for(auto const& value: haveSeen) 
-			{
-				if(value == currentRef)
-				{
-					cerr << "You're about to write out " << currentRef << " but we've already seen this chromosome. This probably means your w1 file is not in chromosome order."<< endl;
-					cerr << "To resolve this, simply sort your file by Chromosome order, something like; sort -kn 1 " << toCString(options.inputFileName) << " > " << toCString(options.inputFileName) << "_sorted.w1.gff"<< endl;
-				}
-			}
-
+	                //search to see if we've already seen this chromosome	
+        	        for(auto const& value: haveSeen)
+	                {
+	                        if(value == currentRef)
+	                        {
+	                                cerr << "ERROR: The input file " << currentRef << " is not sorted by chromosome."<< endl;
+	                                cerr << "To resolve this you need to sort your file by Chromosome order, something like; sort -k1n " << toCString(options.inputFileName) << " > " << toCString(options.inputFileName) << "_sorted.w1.gff"<< endl;
+	                                cerr << "And then rerun this program using the " << toCString(options.inputFileName) << "_sorted.w1.gff file" << endl;
+	                        }
+	                }
+	
 			for(auto& p: map)
 			{
 				float score;
@@ -226,8 +227,9 @@ int main(int argc, char const ** argv)
                 {
                 	if(value == currentRef)
                         {
-                        	cerr << "You're about to write out " << currentRef << " but we've already seen this chromosome and written it out to file. This probably means your w1 file is not sorted in chromosome order."<< endl;
-                                cerr << "To resolve this, simply sort your file by Chromosome order, something like; sort -kn 1 " << toCString(options.inputFileName) << " > " << toCString(options.inputFileName) << "_sorted.w1.gff"<< endl;
+                        	cerr << "ERROR: The input file " << currentRef << " is not sorted by chromosome."<< endl;
+                                cerr << "To resolve this you need to sort your file by Chromosome order, something like; sort -k1n " << toCString(options.inputFileName) << " > " << toCString(options.inputFileName) << "_sorted.w1.gff"<< endl;
+				cerr << "And then rerun this program using the " << toCString(options.inputFileName) << "_sorted.w1.gff file" << endl;
                         }
                 }
 
