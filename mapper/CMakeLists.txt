@@ -1,8 +1,8 @@
-# Minimum cmake version
+# Minimummapper.cpp cmake version
 cmake_minimum_required (VERSION 3.0.0)
 
 # Name of project and that it is C++ only.
-project (w50_creator_trim CXX)
+project (mapper CXX)
 
 # ----------------------------------------------------------------------------
 # Dependencies
@@ -25,9 +25,12 @@ include_directories (${SEQAN_INCLUDE_DIRS})
 add_definitions (${SEQAN_DEFINITIONS})
 
 # Add CXX flags found by find_package (SeqAn).
-#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SEQAN_CXX_FLAGS}")
-set (CMAKE_CXX_FLAGS  "-static ${CMAKE_CXX_FLAGS} ${SEQAN_CXX_FLAGS} -Wl,--whole-archive -Wl,-no-whole-archive")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SEQAN_CXX_FLAGS}")
 
 # Add executable and link against SeqAn dependencies.
-add_executable (w50_creator w50_creator.cpp)
-target_link_libraries (w50_creator ${SEQAN_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+add_executable (mapper mapper.cpp)
+target_link_libraries (mapper ${SEQAN_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+add_executable (build_reference build_reference.cpp)
+target_link_libraries (build_reference ${SEQAN_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+add_executable (extractor extractor.cpp)
+target_link_libraries (extractor ${SEQAN_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})

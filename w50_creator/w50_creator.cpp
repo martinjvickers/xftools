@@ -80,12 +80,27 @@ int main(int argc, char const ** argv)
 
 	std::cout << std::setprecision(4) << std::fixed;
 
+	//stores chromosomes we've seen
+	vector<CharString> haveSeen;
+
+	int count = 0;
 
 	// Copy the file record by record.
 	GffRecord record;
 	while (!atEnd(gffFileIn))
 	{
-		readRecord(record, gffFileIn);
+
+		try
+		{
+			readRecord(record, gffFileIn);
+			count++;
+		}
+		catch (Exception const & e)
+		{
+			std::cerr << "ERROR: " << e.what() << std::endl;
+			std::cerr << "ERROR: " << record.ref << " " << currentRef << " "<< count << std::endl;
+			return 1;
+		}
 
 		//First Chromosome
 		if(currentRef == NULL)
@@ -97,6 +112,16 @@ int main(int argc, char const ** argv)
 		if(record.ref != currentRef)
 		{
 			
+			//search to see if we've already seen this chromosome
+			for(auto const& value: haveSeen) 
+			{
+				if(value == currentRef)
+				{
+					cerr << "You're about to write out " << currentRef << " but we've already seen this chromosome. This probably means your w1 file is not in chromosome order."<< endl;
+					cerr << "To resolve this, simply sort your file by Chromosome order, something like; sort -kn 1 " << toCString(options.inputFileName) << " > " << toCString(options.inputFileName) << "_sorted.w1.gff"<< endl;
+				}
+			}
+
 			for(auto& p: map)
 			{
 				float score;
@@ -109,11 +134,13 @@ int main(int argc, char const ** argv)
 					cout << currentRef << "\t.\twindow\t"<< p.first - (options.window_length-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tc=" << p.second.c << ";t=" << p.second.t << ";n=" << p.second.n << endl;
 			}
 	
+			//we should save the current reference as a check to see if we come across it again out of order
+			haveSeen.push_back(currentRef);
+
 			//clear map
 			map.clear();
 
 			currentRef = record.ref;
-			
 		}
 
 		//here, we add to the hash
@@ -193,6 +220,18 @@ int main(int argc, char const ** argv)
 	//read out very last chromosome
 	for(auto& p: map)
 	{
+
+		//search to see if we've already seen this chromosome
+                for(auto const& value: haveSeen)
+                {
+                	if(value == currentRef)
+                        {
+                        	cerr << "You're about to write out " << currentRef << " but we've already seen this chromosome and written it out to file. This probably means your w1 file is not sorted in chromosome order."<< endl;
+                                cerr << "To resolve this, simply sort your file by Chromosome order, something like; sort -kn 1 " << toCString(options.inputFileName) << " > " << toCString(options.inputFileName) << "_sorted.w1.gff"<< endl;
+                        }
+                }
+
+
 		float score;
 		//write out GFF
 		if ((p.second.c > 0) || (p.second.t > 0)){
@@ -200,7 +239,7 @@ int main(int argc, char const ** argv)
 		} else {
 			score = 0;
 		}
-		cout << currentRef << "\t.\twindow\t"<< p.first - (options.window_length-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tc=" << p.second.c << "; t=" << p.second.t << "; n=" << p.second.n << endl;
+		cout << currentRef << "\t.\twindow\t"<< p.first - (options.window_length-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tc=" << p.second.c << ";t=" << p.second.t << ";n=" << p.second.n << endl;
 	}
 
 
