@@ -19,8 +19,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	addOption(parser, seqan::ArgParseOption("i", "input-file", "Path to the input file", seqan::ArgParseArgument::INPUT_FILE, "IN"));
 	setRequired(parser, "input-file");
 	setShortDescription(parser, "Methylation Tools");
-	setVersion(parser, "0.0.1");
-	setDate(parser, "July 2016");
+	setVersion(parser, "0.0.2");
+	setDate(parser, "Jan 2017");
 	addUsageLine(parser, "-i sequence.fastq [\\fIOPTIONS\\fP] ");
 	addOption(parser, seqan::ArgParseOption("s", "window-size", "Size of window",seqan::ArgParseArgument::INTEGER, "INT"));
 	setDefaultValue(parser, "window-size", "50");
