@@ -4,6 +4,7 @@ struct ModifyStringOptions
 {
         CharString inputFileName;
 	int window_size;
+	CharString label;
 };
 
 struct WindowValues
@@ -25,6 +26,9 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	addOption(parser, seqan::ArgParseOption("s", "window-size", "Size of window",seqan::ArgParseArgument::INTEGER, "INT"));
 	setDefaultValue(parser, "window-size", "50");
 
+	addOption(parser, seqan::ArgParseOption("l", "label", "Column 3 GFF output label. Useful if using SignalMap", seqan::ArgParseArgument::STRING, "TEXT"));
+	setDefaultValue(parser, "label", "window");
+
 	addDescription(parser, "Create a w50 file from a w1 file.");
 	seqan::ArgumentParser::ParseResult res = seqan::parse(parser, argc, argv);
 
@@ -34,7 +38,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 		return res;
 
 	getOptionValue(options.inputFileName, parser, "input-file");
-	getOptionValue(options.window_length, parser, "window-size");
+	getOptionValue(options.window_size, parser, "window-size");
+	getOptionValue(options.label, parser, "label");
 
 	return seqan::ArgumentParser::PARSE_OK;
 
@@ -133,7 +138,7 @@ int main(int argc, char const ** argv)
 				} else {
 					score = 0.0000;
 				}
-					cout << currentRef << "\t.\twindow\t"<< p.first - (options.window_length-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tc=" << p.second.c << ";t=" << p.second.t << ";n=" << p.second.n << endl;
+					cout << currentRef << "\t.\t" << toCString(options.label) <<"\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tc=" << p.second.c << ";t=" << p.second.t << ";n=" << p.second.n << endl;
 			}
 	
 			//we should save the current reference as a check to see if we come across it again out of order
@@ -158,7 +163,7 @@ int main(int argc, char const ** argv)
 			READ HERE
 			https://seqan.readthedocs.io/en/master/Tutorial/InputOutput/GffAndGtfIO.html
 			*/
-			int window = roundUp(record.beginPos+1, options.window_length);
+			int window = roundUp(record.beginPos+1, options.window_size);
 
 			//we expect the following format of tags and values  c=4;t=0;n=1
 			//but we will not assume they are always in that order when reading 
@@ -243,7 +248,7 @@ int main(int argc, char const ** argv)
 		} else {
 			score = 0;
 		}
-		cout << currentRef << "\t.\twindow\t"<< p.first - (options.window_length-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tc=" << p.second.c << ";t=" << p.second.t << ";n=" << p.second.n << endl;
+		cout << currentRef << "\t.\t" << toCString(options.label) << "\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tc=" << p.second.c << ";t=" << p.second.t << ";n=" << p.second.n << endl;
 	}
 
 
