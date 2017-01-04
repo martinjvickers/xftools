@@ -3,7 +3,7 @@
 struct ModifyStringOptions
 {
         CharString inputFileName;
-	int window_length;
+	int window_size;
 };
 
 struct WindowValues
@@ -22,8 +22,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	setVersion(parser, "0.0.1");
 	setDate(parser, "July 2016");
 	addUsageLine(parser, "-i sequence.fastq [\\fIOPTIONS\\fP] ");
-	addOption(parser, seqan::ArgParseOption("l", "window-length", "Size of window",seqan::ArgParseArgument::INTEGER, "INT"));
-	setDefaultValue(parser, "window-length", "50");
+	addOption(parser, seqan::ArgParseOption("s", "window-size", "Size of window",seqan::ArgParseArgument::INTEGER, "INT"));
+	setDefaultValue(parser, "window-size", "50");
 
 	addDescription(parser, "Create a w50 file from a w1 file.");
 	seqan::ArgumentParser::ParseResult res = seqan::parse(parser, argc, argv);
@@ -34,7 +34,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 		return res;
 
 	getOptionValue(options.inputFileName, parser, "input-file");
-	getOptionValue(options.window_length, parser, "window-length");
+	getOptionValue(options.window_length, parser, "window-size");
 
 	return seqan::ArgumentParser::PARSE_OK;
 
