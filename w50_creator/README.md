@@ -6,6 +6,29 @@ Getting this to compile on work machine;
 ~/cmake-3.6.0-rc2-Linux-x86_64/bin/cmake ../w50_creator -DCMAKE_MODULE_PATH=../../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
 ```
 
+##Usage
+
+Usage is simple. Download the latest release and extract;
+
+e.g.
+
+
+```
+wget https://github.com/martinjvickers/methylation_tools/releases/download/v0.0.2/methylation_tools_v0.0.2.tar.gz .
+tar xvf methylation_tools_v0.0.2.tar.gz
+```
+
+If you wish to try some example data;
+
+```
+wget https://github.com/martinjvickers/methylation_tools/blob/master/w50_creator/example_data/GSM952438_TFH39.all.cg-col.w50.gff.gz
+```
+
+and then here you can run the program which will bin the methyalation data from each single-c (w1) location in the example file into 50bp windows (-s flag). Since the -l flag is set the third column in the output is labeled as desired. This is useful for importing into SignalMap.
+
+```
+./w50_creator -s 50 -l GSM952438_CG -i GSM952438_TFH39.all.cg-col.gff.gz > GSM952438_TFH39.all.w50.gff
+```
 ##Testing
 
 ###Test Machine
