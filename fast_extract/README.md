@@ -52,29 +52,45 @@ K00114:151:H3C3JBBXX:2:2208:24659:31168
 K00114:151:H3C3JBBXX:2:2223:5567:45250
 ```
 
+There are two things you need to know when preparing your list file. 
+* Do not include the @ symbol at the beginning of the ID in your list file.
+* Only include up until the first space or tab. 
 
-### Performaance
+So if you wish to extract the read above, the ID in the list file should be;
+
+```
+K00114:151:H3C3JBBXX:2:1101:7140:1773
+```
+
+### Performance
 
 ## Using a Map
 
+```
 mvickers@n108379:~/development/methylation_tools/fast_extract$ time `./fast_extract -e -i example_data/rawreads.fastq -f example_data/list_to_extract.txt > meh.fq`
 real	0m0.868s
 real	0m0.893s
 real	0m0.867s
-
+```
+```
 mvickers@n108379:~/development/methylation_tools/fast_extract$ time `./fast_extract -i example_data/rawreads.fastq -f example_data/list_to_extract.txt > meh.fq`
 real	0m0.344s
 real	0m0.346s
 real	0m0.349s
+```
 
 ## Using an Unordered Map
 
+```
 mvickers@n108379:~/development/methylation_tools/fast_extract$ time `./fast_extract -e -i example_data/rawreads.fastq -f example_data/list_to_extract.txt > meh.fq`
 real    0m0.680s
 real    0m0.683s
 real    0m0.675s
+```
 
+```
 mvickers@n108379:~/development/methylation_tools/fast_extract$ time `./fast_extract -i example_data/rawreads.fastq -f example_data/list_to_extract.txt > meh.fq`
 real	0m0.144s
 real	0m0.148s
 real	0m0.156s
+```
