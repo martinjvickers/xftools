@@ -1,4 +1,5 @@
 #include "common.h"
+#include <unordered_map>
 
 struct ModifyStringOptions
 {
@@ -49,7 +50,8 @@ int main(int argc, char const ** argv)
 	ModifyStringOptions options;
 	seqan::ArgumentParser::ParseResult res = parseCommandLine(options, argc, argv);
 
-	map<CharString, int> map;
+	//map<CharString, int> map;
+	unordered_map<string, int> map;
 
 	//read in the list of IDs we wish to remove or keep and put into a hash table
 	ifstream myfile;
@@ -90,7 +92,6 @@ int main(int argc, char const ** argv)
 		//If the ID from the text file exists in fasta file, then print it
 		if((map.count(token) > 0) && (options.exclude == false))
 		{
-	//		cout << "MATCH " << id << " " << token << " " << map[token] << endl; 
 			cout << id << endl;
 			cout << seq << endl;
 			cout << "+" << endl;
@@ -99,7 +100,6 @@ int main(int argc, char const ** argv)
 
 		if((map.count(token) == 0) && (options.exclude == true))
                 {
-         //               cout << "MATCH " << id << " " << token << " " << map[token] << endl;
                         cout << id << endl;
                         cout << seq << endl;
                         cout << "+" << endl;
