@@ -5,6 +5,7 @@ struct ModifyStringOptions
 {
         CharString inputFastFileName;
 	CharString inputFilterFileName;
+	CharString outputFileName;
 	bool exclude;
 };
 
@@ -15,13 +16,16 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	setRequired(parser, "input-file");
 	addOption(parser, seqan::ArgParseOption("f", "input-filter-file", "Path to the input filter file", seqan::ArgParseArgument::INPUT_FILE, "IN"));
         setRequired(parser, "input-filter-file");
+	addOption(parser, seqan::ArgParseOption("o", "output-file", "Path to the output file", seqan::ArgParseArgument::OUTPUT_FILE, "OUT"));
+	setRequired(parser, "output-file");
+
 
 	addOption(parser, seqan::ArgParseOption("e", "exclude", "Remove reads in fasta file that have IDs in the text file."));
 
 	setShortDescription(parser, "Methylation Tools");
 	setVersion(parser, "0.0.1");
 	setDate(parser, "Jan 2017");
-	addUsageLine(parser, "-i input.fasta -f filter.txt [\\fIOPTIONS\\fP] ");
+	addUsageLine(parser, "-i input.fastq -f filter.txt -o output.fastq [\\fIOPTIONS\\fP] ");
 
 	addDescription(parser, "Extract or exclude reads based on an input list text file of IDs.");
 	seqan::ArgumentParser::ParseResult res = seqan::parse(parser, argc, argv);
@@ -33,6 +37,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 
 	getOptionValue(options.inputFastFileName, parser, "input-file");
 	getOptionValue(options.inputFilterFileName, parser, "input-filter-file");
+	getOptionValue(options.outputFileName, parser, "output-file");
 	options.exclude = isSet(parser, "exclude");
 
 	return seqan::ArgumentParser::PARSE_OK;
@@ -80,6 +85,13 @@ int main(int argc, char const ** argv)
 	Dna5String seq;
 	CharString qual;
 
+	SeqFileOut seqFileOut;
+	if (!open(seqFileOut, toCString(options.outputFileName)))
+        {
+                std::cerr << "ERROR: Could not open the file.\n";
+                return 1;
+        }
+
 	while (!atEnd(seqFileIn))
 	{
 		readRecord(id, seq, qual, seqFileIn);
@@ -92,18 +104,12 @@ int main(int argc, char const ** argv)
 		//If the ID from the text file exists in fasta file, then print it
 		if((map.count(token) > 0) && (options.exclude == false))
 		{
-			cout << id << endl;
-			cout << seq << endl;
-			cout << "+" << endl;
-			cout << qual << endl;
+			writeRecord(seqFileOut, id, seq, qual);
 		}
 
 		if((map.count(token) == 0) && (options.exclude == true))
                 {
-                        cout << id << endl;
-                        cout << seq << endl;
-                        cout << "+" << endl;
-                        cout << qual << endl;
+			writeRecord(seqFileOut, id, seq, qual);
                 }
 	}
 
