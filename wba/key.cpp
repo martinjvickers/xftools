@@ -29,13 +29,15 @@ class MyPair
                 };
 		bool within(CharString val_id, int val) const
 		{
-			string c1str = toCString(id);
-			string c2str = toCString(val_id);
-			cout << c1str << " " << c2str <<" " << c1str.compare(c2str) << endl;
-			if(c1str.compare(c2str) && val >= b_value && val <= e_value)
-				return true;
-			else
+			if(id==val_id)
+			{
+				if(val >= b_value && val <= e_value)
+					return true;
+				else
+					return false;
+			} else {
 				return false;
+			}
 		};
 };
 
@@ -44,10 +46,10 @@ bool operator< (const MyPair &c1, const MyPair &c2)
         string c1str = toCString(c1.id);
         string c2str = toCString(c2.id);
 	//cout << c1str << " " << c2str <<" " << c1str.compare(c2str) << endl;
-        if(c1str.compare(c2str) && c1.e_value < c2.e_value && c1.b_value < c2.e_value)
-                return true;
-        else
-                return false;
+       	if(c1.e_value < c2.e_value && c1.b_value < c2.e_value)
+       	        return true;
+       	else
+       	        return false;
 }
 
 bool operator> (const MyPair &c1, const MyPair &c2)
@@ -55,7 +57,7 @@ bool operator> (const MyPair &c1, const MyPair &c2)
         string c1str = toCString(c1.id);
         string c2str = toCString(c2.id);
 	//cout << c1str << " " << c2str <<" " << c1str.compare(c2str) << endl;
-	if(c1str.compare(c2str) && c1.e_value > c2.e_value && c1.b_value > c2.e_value)
+	if(c1.e_value > c2.e_value && c1.b_value > c2.e_value)
 		return true;
 	else
 		return false;
@@ -63,13 +65,21 @@ bool operator> (const MyPair &c1, const MyPair &c2)
 
 bool operator== (const MyPair &c1, const MyPair &c2)
 {
-	string c1str = toCString(c1.id);
-	string c2str = toCString(c2.id);
-	//cout << c1str << " " << c2str <<" " << c1str.compare(c2str) << endl;
-        if(c1str.compare(c2str) && c1.e_value == c2.e_value && c1.b_value == c2.b_value)
-                return true;
-        else
-                return false;
+	cout << "hello" <<endl;
+	if(c1.id==c2.id)
+	{
+		cout << "hello" <<endl;
+//        	if(c1.e_value == c2.e_value && c1.b_value == c2.b_value)
+		if(c1.e_value < c2.e_value && c1.b_value > c2.b_value)
+		{
+			cout << c1.id << " " << c1.b_value << " " << c1.e_value << " matches " << c2.id << " " << c2.b_value << " " << c2.e_value << endl;
+        	        return true;
+		}
+        	else
+        	        return false;
+	} else {
+		return false;
+	}
 }
 
 

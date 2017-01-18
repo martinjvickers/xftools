@@ -74,12 +74,15 @@ int main(int argc, char const ** argv)
 		{
 			readRecord(annotationrecord, gffAnnotationIn);
 			MyPair temp(annotationrecord.ref, annotationrecord.beginPos, annotationrecord.endPos);
-			annotation[temp] = annotation[temp]+1;
+			annotation[temp] = 0;
+	//		cout << annotationrecord.ref << " " << annotationrecord.beginPos << " " << annotationrecord.endPos << endl;
 		} catch (int e) {
 			cout << "Huh " << e <<  endl;
 			break;
 		}
 	}
+
+	cout << "THere are this many annotation " << annotation.size() << endl;
 
 	///NOW START READING OUR INPUT FILE
 	GffFileIn gffInputIn;
@@ -94,21 +97,20 @@ int main(int argc, char const ** argv)
 
 	while (!atEnd(gffInputIn))
         {
-
 		readRecord(inputrecord, gffInputIn);
-		for(auto const& p: annotation)
-        	{
-			//cout << p.first.getBegin()<< " " << p.first.getEnd() << " " << p.second << endl;
-			if(p.first.within(inputrecord.ref, inputrecord.beginPos))
-			{
-				cout << inputrecord.ref << " " << inputrecord.beginPos << " is within  " << p.first.getID() << " " << p.first.getBegin()<< " " << p.first.getEnd() << " " << p.second << endl;
-				break;
-			}
-        	} 
+		MyPair recordtemp(inputrecord.ref,inputrecord.beginPos,inputrecord.endPos);
+		if(annotation.count(recordtemp))
+		{
+			//cout << inputrecord.ref << " " << inputrecord.beginPos << " " << inputrecord.endPos << " exists here ";
+			annotation[recordtemp]++;
+		}
 		sum = sum + inputrecord.score;
-
 	}
-
 	cout << "Sum " << sum << endl;
+/*
+	for(auto const& p: annotation)
+        {
+		cout << p.first.getID() << " " <<  p.first.getBegin() << " " <<  p.first.getEnd() << " " << p.second << endl;
+	}*/
 	return 0;
 }
