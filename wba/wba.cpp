@@ -1,6 +1,7 @@
 #include "common.h"
 #include <unordered_map>
 #include "key.cpp"
+#include <functional>
 
 struct ModifyStringOptions
 {
@@ -15,6 +16,20 @@ struct WindowValues
         int c;
         int t;
 	int n;
+};
+
+typedef pair<string,pair<int,int>> Name;
+
+namespace std {
+    template <>
+        class hash<Name>{
+        public :
+            size_t operator()(const Name &name ) const
+            {
+		//can i somehow return a hash 
+                return hash<string>()(name.first) ^ hash<int>()(name.second.first) ^ hash<int>()(name.second.second);
+            }
+    };
 };
 
 seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
@@ -59,7 +74,7 @@ int main(int argc, char const ** argv)
 	ModifyStringOptions options;
 	seqan::ArgumentParser::ParseResult res = parseCommandLine(options, argc, argv);
 
-	map<MyPair,int> annotation;
+	unordered_map<Name,int> ids;
 
 	GffFileIn gffAnnotationIn;
 	GffRecord annotationrecord;
@@ -70,19 +85,11 @@ int main(int argc, char const ** argv)
         }
 	while (!atEnd(gffAnnotationIn))
         {
-		try
-		{
-			readRecord(annotationrecord, gffAnnotationIn);
-			MyPair temp(annotationrecord.ref, annotationrecord.beginPos, annotationrecord.endPos);
-			annotation[temp] = 0;
-	//		cout << annotationrecord.ref << " " << annotationrecord.beginPos << " " << annotationrecord.endPos << endl;
-		} catch (int e) {
-			cout << "Huh " << e <<  endl;
-			break;
-		}
+		readRecord(annotationrecord, gffAnnotationIn);
+		ids[Name(toCString(annotationrecord.ref), make_pair(annotationrecord.beginPos, annotationrecord.endPos))] = 0;
 	}
 
-	cout << "THere are this many annotation " << annotation.size() << endl;
+	cout << "THere are this many annotation " << ids.size() << endl;
 
 	///NOW START READING OUR INPUT FILE
 	GffFileIn gffInputIn;
@@ -98,19 +105,15 @@ int main(int argc, char const ** argv)
 	while (!atEnd(gffInputIn))
         {
 		readRecord(inputrecord, gffInputIn);
-		MyPair recordtemp(inputrecord.ref,inputrecord.beginPos,inputrecord.endPos);
-		if(annotation.count(recordtemp))
-		{
-			//cout << inputrecord.ref << " " << inputrecord.beginPos << " " << inputrecord.endPos << " exists here ";
-			annotation[recordtemp]++;
-		}
+		
+		cout << inputrecord.ref << " " << inputrecord.beginPos << " " << inputrecord.endPos << " " << ( std::hash<string>()(toCString(inputrecord.ref)) ^ std::hash<int>()(inputrecord.beginPos) ^ std::hash<int>()(inputrecord.endPos) ) << endl;
+		ids[Name(toCString(inputrecord.ref), make_pair(inputrecord.beginPos, inputrecord.endPos))]++;
 		sum = sum + inputrecord.score;
 	}
 	cout << "Sum " << sum << endl;
-/*
-	for(auto const& p: annotation)
-        {
-		cout << p.first.getID() << " " <<  p.first.getBegin() << " " <<  p.first.getEnd() << " " << p.second << endl;
-	}*/
+
+	for ( auto ii = ids.begin() ; ii != ids.end() ; ii++ )
+		cout << ii->first.first << " " << ii->first.second.first << " " << ii->first.second.second << " " << ii->second << endl;
+
 	return 0;
 }

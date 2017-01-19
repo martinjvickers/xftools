@@ -11,9 +11,10 @@ class MyPair
 			b_value = begin;
 			e_value = end;
 		};
+
 		friend bool operator< (const MyPair &c1, const MyPair &c2);
 		friend bool operator> (const MyPair &c1, const MyPair &c2);
-		friend bool operator== (const MyPair &c1, const MyPair &c2);
+		//friend bool operator== (const MyPair &c1, const MyPair &c2);
 
 		int getBegin() const
 		{
@@ -27,6 +28,7 @@ class MyPair
                 {
                         return id;
                 };
+/*
 		bool within(CharString val_id, int val) const
 		{
 			if(id==val_id)
@@ -39,13 +41,11 @@ class MyPair
 				return false;
 			}
 		};
+*/
 };
 
 bool operator< (const MyPair &c1, const MyPair &c2)
 {
-        string c1str = toCString(c1.id);
-        string c2str = toCString(c2.id);
-	//cout << c1str << " " << c2str <<" " << c1str.compare(c2str) << endl;
        	if(c1.e_value < c2.e_value && c1.b_value < c2.e_value)
        	        return true;
        	else
@@ -54,15 +54,14 @@ bool operator< (const MyPair &c1, const MyPair &c2)
 
 bool operator> (const MyPair &c1, const MyPair &c2)
 {
-        string c1str = toCString(c1.id);
-        string c2str = toCString(c2.id);
-	//cout << c1str << " " << c2str <<" " << c1str.compare(c2str) << endl;
 	if(c1.e_value > c2.e_value && c1.b_value > c2.e_value)
 		return true;
 	else
 		return false;
 }
 
+
+/*
 bool operator== (const MyPair &c1, const MyPair &c2)
 {
 	cout << "hello" <<endl;
@@ -80,18 +79,4 @@ bool operator== (const MyPair &c1, const MyPair &c2)
 	} else {
 		return false;
 	}
-}
-
-
-
-/*
-bool operator<= (const MyPair &c1, const MyPair &c2)
-{
-        return c1.e_value <= c2.b_value;
-}
-
-bool operator>= (const MyPair &c1, const MyPair &c2)
-{
-        return c1.e_value >= c2.b_value;
-}
-*/
+}*/
