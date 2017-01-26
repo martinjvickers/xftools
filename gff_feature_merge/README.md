@@ -36,18 +36,46 @@ chr2	.	window	600	600	1	.	.	n=1
 The aim of this program is to merge features (lines/rows) within the GFF that are within `-s` of oneanother. So, if `-s 2` is applied, then the resulting output will be;
 
 ```
-chr2    .       window  80      82      .       .       .       n=1
-chr2    .       window  90      91      .       .       .       n=1
-chr2    .       window  101     104     .       .       .       n=1
-chr2    .       window  200     200     .       .       .       n=1
-chr2    .       window  600     600     .       .       .       n=1
+chr2	.	window	80	82	.	.	.	windowSize=3
+chr2	.	window	90	91	.	.	.	windowSize=2
+chr2	.	window	101	104	.	.	.	windowSize=4
+chr2	.	window	200	200	.	.	.	windowSize=1
+chr2	.	window	600	600	.	.	.	windowSize=1
 ```
 
 similarly if `-s 10` is applied the resulting output will be;
 
 ```
-chr2    .       window  80      104      .       .       .       n=1
-chr2    .       window  200     200     .       .       .       n=1
-chr2    .       window  600     600     .       .       .       n=1
+chr2	.	window	80	104	.	.	.	windowSize=25
+chr2	.	window	200	200	.	.	.	windowSize=1
+chr2	.	window	600	600	.	.	.	windowSize=1
 ```
+
+###Defining `-s`
+
+The definition of `-s 1` would mean that if two bases are next to eachother, they will be merged, e.g.;
+
+```
+chr2	.	window	80	80	1	.	.	n=1
+chr2	.	window	81	81	1	.	.	n=1
+chr2	.	window	82	82	1	.	.	n=1
+```
+
+would get you;
+
+```
+chr2	.	window	80	82	.	.	.	windowSize=3
+```
+
+So `-s 1` means ((second.startPos - first.endPos) < s) where first and second are the two lines being evaluated. 
+
+###Examples
+
+If you wish to merge features in a GFF file where there is a gap no more than 4 in size, then `-s 5` is what you want;
+
+```
+./gff_feature_merge -i input.gff -s 5 -o output.gff
+```
+
+
 
