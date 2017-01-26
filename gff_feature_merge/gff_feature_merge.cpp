@@ -102,5 +102,13 @@ int main(int argc, char const ** argv)
 		count++;
 	}
 
+	//there is always one last result left over
+	clear(merging.tagNames);
+	clear(merging.tagValues);
+	merging.score = GffRecord::INVALID_SCORE();
+	appendValue(merging.tagNames, "windowSize");
+	appendValue(merging.tagValues, to_string(merging.endPos-merging.beginPos));
+	writeRecord(gffOut, merging);
+
 	return 0;
 }
