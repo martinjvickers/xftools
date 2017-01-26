@@ -1,6 +1,6 @@
 # methylation_tools
 
-## GFF Feature Mergey
+## GFF Feature Merge
 
 ### Compiling
 
