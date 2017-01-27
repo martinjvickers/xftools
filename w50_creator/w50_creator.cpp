@@ -22,7 +22,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	addOption(parser, seqan::ArgParseOption("i", "input-file", "Path to the input file", seqan::ArgParseArgument::INPUT_FILE, "IN"));
 	setRequired(parser, "input-file");
 	setShortDescription(parser, "Methylation Tools");
-	setVersion(parser, "0.0.2");
+	setVersion(parser, "0.0.3");
 	setDate(parser, "Jan 2017");
 	addUsageLine(parser, "-i input_w1.gff [\\fIOPTIONS\\fP] ");
 	addOption(parser, seqan::ArgParseOption("s", "window-size", "Size of window",seqan::ArgParseArgument::INTEGER, "INT"));
