@@ -5,6 +5,7 @@ struct ModifyStringOptions
         CharString inputFileName;
 	int window_size;
 	CharString label;
+	CharString type;
 };
 
 struct WindowValues
@@ -12,6 +13,7 @@ struct WindowValues
         int c;
         int t;
 	int n;
+	float score;
 };
 
 seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
@@ -26,8 +28,14 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	addOption(parser, seqan::ArgParseOption("s", "window-size", "Size of window",seqan::ArgParseArgument::INTEGER, "INT"));
 	setDefaultValue(parser, "window-size", "50");
 
+	addOption(parser, seqan::ArgParseOption("t", "addition-type", "Addition type specifies the behaviour when adding two or more rows together.", seqan::ArgParseArgument::STRING, "STR"));
+	setValidValues(parser, "addition-type", "count methyl");
+	setDefaultValue(parser, "addition-type", "methyl");
+
 	addOption(parser, seqan::ArgParseOption("l", "label", "Column 3 GFF output label. Useful if using SignalMap", seqan::ArgParseArgument::STRING, "TEXT"));
 	setDefaultValue(parser, "label", "window");
+
+	
 
 	addDescription(parser, "Create a w50 file from a w1 file.");
 	seqan::ArgumentParser::ParseResult res = seqan::parse(parser, argc, argv);
@@ -40,6 +48,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	getOptionValue(options.inputFileName, parser, "input-file");
 	getOptionValue(options.window_size, parser, "window-size");
 	getOptionValue(options.label, parser, "label");
+	getOptionValue(options.type, parser, "addition-type");
 
 	return seqan::ArgumentParser::PARSE_OK;
 
@@ -76,6 +85,8 @@ int main(int argc, char const ** argv)
 		std::cerr << "ERROR: Could not open the file.\n";
 		return 1;
 	}
+
+	bool meth = false;
 
 	CharString currentRef = NULL;
 
@@ -133,12 +144,19 @@ int main(int argc, char const ** argv)
 			{
 				float score;
 				//write out GFF
-				if ((p.second.c > 0) || (p.second.t > 0)){
-					score = (float)p.second.c / (float)(p.second.c + p.second.t);
-				} else {
-					score = 0.0000;
-				}
+
+				if(options.type=="methyl")
+				{
+					if ((p.second.c > 0) || (p.second.t > 0)){
+						score = (float)p.second.c / (float)(p.second.c + p.second.t);
+					} else {
+						score = 0.0000;
+					}
 					cout << currentRef << "\t.\t" << toCString(options.label) <<"\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tc=" << p.second.c << ";t=" << p.second.t << ";n=" << p.second.n << endl;
+				} else if(options.type=="count") {
+					score = p.second.score;
+					cout << currentRef << "\t.\t" << toCString(options.label) << "\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tn=" << p.second.n << endl;
+				}
 			}
 	
 			//we should save the current reference as a check to see if we come across it again out of order
@@ -181,7 +199,6 @@ int main(int argc, char const ** argv)
 			//iterate through looking for c,t,n (will ignore anything else)
 			for(int i = 0; i < length(record.tagNames); i++)
 			{	
-				
 				if(record.tagNames[i] == "c")
 				{
 					currWindowVal.c = atoi(toCString(record.tagValues[i]));
@@ -197,10 +214,8 @@ int main(int argc, char const ** argv)
                                         currWindowVal.n = atoi(toCString(record.tagValues[i]));
 					haveN = 0;
                                 }
-
-				//need to check if we have all three??
-
 			}
+			currWindowVal.score = record.score;
 
 			//means we have no n's in the input file, so we add one
 			if(haveN == 1)
@@ -214,6 +229,8 @@ int main(int argc, char const ** argv)
 			currWindowVal.c = get.c + currWindowVal.c;
 			currWindowVal.t = get.t + currWindowVal.t;
 			currWindowVal.n = get.n + currWindowVal.n;
+
+			currWindowVal.score = get.score + currWindowVal.score;
 
 			//now insert back into map
 			map[window] = currWindowVal;
@@ -242,13 +259,19 @@ int main(int argc, char const ** argv)
 
 
 		float score;
-		//write out GFF
-		if ((p.second.c > 0) || (p.second.t > 0)){
-			score = (float)p.second.c / (float)(p.second.c + p.second.t);
-		} else {
-			score = 0;
+		//write out GFF 
+		if(options.type=="methyl")
+		{
+			if ((p.second.c > 0) || (p.second.t > 0)){
+				score = (float)p.second.c / (float)(p.second.c + p.second.t);
+			} else {
+				score = 0;
+			}
+			cout << currentRef << "\t.\t" << toCString(options.label) << "\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tc=" << p.second.c << ";t=" << p.second.t << ";n=" << p.second.n << endl;
+		} else if(options.type=="count") {
+			score = p.second.score;
+			cout << currentRef << "\t.\t" << toCString(options.label) << "\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tn=" << p.second.n << endl;
 		}
-		cout << currentRef << "\t.\t" << toCString(options.label) << "\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tc=" << p.second.c << ";t=" << p.second.t << ";n=" << p.second.n << endl;
 	}
 
 
