@@ -8,7 +8,7 @@ Getting this to compile on work machine;
 
 ##Usage
 
-Usage is simple. Download the latest release and extract;
+Usage for methylation data is simple. Download the latest release and extract;
 
 e.g.
 
@@ -29,6 +29,13 @@ and then here you can run the program which will bin the methyalation data from 
 ```
 ./w50_creator -s 50 -l GSM952438_CG -i GSM952438_TFH39.all.cg-col.gff.gz > GSM952438_TFH39.all.w50.gff
 ```
+
+You can also use this for counts data by specifying the `-t count` flag which has different behaviour than the default `-t methyl` flag. `-t count` will sum columns 6 of rows that belong in a bin and also display a count in column 9, e.g. `n=10`. The command for this is as follows;
+
+```
+./w50_creator -i example_data/reads_start_bases.gff -t count -s 1 > reads_summed_w1.gff
+```
+
 ##Testing
 
 ###Test Machine
