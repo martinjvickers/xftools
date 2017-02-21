@@ -1,35 +1,12 @@
 #include "common.h"
-#include <unordered_map>
-#include "key.cpp"
-#include <functional>
 
+//http://marknelson.us/2011/09/03/hash-functions-for-c-unordered-containers/
 struct ModifyStringOptions
 {
         CharString inputFileName;
 	CharString inputAnnotationFileName;
 	CharString outputFileName;
 	bool exclude;
-};
-
-struct WindowValues
-{
-        int c;
-        int t;
-	int n;
-};
-
-typedef pair<string,pair<int,int>> Name;
-
-namespace std {
-    template <>
-        class hash<Name>{
-        public :
-            size_t operator()(const Name &name ) const
-            {
-		//can i somehow return a hash 
-                return hash<string>()(name.first) ^ hash<int>()(name.second.first) ^ hash<int>()(name.second.second);
-            }
-    };
 };
 
 seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
@@ -62,11 +39,17 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	return seqan::ArgumentParser::PARSE_OK;
 }
 
+struct Feature
+{
+	int endPos;
+	char strand;
+	CharString ref;
+	int score;
+};
+
 /*
 Aim: Given an annotation file and an input w1 file, this will add all of the w1 records that are within that annotation file.
-
 Current progress: It compiles!
-
 */
 int main(int argc, char const ** argv)
 {
@@ -74,46 +57,115 @@ int main(int argc, char const ** argv)
 	ModifyStringOptions options;
 	seqan::ArgumentParser::ParseResult res = parseCommandLine(options, argc, argv);
 
-	unordered_map<Name,int> ids;
+	multimap<int,Feature> meh;
+	multimap<int,Feature>::iterator it, itlow, itup;
 
-	GffFileIn gffAnnotationIn;
-	GffRecord annotationrecord;
-        if (!open(gffAnnotationIn, toCString(options.inputAnnotationFileName)))
+	GffFileIn gffFileIn;
+	if (!open(gffFileIn, toCString(options.inputAnnotationFileName)))
+	{
+		std::cerr << "ERROR: Could not open the file.\n";
+		return 1;
+	}
+
+        GffRecord record;
+        while (!atEnd(gffFileIn))
         {
-                std::cerr << "ERROR: Could not open example.gff" << std::endl;
+                try
+                {
+                        readRecord(record, gffFileIn);
+
+			//lets make an annotation object
+			Feature feat;
+			feat.endPos = record.endPos;
+			feat.strand = record.strand;
+			feat.ref = record.ref;
+			feat.score = 0;
+
+			//insert
+			meh.insert(make_pair(record.beginPos+1, feat));
+                }
+                catch (Exception const & e)
+                {
+                        std::cerr << "ERROR: " << e.what() << std::endl;
+                        return 1;
+                }
+
+        }
+/*
+	cout << "Input : " << meh.size() << endl;
+
+	for(auto& a : meh)
+		cout << a.first << " " << a.second.endPos << " " << a.second.strand << " " << a.second.ref << endl;
+*/
+
+	GffFileIn gffFileInput;
+        if (!open(gffFileInput, toCString(options.inputFileName)))
+        {
+                std::cerr << "ERROR: Could not open the file.\n";
                 return 1;
         }
-	while (!atEnd(gffAnnotationIn))
-        {
-		readRecord(annotationrecord, gffAnnotationIn);
-		ids[Name(toCString(annotationrecord.ref), make_pair(annotationrecord.beginPos, annotationrecord.endPos))] = 0;
-	}
 
-	cout << "THere are this many annotation " << ids.size() << endl;
-
-	///NOW START READING OUR INPUT FILE
-	GffFileIn gffInputIn;
 	GffRecord inputrecord;
-	if (!open(gffInputIn, toCString(options.inputFileName)))
-	{
-        	std::cerr << "ERROR: Could not open example.gff" << std::endl;
-	        return 1;
-	}
-
-	double sum = 0.0;
-
-	while (!atEnd(gffInputIn))
+        while (!atEnd(gffFileInput))
         {
-		readRecord(inputrecord, gffInputIn);
-		
-		cout << inputrecord.ref << " " << inputrecord.beginPos << " " << inputrecord.endPos << " " << ( std::hash<string>()(toCString(inputrecord.ref)) ^ std::hash<int>()(inputrecord.beginPos) ^ std::hash<int>()(inputrecord.endPos) ) << endl;
-		ids[Name(toCString(inputrecord.ref), make_pair(inputrecord.beginPos, inputrecord.endPos))]++;
-		sum = sum + inputrecord.score;
+		try
+		{
+			readRecord(inputrecord, gffFileInput);
+			//get the first one
+			//Returns an iterator pointing to the first element in the container whose key is considered to go after k.
+			itup = meh.upper_bound(inputrecord.endPos);
+		//	itup--;
+
+			//Returns an iterator pointing to the first element in the container whose key is not considered to go before k (i.e., either it is equivalent or goes after).
+			itlow = meh.lower_bound(inputrecord.beginPos+1);
+
+			//now as i iterate, check to see if the iterator is larger than the beginPos
+			//of our input
+			//IN WORDS
+			//I have a w1, and i have found the first key that is above the current test
+			//then iterate backwards
+			//until the iterator is 
+
+			cout << "checking " << inputrecord.beginPos+1 << " is less than either of these " << (*itup).first << endl;
+			for(it = itup; ((inputrecord.beginPos+1 > (*it).first)); --it)
+			{
+				cout << "Checking : " << inputrecord.beginPos+1 << " against " << (*it).first << " " << (*it).second.endPos << endl;
+			}
+
+/*
+			for(it = itup; ((*it).first < inputrecord.beginPos+1) && ((*it).second.endPos < inputrecord.beginPos+1) ; it--)
+			{
+				cout << "Checking : " << inputrecord.beginPos+1 << " against " << (*it).first << " " << (*it).second.endPos << endl;
+				if((inputrecord.beginPos+1 >= (*it).first) && (inputrecord.endPos <= (*it).second.endPos))
+				{
+					cout << inputrecord.beginPos+1 << " " << inputrecord.endPos << " is within " << (*it).first << " " << (*it).second.endPos << endl;
+					(*it).second.score++;
+				} else {
+					cout << inputrecord.beginPos+1 << " " << inputrecord.endPos << " is NOT within " << (*it).first << " " << (*it).second.endPos << endl;
+				}
+			}
+*/
+		}
+		catch (Exception const & e)
+		{
+			std::cerr << "ERROR: " << e.what() << std::endl;
+                        return 1;
+		}
 	}
-	cout << "Sum " << sum << endl;
 
-	for ( auto ii = ids.begin() ; ii != ids.end() ; ii++ )
-		cout << ii->first.first << " " << ii->first.second.first << " " << ii->first.second.second << " " << ii->second << endl;
 
+        for(auto& a : meh)
+                cout << a.second.ref << " " << a.first << " " << a.second.endPos << " " << a.second.strand << " " << a.second.score <<  endl;
+
+/*
+        multimap<int,int>::iterator it, itlow, itup;
+        itlow = meh.lower_bound(10000);
+        itup = meh.upper_bound(20000);
+
+        for (it=itlow; it!=itup; ++it)
+        {
+                cout << (*it).first << " " << (*it).second <<  endl;
+        }
+*/
 	return 0;
 }
