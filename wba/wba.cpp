@@ -1,6 +1,14 @@
 #include "common.h"
+#include <unordered_map>
+#include "key.cpp"
+#include <functional>
+#include "boost/icl/interval.hpp"
+#include "boost/icl/interval_map.hpp"
+#include <boost/icl/split_interval_map.hpp>
+#include <boost/icl/interval_set.hpp>
+#include <set>
+using namespace boost::icl;
 
-//http://marknelson.us/2011/09/03/hash-functions-for-c-unordered-containers/
 struct ModifyStringOptions
 {
         CharString inputFileName;
@@ -8,6 +16,39 @@ struct ModifyStringOptions
 	CharString outputFileName;
 	bool exclude;
 };
+
+class Feature
+{
+public:
+	Feature():_score(0),_strand('*'),_ref("Meh"),_endPos(0),_startPos(0){} // default constructor which i hope to never use?
+	Feature(int score, char strand, CharString ref, int startPos, int endPos):_score(score),_strand(strand),_ref(ref),_endPos(endPos),_startPos(startPos){} // constructor
+	int endPos()const  {return _endPos;}
+	int startPos()const  {return _startPos;}
+	int score()const{return _score;}
+	CharString ref()const{return _ref;}
+	char strand()const{return _strand;}
+
+	void increment(){_score++;}
+
+	Feature& operator += (const Feature& right)
+	{	
+		_score += right.score(); 
+		return *this; 
+	}
+
+private:
+	int _startPos;
+	int _endPos;
+	char _strand;
+	CharString _ref;
+	int _score;
+};
+
+bool operator == (const Feature& left, const Feature& right)
+{
+	//== if everything (except for score) is the same 
+	return left.strand()==right.strand() && left.ref()==right.ref() && left.endPos()==right.endPos() && left.startPos()==right.startPos(); 
+}
 
 seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
 {
@@ -24,7 +65,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	setDate(parser, "Jan 2017");
 	addUsageLine(parser, "-i input.gff -a annotation.gff -o output.gff [\\fIOPTIONS\\fP] ");
 
-	addDescription(parser, "Extract or exclude reads based on an input list text file of IDs.");
+	addDescription(parser, "Given an annotation/feature file and an input w1 file, give counts for each feature");
 	seqan::ArgumentParser::ParseResult res = seqan::parse(parser, argc, argv);
 
 	// If parsing was not successful then exit with code 1 if there were errors.
@@ -39,17 +80,9 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	return seqan::ArgumentParser::PARSE_OK;
 }
 
-struct Feature
-{
-	int endPos;
-	char strand;
-	CharString ref;
-	int score;
-};
-
 /*
 Aim: Given an annotation file and an input w1 file, this will add all of the w1 records that are within that annotation file.
-Current progress: It compiles!
+Current progress: It works in principle
 */
 int main(int argc, char const ** argv)
 {
@@ -57,115 +90,55 @@ int main(int argc, char const ** argv)
 	ModifyStringOptions options;
 	seqan::ArgumentParser::ParseResult res = parseCommandLine(options, argc, argv);
 
-	multimap<int,Feature> meh;
-	multimap<int,Feature>::iterator it, itlow, itup;
+	split_interval_map<int, Feature> map;
 
-	GffFileIn gffFileIn;
-	if (!open(gffFileIn, toCString(options.inputAnnotationFileName)))
-	{
-		std::cerr << "ERROR: Could not open the file.\n";
-		return 1;
-	}
-
-        GffRecord record;
-        while (!atEnd(gffFileIn))
+	//get our value and add value to map
+	GffFileIn gffAnnotationIn;
+	GffRecord annotationrecord;
+        if (!open(gffAnnotationIn, toCString(options.inputAnnotationFileName)))
         {
-                try
-                {
-                        readRecord(record, gffFileIn);
-
-			//lets make an annotation object
-			Feature feat;
-			feat.endPos = record.endPos;
-			feat.strand = record.strand;
-			feat.ref = record.ref;
-			feat.score = 0;
-
-			//insert
-			meh.insert(make_pair(record.beginPos+1, feat));
-                }
-                catch (Exception const & e)
-                {
-                        std::cerr << "ERROR: " << e.what() << std::endl;
-                        return 1;
-                }
-
-        }
-/*
-	cout << "Input : " << meh.size() << endl;
-
-	for(auto& a : meh)
-		cout << a.first << " " << a.second.endPos << " " << a.second.strand << " " << a.second.ref << endl;
-*/
-
-	GffFileIn gffFileInput;
-        if (!open(gffFileInput, toCString(options.inputFileName)))
-        {
-                std::cerr << "ERROR: Could not open the file.\n";
+                std::cerr << "ERROR: Could not open example.gff" << std::endl;
                 return 1;
         }
 
-	GffRecord inputrecord;
-        while (!atEnd(gffFileInput))
+	//put all of our annotations into a vector and store the pairs in an interval map
+	while (!atEnd(gffAnnotationIn))
         {
-		try
+		readRecord(annotationrecord, gffAnnotationIn);
+		Feature feat(0, annotationrecord.strand, annotationrecord.ref, annotationrecord.beginPos, annotationrecord.endPos);
+		discrete_interval<int> inter_val = discrete_interval<int> (annotationrecord.beginPos, annotationrecord.endPos);
+		map += make_pair(inter_val, feat);
+	}
+
+	//now load our new data
+	GffFileIn gffRawIn;
+	GffRecord to_bin_record;
+	if (!open(gffRawIn, toCString(options.inputFileName)))
+	{
+		std::cerr << "ERROR: Could not open example.gff" << std::endl;
+                return 1;
+	}
+
+	//logic, this is where we bin or count etc with our overlaps.
+	while (!atEnd(gffRawIn))
+        {
+		readRecord(to_bin_record, gffRawIn);
+
+		discrete_interval<int> key = discrete_interval<int> (to_bin_record.beginPos, to_bin_record.endPos);
+		std::pair<split_interval_map<int, Feature>::iterator, split_interval_map<int, Feature>::iterator> itres = map.equal_range(key);
+
+		for(auto it = itres.first; it != itres.second; ++it)
 		{
-			readRecord(inputrecord, gffFileInput);
-			//get the first one
-			//Returns an iterator pointing to the first element in the container whose key is considered to go after k.
-			itup = meh.upper_bound(inputrecord.endPos);
-		//	itup--;
-
-			//Returns an iterator pointing to the first element in the container whose key is not considered to go before k (i.e., either it is equivalent or goes after).
-			itlow = meh.lower_bound(inputrecord.beginPos+1);
-
-			//now as i iterate, check to see if the iterator is larger than the beginPos
-			//of our input
-			//IN WORDS
-			//I have a w1, and i have found the first key that is above the current test
-			//then iterate backwards
-			//until the iterator is 
-
-			cout << "checking " << inputrecord.beginPos+1 << " is less than either of these " << (*itup).first << endl;
-			for(it = itup; ((inputrecord.beginPos+1 > (*it).first)); --it)
-			{
-				cout << "Checking : " << inputrecord.beginPos+1 << " against " << (*it).first << " " << (*it).second.endPos << endl;
-			}
-
-/*
-			for(it = itup; ((*it).first < inputrecord.beginPos+1) && ((*it).second.endPos < inputrecord.beginPos+1) ; it--)
-			{
-				cout << "Checking : " << inputrecord.beginPos+1 << " against " << (*it).first << " " << (*it).second.endPos << endl;
-				if((inputrecord.beginPos+1 >= (*it).first) && (inputrecord.endPos <= (*it).second.endPos))
-				{
-					cout << inputrecord.beginPos+1 << " " << inputrecord.endPos << " is within " << (*it).first << " " << (*it).second.endPos << endl;
-					(*it).second.score++;
-				} else {
-					cout << inputrecord.beginPos+1 << " " << inputrecord.endPos << " is NOT within " << (*it).first << " " << (*it).second.endPos << endl;
-				}
-			}
-*/
-		}
-		catch (Exception const & e)
-		{
-			std::cerr << "ERROR: " << e.what() << std::endl;
-                        return 1;
+			(*it).second.increment();
 		}
 	}
 
-
-        for(auto& a : meh)
-                cout << a.second.ref << " " << a.first << " " << a.second.endPos << " " << a.second.strand << " " << a.second.score <<  endl;
-
-/*
-        multimap<int,int>::iterator it, itlow, itup;
-        itlow = meh.lower_bound(10000);
-        itup = meh.upper_bound(20000);
-
-        for (it=itlow; it!=itup; ++it)
+	//now print everything
+	for(split_interval_map<int, Feature>::iterator it = map.begin(); it != map.end(); it++)
         {
-                cout << (*it).first << " " << (*it).second <<  endl;
+                discrete_interval<int> itv  = (*it).first;
+                cout << (*it).first << " " << (*it).second.ref() << " " << (*it).second.startPos() << " " << (*it).second.endPos() << " " << (*it).second.strand() << " " << (*it).second.score() << endl;
         }
-*/
+
 	return 0;
 }
