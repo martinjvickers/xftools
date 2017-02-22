@@ -30,6 +30,9 @@ public:
 
 	void increment(){_score++;}
 
+	//next to implement
+		//give the tags(e.g. c,t,n)
+
 	Feature& operator += (const Feature& right)
 	{	
 		_score += right.score(); 
@@ -110,6 +113,8 @@ int main(int argc, char const ** argv)
 		map += make_pair(inter_val, feat);
 	}
 
+	close(gffAnnotationIn);
+
 	//now load our new data
 	GffFileIn gffRawIn;
 	GffRecord to_bin_record;
@@ -129,16 +134,52 @@ int main(int argc, char const ** argv)
 
 		for(auto it = itres.first; it != itres.second; ++it)
 		{
-			(*it).second.increment();
+			//this is where we could check strandedness and correct reference/feature
+
+			//only increment if these are the same reference
+		//	if(to_bin_record.ref==(*it).second.ref()){
+				(*it).second.increment();
+		//	}
 		}
 	}
 
+	close(gffRawIn);
+
+	//now, let's reopen out feature file and get our feature counts
+	GffFileIn gffFeatureIn;
+	GffRecord featurerecord;
+	if (!open(gffFeatureIn, toCString(options.inputAnnotationFileName)))
+        {
+                std::cerr << "ERROR: Could not open example.gff" << std::endl;
+                return 1;
+        }
+
+	while (!atEnd(gffFeatureIn))
+        {
+		readRecord(featurerecord, gffFeatureIn);
+		discrete_interval<int> key = discrete_interval<int> (featurerecord.beginPos, featurerecord.endPos);
+		std::pair<split_interval_map<int, Feature>::iterator, split_interval_map<int, Feature>::iterator> itres = map.equal_range(key);
+
+		int score = 0;
+		cout << "Feature " << featurerecord.ref << " " << featurerecord.beginPos << " " << featurerecord.endPos << " " << featurerecord.strand << endl;
+		for(auto it = itres.first; it != itres.second; ++it)
+                {
+			Feature mmm = (*it).second;
+			score = score + mmm.score();
+			cout << "\t\t" << mmm.ref() << " " << mmm.startPos() << " " << mmm.endPos() << " " << mmm.score()<< " " << mmm.strand()<< endl;
+                }
+		//cout << "Feature " << featurerecord.ref << " " << featurerecord.beginPos << " " << featurerecord.endPos << " " << score << " " << featurerecord.strand << endl;
+	}
+
+	close(gffFeatureIn);
+
+/*
 	//now print everything
 	for(split_interval_map<int, Feature>::iterator it = map.begin(); it != map.end(); it++)
         {
                 discrete_interval<int> itv  = (*it).first;
                 cout << (*it).first << " " << (*it).second.ref() << " " << (*it).second.startPos() << " " << (*it).second.endPos() << " " << (*it).second.strand() << " " << (*it).second.score() << endl;
         }
-
+*/
 	return 0;
 }
