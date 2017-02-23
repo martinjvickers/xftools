@@ -189,14 +189,11 @@ int main(int argc, char const ** argv)
 		std::pair<split_interval_map<int, Feature>::iterator, split_interval_map<int, Feature>::iterator> itres = map.equal_range(key);
 
 		int score = 0;
-	//	cout << "Feature " << featurerecord.ref << " " << featurerecord.beginPos << " " << featurerecord.endPos << " " << featurerecord.strand << endl;
 		for(auto it = itres.first; it != itres.second; ++it)
                 {
 			Feature mmm = (*it).second;
 			score = score + mmm.score();
-	//		cout << "\t\t" << mmm.ref() << " " << mmm.startPos() << " " << mmm.endPos() << " " << mmm.score()<< " " << mmm.strand()<< endl;
                 }
-		//cout << "Feature " << featurerecord.ref << " " << featurerecord.beginPos << " " << featurerecord.endPos << " " << score << " " << featurerecord.strand << endl;
 
 
 		//again, without wrecking the old way, lets not extract our our features from the completemap and print them
@@ -212,13 +209,5 @@ int main(int argc, char const ** argv)
 
 	close(gffFeatureIn);
 
-/*
-	//now print everything
-	for(split_interval_map<int, Feature>::iterator it = map.begin(); it != map.end(); it++)
-        {
-                discrete_interval<int> itv  = (*it).first;
-                cout << (*it).first << " " << (*it).second.ref() << " " << (*it).second.startPos() << " " << (*it).second.endPos() << " " << (*it).second.strand() << " " << (*it).second.score() << endl;
-        }
-*/
 	return 0;
 }
