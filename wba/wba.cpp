@@ -65,7 +65,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 
 	setShortDescription(parser, "Window by Annotation");
 	setVersion(parser, "0.0.1");
-	setDate(parser, "Jan 2017");
+	setDate(parser, "Feb 2017");
 	addUsageLine(parser, "-i input.gff -a annotation.gff -o output.gff [\\fIOPTIONS\\fP] ");
 
 	addDescription(parser, "Given an annotation/feature file and an input w1 file, give counts for each feature");
