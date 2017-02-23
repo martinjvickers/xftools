@@ -6,6 +6,7 @@
 #include "boost/icl/interval_map.hpp"
 #include <boost/icl/split_interval_map.hpp>
 #include <boost/icl/interval_set.hpp>
+#include <boost/algorithm/string.hpp>
 #include <set>
 using namespace boost::icl;
 
@@ -122,6 +123,9 @@ int main(int argc, char const ** argv)
 		string currRef;
 		if(options.lazyRef == true){
 			//convert to upper
+			string tmp = toCString(annotationrecord.ref);
+			boost::to_upper(tmp);
+			currRef = boost::to_upper_copy(tmp);
 		}else{
 			currRef = toCString(annotationrecord.ref);
 		}
@@ -139,6 +143,8 @@ int main(int argc, char const ** argv)
                 return 1;
 	}
 
+	bool differror = false;
+
 	//logic, this is where we bin or count etc with our overlaps.
 	while (!atEnd(gffRawIn))
         {
@@ -149,6 +155,9 @@ int main(int argc, char const ** argv)
 		string currRef;
                 if(options.lazyRef == true)
                 {
+			string tmp = toCString(to_bin_record.ref);
+                        boost::to_upper(tmp);
+                        currRef = boost::to_upper_copy(tmp);
                 } else {
                         currRef = toCString(to_bin_record.ref);
                 }
@@ -156,15 +165,18 @@ int main(int argc, char const ** argv)
 		//do we have this reference in our map?
 		if(results.find(currRef) == results.end())
 		{
-			cerr << "Error: Your input file contains a reference [ " << currRef << " ] that does not exist in the annotation" << endl;
-			cerr << "Error: References that exist in your annotation are :" << endl;
-			cerr << "Error: ";
-			for(auto& a: results)
-				cerr << a.first << " ";
-			cerr << endl;
-			cerr << "Error: If this is simply that the annotation and input ref columns differ in the use of capital letters then you can rerun with the -l flag." << endl;
-			cerr << "Error: The -l flag will capitalise both the input and the annotation internally." << endl;
-			return 1;
+			if(differror == false){
+				cerr << "Error: Your input file contains a reference [ " << currRef << " ] that does not exist in the annotation" << endl;
+				cerr << "Error: References that exist in your annotation are :" << endl;
+				cerr << "Error: ";
+				for(auto& a: results)
+					cerr << a.first << " ";
+				cerr << endl;
+				cerr << "Error: If this is simply that the annotation and input ref columns differ in the use of capital letters then you can rerun with the -l flag." << endl;
+				cerr << "Error: The -l flag will capitalise both the input and the annotation internally." << endl;
+				cerr << "Error: This will continue to run, but will not count these inputs." << endl;
+				differror = true;
+			}
 		}
 
 		//check if stranded
@@ -184,7 +196,6 @@ int main(int argc, char const ** argv)
 					(*itnew).second.increment();
 			}
 		}
-		
 	}
 
 	close(gffRawIn);
@@ -205,13 +216,15 @@ int main(int argc, char const ** argv)
                 string currRef;
                 if(options.lazyRef == true)
                 {
+			string tmp = toCString(featurerecord.ref);
+                        boost::to_upper(tmp);
+                        currRef = boost::to_upper_copy(tmp);
                 } else {
                         currRef = toCString(featurerecord.ref);
                 }
 
 		discrete_interval<int> key = discrete_interval<int> (featurerecord.beginPos, featurerecord.endPos);
 
-		//again, without wrecking the old way, lets not extract our our features from the completemap and print them
 		int score = 0;
 		std::pair<split_interval_map<int, Feature>::iterator, split_interval_map<int, Feature>::iterator> itresnew = results[currRef][featurerecord.strand].equal_range(key);
 		for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew)
