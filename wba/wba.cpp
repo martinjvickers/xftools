@@ -98,7 +98,6 @@ int main(int argc, char const ** argv)
 	ModifyStringOptions options;
 	seqan::ArgumentParser::ParseResult res = parseCommandLine(options, argc, argv);
 
-	split_interval_map<int, Feature> map; // old way
 	completemap results; // new way results[ref][strand].thingy
 
 	//get our value and add value to map
@@ -116,8 +115,6 @@ int main(int argc, char const ** argv)
 		readRecord(annotationrecord, gffAnnotationIn);
 		Feature feat(0, annotationrecord.strand, annotationrecord.ref, annotationrecord.beginPos, annotationrecord.endPos);
 		discrete_interval<int> inter_val = discrete_interval<int> (annotationrecord.beginPos, annotationrecord.endPos);
-		map += make_pair(inter_val, feat);
-		//let's allso append to the correct place in the new completemap
 		results[toCString(annotationrecord.ref)][annotationrecord.strand] += make_pair(inter_val, feat);
 	}
 
@@ -138,14 +135,6 @@ int main(int argc, char const ** argv)
 		readRecord(to_bin_record, gffRawIn);
 
 		discrete_interval<int> key = discrete_interval<int> (to_bin_record.beginPos, to_bin_record.endPos);
-		std::pair<split_interval_map<int, Feature>::iterator, split_interval_map<int, Feature>::iterator> itres = map.equal_range(key);
-
-		//this is the old way
-		for(auto it = itres.first; it != itres.second; ++it)
-			(*it).second.increment();
-
-		//without wrecking the old way, let's increment the new complete map
-
 
 		//check if stranded
 		std::pair<split_interval_map<int, Feature>::iterator, split_interval_map<int, Feature>::iterator> itresnew;
@@ -164,11 +153,6 @@ int main(int argc, char const ** argv)
 			}
 		}
 		
-		//DO NOT DELETE. THIS IS THE BASE LOGIC OF THIS.
-//		std::pair<split_interval_map<int, Feature>::iterator, split_interval_map<int, Feature>::iterator> itresnew = results[toCString(to_bin_record.ref)][to_bin_record.strand].equal_range(key);
-//		for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew){
-//                        (*itnew).second.increment();
-//		}
 	}
 
 	close(gffRawIn);
@@ -186,18 +170,9 @@ int main(int argc, char const ** argv)
         {
 		readRecord(featurerecord, gffFeatureIn);
 		discrete_interval<int> key = discrete_interval<int> (featurerecord.beginPos, featurerecord.endPos);
-		std::pair<split_interval_map<int, Feature>::iterator, split_interval_map<int, Feature>::iterator> itres = map.equal_range(key);
-
-		int score = 0;
-		for(auto it = itres.first; it != itres.second; ++it)
-                {
-			Feature mmm = (*it).second;
-			score = score + mmm.score();
-                }
-
 
 		//again, without wrecking the old way, lets not extract our our features from the completemap and print them
-		score = 0;
+		int score = 0;
 		std::pair<split_interval_map<int, Feature>::iterator, split_interval_map<int, Feature>::iterator> itresnew = results[toCString(featurerecord.ref)][featurerecord.strand].equal_range(key);
 		for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew)
                 {
