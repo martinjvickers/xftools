@@ -67,6 +67,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         setRequired(parser, "input-annotation-file");
 	addOption(parser, seqan::ArgParseOption("o", "output-file", "Path to the output file", seqan::ArgParseArgument::OUTPUT_FILE, "OUT"));
 	setRequired(parser, "output-file");
+	
 
 	setShortDescription(parser, "Window by Annotation");
 	setVersion(parser, "0.0.1");
@@ -135,6 +136,20 @@ int main(int argc, char const ** argv)
 		readRecord(to_bin_record, gffRawIn);
 
 		discrete_interval<int> key = discrete_interval<int> (to_bin_record.beginPos, to_bin_record.endPos);
+
+		//do we have this reference in our map?
+		if(results.find(toCString(to_bin_record.ref)) == results.end())
+		{
+			cerr << "Error: Your input file contains a reference that does not exist in the annotation" << endl;
+			cerr << "Error: References that exist in your annotation are :" << endl;
+			cerr << "Error: ";
+			for(auto& a: results)
+				cerr << a.first << " ";
+			cerr << endl;
+			cerr << "Error: If this is simply that the annotation and input ref columns differ in the use of capital letters then you can rerun with the -l flag." << endl;
+			cerr << "Error: The -l flag will capitalise both the input and the annotation internally." << endl;
+			return 1;
+		}
 
 		//check if stranded
 		std::pair<split_interval_map<int, Feature>::iterator, split_interval_map<int, Feature>::iterator> itresnew;
