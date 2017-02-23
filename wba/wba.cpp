@@ -15,6 +15,7 @@ struct ModifyStringOptions
 	CharString inputAnnotationFileName;
 	CharString outputFileName;
 	bool exclude;
+	bool lazyRef;
 };
 
 class Feature
@@ -67,7 +68,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         setRequired(parser, "input-annotation-file");
 	addOption(parser, seqan::ArgParseOption("o", "output-file", "Path to the output file", seqan::ArgParseArgument::OUTPUT_FILE, "OUT"));
 	setRequired(parser, "output-file");
-	
+	addOption(parser, seqan::ArgParseOption("l", "lazy-ref", "Internally it will capitalise both the input and annoation reference names so that chr1, Chr1 and CHR1 will all match. The output GFF will be of the same format as the annoation file."));
 
 	setShortDescription(parser, "Window by Annotation");
 	setVersion(parser, "0.0.1");
@@ -85,6 +86,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	getOptionValue(options.inputFileName, parser, "input-file");
 	getOptionValue(options.inputAnnotationFileName, parser, "input-annotation-file");
 	getOptionValue(options.outputFileName, parser, "output-file");
+	options.lazyRef = isSet(parser, "lazy-ref");
+	
 
 	return seqan::ArgumentParser::PARSE_OK;
 }
