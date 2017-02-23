@@ -145,19 +145,33 @@ int main(int argc, char const ** argv)
 			(*it).second.increment();
 
 		//without wrecking the old way, let's increment the new complete map
-		std::pair<split_interval_map<int, Feature>::iterator, split_interval_map<int, Feature>::iterator> itresnew = results[toCString(to_bin_record.ref)][to_bin_record.strand].equal_range(key);
-		for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew)
-                        (*itnew).second.increment();
+
+
+		//check if stranded
+		std::pair<split_interval_map<int, Feature>::iterator, split_interval_map<int, Feature>::iterator> itresnew;
+		if(results[toCString(to_bin_record.ref)][to_bin_record.strand].size() > 0)
+		{
+                	itresnew = results[toCString(to_bin_record.ref)][to_bin_record.strand].equal_range(key);
+			for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew)
+	                        (*itnew).second.increment();
+		} else {
+			//cout << "Input data has no strand information, so adding to both strands" << endl; //probably only show this message once
+			for(auto& i : results[toCString(to_bin_record.ref)])
+			{
+				itresnew = i.second.equal_range(key);
+				for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew)
+					(*itnew).second.increment();
+			}
+		}
+		
+		//DO NOT DELETE. THIS IS THE BASE LOGIC OF THIS.
+//		std::pair<split_interval_map<int, Feature>::iterator, split_interval_map<int, Feature>::iterator> itresnew = results[toCString(to_bin_record.ref)][to_bin_record.strand].equal_range(key);
+//		for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew){
+//                        (*itnew).second.increment();
+//		}
 	}
 
 	close(gffRawIn);
-
-	//get some information about our new completemap
-	for(auto& i: results)
-		for(auto& j : i.second){
-		//	cout << i.first << " " << j << " " << j.second.size() << endl;
-			cout << i.first << " " << j.first << " " << j.second.size() << endl;
-		}
 
 	//now, let's reopen out feature file and get our feature counts
 	GffFileIn gffFeatureIn;
@@ -193,7 +207,7 @@ int main(int argc, char const ** argv)
 			Feature mmm = (*itnew).second;
 			score = score + mmm.score();
 		}
-		cout << "Feature " << featurerecord.ref << " " << featurerecord.beginPos << " " << featurerecord.endPos << " " << score << " " << featurerecord.strand << endl;
+		cout << featurerecord.ref << "\t" << featurerecord.source << "\t" << featurerecord.type << "\t" << featurerecord.beginPos << "\t" << featurerecord.endPos << "\t" << score << "\t" << featurerecord.strand << "\t" << featurerecord.phase << endl;
 	}
 
 	close(gffFeatureIn);
