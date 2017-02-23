@@ -119,7 +119,13 @@ int main(int argc, char const ** argv)
 		readRecord(annotationrecord, gffAnnotationIn);
 		Feature feat(0, annotationrecord.strand, annotationrecord.ref, annotationrecord.beginPos, annotationrecord.endPos);
 		discrete_interval<int> inter_val = discrete_interval<int> (annotationrecord.beginPos, annotationrecord.endPos);
-		results[toCString(annotationrecord.ref)][annotationrecord.strand] += make_pair(inter_val, feat);
+		string currRef;
+		if(options.lazyRef == true){
+			//convert to upper
+		}else{
+			currRef = toCString(annotationrecord.ref);
+		}
+		results[currRef][annotationrecord.strand] += make_pair(inter_val, feat);
 	}
 
 	close(gffAnnotationIn);
@@ -140,10 +146,17 @@ int main(int argc, char const ** argv)
 
 		discrete_interval<int> key = discrete_interval<int> (to_bin_record.beginPos, to_bin_record.endPos);
 
+		string currRef;
+                if(options.lazyRef == true)
+                {
+                } else {
+                        currRef = toCString(to_bin_record.ref);
+                }
+
 		//do we have this reference in our map?
-		if(results.find(toCString(to_bin_record.ref)) == results.end())
+		if(results.find(currRef) == results.end())
 		{
-			cerr << "Error: Your input file contains a reference that does not exist in the annotation" << endl;
+			cerr << "Error: Your input file contains a reference [ " << currRef << " ] that does not exist in the annotation" << endl;
 			cerr << "Error: References that exist in your annotation are :" << endl;
 			cerr << "Error: ";
 			for(auto& a: results)
@@ -156,14 +169,15 @@ int main(int argc, char const ** argv)
 
 		//check if stranded
 		std::pair<split_interval_map<int, Feature>::iterator, split_interval_map<int, Feature>::iterator> itresnew;
-		if(results[toCString(to_bin_record.ref)][to_bin_record.strand].size() > 0)
+
+		if(results[currRef][to_bin_record.strand].size() > 0)
 		{
-                	itresnew = results[toCString(to_bin_record.ref)][to_bin_record.strand].equal_range(key);
+                	itresnew = results[currRef][to_bin_record.strand].equal_range(key);
 			for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew)
 	                        (*itnew).second.increment();
 		} else {
 			//cout << "Input data has no strand information, so adding to both strands" << endl; //probably only show this message once
-			for(auto& i : results[toCString(to_bin_record.ref)])
+			for(auto& i : results[currRef])
 			{
 				itresnew = i.second.equal_range(key);
 				for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew)
@@ -187,11 +201,19 @@ int main(int argc, char const ** argv)
 	while (!atEnd(gffFeatureIn))
         {
 		readRecord(featurerecord, gffFeatureIn);
+
+                string currRef;
+                if(options.lazyRef == true)
+                {
+                } else {
+                        currRef = toCString(featurerecord.ref);
+                }
+
 		discrete_interval<int> key = discrete_interval<int> (featurerecord.beginPos, featurerecord.endPos);
 
 		//again, without wrecking the old way, lets not extract our our features from the completemap and print them
 		int score = 0;
-		std::pair<split_interval_map<int, Feature>::iterator, split_interval_map<int, Feature>::iterator> itresnew = results[toCString(featurerecord.ref)][featurerecord.strand].equal_range(key);
+		std::pair<split_interval_map<int, Feature>::iterator, split_interval_map<int, Feature>::iterator> itresnew = results[currRef][featurerecord.strand].equal_range(key);
 		for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew)
                 {
 			Feature mmm = (*itnew).second;
