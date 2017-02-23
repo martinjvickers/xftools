@@ -53,6 +53,11 @@ bool operator == (const Feature& left, const Feature& right)
 	return left.strand()==right.strand() && left.ref()==right.ref() && left.endPos()==right.endPos() && left.startPos()==right.startPos(); 
 }
 
+//map of map of split interval map. 
+typedef split_interval_map<int, Feature> featuremap;
+typedef std::map<char, featuremap> strandedmap;
+typedef std::map<string, strandedmap> completemap;
+
 seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
 {
 	seqan::ArgumentParser parser("wba");
@@ -93,7 +98,8 @@ int main(int argc, char const ** argv)
 	ModifyStringOptions options;
 	seqan::ArgumentParser::ParseResult res = parseCommandLine(options, argc, argv);
 
-	split_interval_map<int, Feature> map;
+	split_interval_map<int, Feature> map; // old way
+	completemap results; // new way results[ref][strand].thingy
 
 	//get our value and add value to map
 	GffFileIn gffAnnotationIn;
@@ -111,6 +117,8 @@ int main(int argc, char const ** argv)
 		Feature feat(0, annotationrecord.strand, annotationrecord.ref, annotationrecord.beginPos, annotationrecord.endPos);
 		discrete_interval<int> inter_val = discrete_interval<int> (annotationrecord.beginPos, annotationrecord.endPos);
 		map += make_pair(inter_val, feat);
+		//let's allso append to the correct place in the new completemap
+		results[toCString(annotationrecord.ref)][annotationrecord.strand] += make_pair(inter_val, feat);
 	}
 
 	close(gffAnnotationIn);
@@ -132,18 +140,24 @@ int main(int argc, char const ** argv)
 		discrete_interval<int> key = discrete_interval<int> (to_bin_record.beginPos, to_bin_record.endPos);
 		std::pair<split_interval_map<int, Feature>::iterator, split_interval_map<int, Feature>::iterator> itres = map.equal_range(key);
 
+		//this is the old way
 		for(auto it = itres.first; it != itres.second; ++it)
-		{
-			//this is where we could check strandedness and correct reference/feature
+			(*it).second.increment();
 
-			//only increment if these are the same reference
-		//	if(to_bin_record.ref==(*it).second.ref()){
-				(*it).second.increment();
-		//	}
-		}
+		//without wrecking the old way, let's increment the new complete map
+		std::pair<split_interval_map<int, Feature>::iterator, split_interval_map<int, Feature>::iterator> itresnew = results[toCString(to_bin_record.ref)][to_bin_record.strand].equal_range(key);
+		for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew)
+                        (*itnew).second.increment();
 	}
 
 	close(gffRawIn);
+
+	//get some information about our new completemap
+	for(auto& i: results)
+		for(auto& j : i.second){
+		//	cout << i.first << " " << j << " " << j.second.size() << endl;
+			cout << i.first << " " << j.first << " " << j.second.size() << endl;
+		}
 
 	//now, let's reopen out feature file and get our feature counts
 	GffFileIn gffFeatureIn;
@@ -161,14 +175,25 @@ int main(int argc, char const ** argv)
 		std::pair<split_interval_map<int, Feature>::iterator, split_interval_map<int, Feature>::iterator> itres = map.equal_range(key);
 
 		int score = 0;
-		cout << "Feature " << featurerecord.ref << " " << featurerecord.beginPos << " " << featurerecord.endPos << " " << featurerecord.strand << endl;
+	//	cout << "Feature " << featurerecord.ref << " " << featurerecord.beginPos << " " << featurerecord.endPos << " " << featurerecord.strand << endl;
 		for(auto it = itres.first; it != itres.second; ++it)
                 {
 			Feature mmm = (*it).second;
 			score = score + mmm.score();
-			cout << "\t\t" << mmm.ref() << " " << mmm.startPos() << " " << mmm.endPos() << " " << mmm.score()<< " " << mmm.strand()<< endl;
+	//		cout << "\t\t" << mmm.ref() << " " << mmm.startPos() << " " << mmm.endPos() << " " << mmm.score()<< " " << mmm.strand()<< endl;
                 }
 		//cout << "Feature " << featurerecord.ref << " " << featurerecord.beginPos << " " << featurerecord.endPos << " " << score << " " << featurerecord.strand << endl;
+
+
+		//again, without wrecking the old way, lets not extract our our features from the completemap and print them
+		score = 0;
+		std::pair<split_interval_map<int, Feature>::iterator, split_interval_map<int, Feature>::iterator> itresnew = results[toCString(featurerecord.ref)][featurerecord.strand].equal_range(key);
+		for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew)
+                {
+			Feature mmm = (*itnew).second;
+			score = score + mmm.score();
+		}
+		cout << "Feature " << featurerecord.ref << " " << featurerecord.beginPos << " " << featurerecord.endPos << " " << score << " " << featurerecord.strand << endl;
 	}
 
 	close(gffFeatureIn);
