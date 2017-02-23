@@ -144,6 +144,7 @@ int main(int argc, char const ** argv)
 	}
 
 	bool differror = false;
+	bool stranderror = false;
 
 	//logic, this is where we bin or count etc with our overlaps.
 	while (!atEnd(gffRawIn))
@@ -188,7 +189,9 @@ int main(int argc, char const ** argv)
 			for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew)
 	                        (*itnew).second.increment();
 		} else {
-			//cout << "Input data has no strand information, so adding to both strands" << endl; //probably only show this message once
+			if(stranderror == false){
+				cout << "Error: Input data has no strand information but the reference does. The input data will be added to features in your annotation from both strands" << endl;
+			}
 			for(auto& i : results[currRef])
 			{
 				itresnew = i.second.equal_range(key);
