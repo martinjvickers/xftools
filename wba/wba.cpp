@@ -7,11 +7,13 @@
 #include <boost/icl/split_interval_map.hpp>
 #include <boost/icl/interval_set.hpp>
 #include <boost/algorithm/string.hpp>
+#include "boost/lexical_cast.hpp"
 #include <set>
 
 #include <chrono>
 
 using namespace boost::icl;
+using boost::bad_lexical_cast;
 
 struct ModifyStringOptions
 {
@@ -30,6 +32,7 @@ public:
 	int endPos()const  {return _endPos;}
 	int startPos()const  {return _startPos;}
 	int score()const{return _score;}
+	std::map<string, string> tagmap()const{ return _tagmap;}
 	CharString ref()const{return _ref;}
 	char strand()const{return _strand;}
 
@@ -38,13 +41,39 @@ public:
 		_score++;
 	}
 
+	//the problem here is that you can put anything into a tag. So, we will do all the logic in this function
+	//a methyl tag looks like c=0;t=4
+	// i want a generic method for this. as in, if it's an integer or float, add it, if it's a string, just ignore.
+	//not sure how to do this though. Let's start by simply doing what we know. c's and bloody t's.
+	///////AND WHY ARE STRING SETS SETS? WHY NOT MAPS?!
 	void addtags(StringSet<CharString> tagNames, StringSet<CharString> tagValues)
-	{
-
+	{	
+		for(int i = 0; i < length(tagNames); i++)
+		{
+			//for each tag, find it in the _tagmap
+			std::map<string, string>::iterator it;
+			it = _tagmap.find(toCString(tagNames[i]));
+			//if it exists, do something
+			if(it != _tagmap.end())
+			{
+				double toadd, current;
+				current = 0;
+				string currentstr = _tagmap[toCString(tagNames[i])];
+				try {
+					toadd = boost::lexical_cast<double>(toCString(tagValues[i]));
+					current = boost::lexical_cast<double>(_tagmap[toCString(tagNames[i])]);
+				}
+				catch (bad_lexical_cast &) {
+					//don't actually do anything then
+				}
+				_tagmap[toCString(tagNames[i])] = std::to_string(toadd + current);
+			} 
+			else //just add it
+			{
+				_tagmap[toCString(tagNames[i])] = toCString(tagValues[i]);
+			}
+		}
 	}
-
-	//next to implement
-		//give the tags(e.g. c,t,n)
 
 	Feature& operator += (const Feature& right)
 	{	
@@ -58,8 +87,7 @@ private:
 	char _strand;
 	CharString _ref;
 	int _score;
-	StringSet<CharString> _tagNames;
-	StringSet<CharString> _tagValues;
+	std::map<string, string> _tagmap;
 };
 
 bool operator == (const Feature& left, const Feature& right)
@@ -196,8 +224,11 @@ int main(int argc, char const ** argv)
 		if(results[currRef][to_bin_record.strand].size() > 0)
 		{
                 	itresnew = results[currRef][to_bin_record.strand].equal_range(key);
-			for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew)
+			for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew){
 	                        (*itnew).second.increment();
+				(*itnew).second.addtags(to_bin_record.tagNames, to_bin_record.tagValues);
+			}
+				
 		} else {
 			if(stranderror == false){
 				cout << "Error: Input data has no strand information but the reference does. The input data will be added to features in your annotation from both strands" << endl;
@@ -207,7 +238,10 @@ int main(int argc, char const ** argv)
 			{
 				itresnew = i.second.equal_range(key);
 				for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew)
+				{
 					(*itnew).second.increment();
+					(*itnew).second.addtags(to_bin_record.tagNames, to_bin_record.tagValues);
+				}
 			}
 		}
 	}
@@ -240,13 +274,21 @@ int main(int argc, char const ** argv)
 		discrete_interval<int> key = discrete_interval<int> (featurerecord.beginPos, featurerecord.endPos);
 
 		int score = 0;
+		std::map<string, string> tagmap;
 		std::pair<split_interval_map<int, Feature>::iterator, split_interval_map<int, Feature>::iterator> itresnew = results[currRef][featurerecord.strand].equal_range(key);
 		for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew)
                 {
 			Feature mmm = (*itnew).second;
 			score = score + mmm.score();
+			tagmap = mmm.tagmap();
 		}
-		cout << featurerecord.ref << "\t" << featurerecord.source << "\t" << featurerecord.type << "\t" << featurerecord.beginPos << "\t" << featurerecord.endPos << "\t" << score << "\t" << featurerecord.strand << "\t" << featurerecord.phase << endl;
+		cout << featurerecord.ref << "\t" << featurerecord.source << "\t" << featurerecord.type << "\t" << featurerecord.beginPos << "\t" << featurerecord.endPos << "\t" << score << "\t" << featurerecord.strand << "\t" << featurerecord.phase << "\t";
+		//now loop the thingy
+		for(auto& m: tagmap)
+		{
+			cout << m.first << "=" << m.second <<";";
+		}
+		cout << endl;
 	}
 
 	close(gffFeatureIn);
