@@ -186,63 +186,72 @@ int main(int argc, char const ** argv)
 
 	bool differror = false;
 	bool stranderror = false;
+	int count = 0;
 
 	//logic, this is where we bin or count etc with our overlaps.
 	while (!atEnd(gffRawIn))
         {
-		readRecord(to_bin_record, gffRawIn);
+		try
+    		{
+			readRecord(to_bin_record, gffRawIn);
+			discrete_interval<int> key = discrete_interval<int> (to_bin_record.beginPos, to_bin_record.endPos);
 
-		discrete_interval<int> key = discrete_interval<int> (to_bin_record.beginPos, to_bin_record.endPos);
-
-		string currRef = toCString(to_bin_record.ref);
-                if(options.lazyRef == true)
-                {
-			for (string::size_type i = 0; i < currRef.length(); ++i)
-				toupper(currRef[i]);
-                }
-
-		//do we have this reference in our map?
-		if(results.find(currRef) == results.end())
-		{
-			if(differror == false){
-				cerr << "Error: Your input file contains a reference [ " << currRef << " ] that does not exist in the annotation" << endl;
-				cerr << "Error: References that exist in your annotation are :" << endl;
-				cerr << "Error: ";
-				for(auto& a: results)
-					cerr << a.first << " ";
-				cerr << endl;
-				cerr << "Error: If this is simply that the annotation and input ref columns differ in the use of capital letters then you can rerun with the -l flag." << endl;
-				cerr << "Error: The -l flag will capitalise both the input and the annotation internally." << endl;
-				cerr << "Error: This will continue to run, but will not count these inputs." << endl;
-				differror = true;
-			}
-		}
-
-		//check if stranded
-		std::pair<split_interval_map<int, Feature>::iterator, split_interval_map<int, Feature>::iterator> itresnew;
-
-		if(results[currRef][to_bin_record.strand].size() > 0)
-		{
-                	itresnew = results[currRef][to_bin_record.strand].equal_range(key);
-			for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew){
-	                        (*itnew).second.increment();
-				(*itnew).second.addtags(to_bin_record.tagNames, to_bin_record.tagValues);
-			}
-				
-		} else {
-			if(stranderror == false){
-				cout << "Error: Input data has no strand information but the reference does. The input data will be added to features in your annotation from both strands" << endl;
-				stranderror = true;
-			}
-			for(auto& i : results[currRef])
-			{
-				itresnew = i.second.equal_range(key);
-				for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew)
+			string currRef = toCString(to_bin_record.ref);
+		        if(options.lazyRef == true)
+		        {
+				for (string::size_type i = 0; i < currRef.length(); ++i)
 				{
-					(*itnew).second.increment();
-					(*itnew).second.addtags(to_bin_record.tagNames, to_bin_record.tagValues);
+					boost::to_upper(currRef);
+				}
+		        }
+
+			//do we have this reference in our map?
+			if(results.find(currRef) == results.end())
+			{
+				if(differror == false){
+					cerr << "Error: Your input file contains a reference [ " << currRef << " ] that does not exist in the annotation" << endl;
+					cerr << "Error: References that exist in your annotation are :" << endl;
+					cerr << "Error: ";
+					for(auto& a: results)
+						cerr << a.first << " ";
+					cerr << endl;
+					cerr << "Error: If this is simply that the annotation and input ref columns differ in the use of capital letters then you can rerun with the -l flag." << endl;
+					cerr << "Error: The -l flag will capitalise both the input and the annotation internally." << endl;
+					cerr << "Error: This will continue to run, but will not count these inputs." << endl;
+					differror = true;
 				}
 			}
+
+			//check if stranded
+			std::pair<split_interval_map<int, Feature>::iterator, split_interval_map<int, Feature>::iterator> itresnew;
+
+			if(results[currRef][to_bin_record.strand].size() > 0)
+			{
+		        	itresnew = results[currRef][to_bin_record.strand].equal_range(key);
+				for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew){
+			                (*itnew).second.increment();
+					(*itnew).second.addtags(to_bin_record.tagNames, to_bin_record.tagValues);
+				}
+				
+			} else {
+				if(stranderror == false){
+					cout << "Error: Input data has no strand information but the reference does. The input data will be added to features in your annotation from both strands" << endl;
+					stranderror = true;
+				}
+				for(auto& i : results[currRef])
+				{
+					itresnew = i.second.equal_range(key);
+					for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew)
+					{
+						(*itnew).second.increment();
+						(*itnew).second.addtags(to_bin_record.tagNames, to_bin_record.tagValues);
+					}
+				}
+			}
+			count++;
+
+		} catch (Exception const & e) {
+			std::cout << "ERROR: " << e.what() << " and died on line " << count << std::endl;
 		}
 	}
 
@@ -283,7 +292,8 @@ int main(int argc, char const ** argv)
 			tagmap = mmm.tagmap();
 		}
 		cout << featurerecord.ref << "\t" << featurerecord.source << "\t" << featurerecord.type << "\t" << featurerecord.beginPos << "\t" << featurerecord.endPos << "\t" << score << "\t" << featurerecord.strand << "\t" << featurerecord.phase << "\t";
-		//now loop the thingy
+	
+		//now loop the tags at the end
 		for(auto& m: tagmap)
 		{
 			cout << m.first << "=" << m.second <<";";
