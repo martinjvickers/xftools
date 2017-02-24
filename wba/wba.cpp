@@ -8,6 +8,9 @@
 #include <boost/icl/interval_set.hpp>
 #include <boost/algorithm/string.hpp>
 #include <set>
+
+#include <chrono>
+
 using namespace boost::icl;
 
 struct ModifyStringOptions
@@ -30,7 +33,15 @@ public:
 	CharString ref()const{return _ref;}
 	char strand()const{return _strand;}
 
-	void increment(){_score++;}
+	void increment()
+	{
+		_score++;
+	}
+
+	void addtags(StringSet<CharString> tagNames, StringSet<CharString> tagValues)
+	{
+
+	}
 
 	//next to implement
 		//give the tags(e.g. c,t,n)
@@ -47,6 +58,8 @@ private:
 	char _strand;
 	CharString _ref;
 	int _score;
+	StringSet<CharString> _tagNames;
+	StringSet<CharString> _tagValues;
 };
 
 bool operator == (const Feature& left, const Feature& right)
@@ -153,14 +166,11 @@ int main(int argc, char const ** argv)
 
 		discrete_interval<int> key = discrete_interval<int> (to_bin_record.beginPos, to_bin_record.endPos);
 
-		string currRef;
+		string currRef = toCString(to_bin_record.ref);
                 if(options.lazyRef == true)
                 {
-			string tmp = toCString(to_bin_record.ref);
-                        boost::to_upper(tmp);
-                        currRef = boost::to_upper_copy(tmp);
-                } else {
-                        currRef = toCString(to_bin_record.ref);
+			for (string::size_type i = 0; i < currRef.length(); ++i)
+				toupper(currRef[i]);
                 }
 
 		//do we have this reference in our map?
@@ -191,6 +201,7 @@ int main(int argc, char const ** argv)
 		} else {
 			if(stranderror == false){
 				cout << "Error: Input data has no strand information but the reference does. The input data will be added to features in your annotation from both strands" << endl;
+				stranderror = true;
 			}
 			for(auto& i : results[currRef])
 			{
