@@ -71,9 +71,13 @@ int mapping(ModifyStringOptions options)
 	BamIOContext<StringSet<CharString> > bamIOContext(referenceNameStore, referenceNameStoreCache);
 
 	//string const bowtie_cmd1 = string("bowtie2 -p ") + to_string(options.cpu_cores) + (" -k 2 -x ref.temp.C2T.fa -U ref.temp.C2T.fastq.gz");
-	string const bowtie_cmd1 = string("bowtie2 -p ") + to_string(options.cpu_cores) + (" -k 2 -x ref.temp.C2T.fa -U testing.fastq.gz");
+	string const bowtie_cmd1 = string("bowtie2 -p ") + to_string(options.cpu_cores) + (" -k 2 -x ref.temp.C2T.fa -U ") + toCString(options.inputFileName);
 
-	BamFileOut bamIO(toCString("test.sam"));
+	//BamFileOut bamIO(toCString("test.sam"));
+
+	//BamFileOut bamFileOut(toCString("test.sam"), std::cout, Sam());
+	//BamFileOut bamFileOut(toCString("test.sam"), std::cout);	
+	BamFileOut bamFileOut(bamIOContext, std::cout, Sam());
 
 	FILE *in;
     	char buff[1024];
@@ -88,20 +92,61 @@ int mapping(ModifyStringOptions options)
 	string headerstring;
 	CharString headerchar;
 
+	String<BamAlignmentRecord> alignments;
+	int count = 0;
+
+	//new thought, do i need to do all of this, just keep ploughing in the buffer
+	while(fgets(buff, sizeof(buff), in)!=NULL){
+
+		CharString input = buff;
+		Iterator<CharString, Rooted>::Type iter = begin(input);
+
+    		readHeader(header, bamIOContext, iter, Sam());
+		//can we write the header?
+		String<char> text;
+		//awrite(text, header, bamIOContext, Bam());
+		writeHeader(bamFileOut, header);
+
+		BamAlignmentRecord align;
+
+    		while (!atEnd(iter))
+		{
+			resize(alignments, length(alignments) + 1);
+			//readRecord(back(alignments), bamIOContext, iter, Sam());
+			readRecord(align, bamIOContext, iter, Sam());
+			//writeRecord(out, align);
+//			write(text, align, bamIOContext, Bam());
+		}
+
+		//cout << "Num alignments "<< iter << endl;
+		count++;
+	}
+
+/*
+	for(auto& i : alignments)
+	{
+		cout << " " << i.seq << endl;
+	}
+*/
+
+/*
 	while(fgets(buff, sizeof(buff), in)!=NULL){
 		char * pch;
                 pch = strtok (buff,"\n");
                 while (pch != NULL)
                 {
+
 			//it's a header
 			if(pch[0]=='@')
                         {
-				//headerstring = headerstring + string("\n") + string(pch);
-				//CharString meh = pch;
+				headerstring = headerstring + string("\n") + string(pch);
+				headerchar = pch;
+				//CharString meh = pch; //meh contains the header
 				//headerchar = headerchar + meh;
 			} else {
 				if(headerwritten==false)
 				{
+					cout << "writing out eader" << endl;
 	//				headerstring = headerstring + string("\n");
 					CharString headinput = headerstring;
 					Iterator<CharString, Rooted>::Type iter = begin(headerchar);
@@ -119,14 +164,16 @@ int mapping(ModifyStringOptions options)
 				//cout << "hello"<<endl;
 				//writeRecord(out, record);
 
-				writeRecord(bamIO, record);
+				//writeRecord(bamIO, record);
 			}
 			pch = strtok(NULL, "\n");
+
 		}
 
 	}
-
-	close(bamIO);
+*/
+	//close(bamIO);
+	close(bamFileOut);
 
 /*
 		char * pch;
