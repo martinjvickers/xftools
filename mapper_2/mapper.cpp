@@ -70,7 +70,6 @@ int mapping(ModifyStringOptions options)
 
 	string const bowtie_cmd1 = string("bowtie2 -p ") + to_string(options.cpu_cores) + (" -k 2 -x ref.temp.C2T.fa -U ") + toCString(options.inputFileName);
 
-
 	FILE *in;
     	char buff[1024];
 
@@ -88,7 +87,7 @@ int mapping(ModifyStringOptions options)
 		CharString input = buff; //convert buffer to CharString
 		Iterator<CharString, Rooted>::Type iter = begin(input); //create iterator for the current buffer
 
-    		readHeader(header, bamIOContext, iter, Sam()); //read header from buffer (i assume this will just work if it's a header and if it's not it won't work?
+	    	readHeader(header, bamIOContext, iter, Sam()); //read header from buffer (i assume this will just work if it's a header and if it's not it won't work?
 
     		while (!atEnd(iter)) //go over stuff in the iterator
 		{
@@ -97,16 +96,27 @@ int mapping(ModifyStringOptions options)
 		}
 	}
 
-	BamFileOut bamFileOut(toCString("meh.bam"));
-	writeHeader(bamFileOut,header);
+	//BamFileOut bamFileOut(bamIOContext, toCString("meh.bam"));
+	//BamFileOut bamFileOut(bamIOContext);
+	//BamFileOut bamFileOut(bamIOContext, std::cout, Bam());
+	//writeHeader(bamFileOut, header);
+
+	String<char> text;
+	write(text, header, bamIOContext, Sam());
 
 	for(auto& i : alignments)
 	{
-		writeRecord(bamFileOut, i);
+	//	writeRecord(bamFileOut, i);
+		write(text, i, bamIOContext, Sam());
 	}
-	
+	cout << text << endl;
+/*
+	for(auto& i : text)
+	{
+		cout << i << endl;
+	}*/
 	pclose(in);
-	close(bamFileOut);
+	//close(bamFileOut);
 
 	return 0;
 }
