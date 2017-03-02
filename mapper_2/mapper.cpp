@@ -63,21 +63,13 @@ int mapping(ModifyStringOptions options)
 	typedef typename BamHeaderRecord::TTag	TTag;
 	BamHeader header;
 	
-	BamFileOut out(std::cout, Sam());
-
 	//contig name store?
 	StringSet<CharString> referenceNameStore;
 	NameStoreCache<StringSet<CharString> > referenceNameStoreCache(referenceNameStore);
 	BamIOContext<StringSet<CharString> > bamIOContext(referenceNameStore, referenceNameStoreCache);
 
-	//string const bowtie_cmd1 = string("bowtie2 -p ") + to_string(options.cpu_cores) + (" -k 2 -x ref.temp.C2T.fa -U ref.temp.C2T.fastq.gz");
 	string const bowtie_cmd1 = string("bowtie2 -p ") + to_string(options.cpu_cores) + (" -k 2 -x ref.temp.C2T.fa -U ") + toCString(options.inputFileName);
 
-	//BamFileOut bamIO(toCString("test.sam"));
-
-	//BamFileOut bamFileOut(toCString("test.sam"), std::cout, Sam());
-	//BamFileOut bamFileOut(toCString("test.sam"), std::cout);	
-	BamFileOut bamFileOut(bamIOContext, std::cout, Sam());
 
 	FILE *in;
     	char buff[1024];
@@ -88,258 +80,33 @@ int mapping(ModifyStringOptions options)
 		cout << "Running: " << bowtie_cmd1 << endl;
 	}
 
-	bool headerwritten = false;
-	string headerstring;
-	CharString headerchar;
-
-	String<BamAlignmentRecord> alignments;
-	int count = 0;
+	String<BamAlignmentRecord> alignments; // store our alignments
 
 	//new thought, do i need to do all of this, just keep ploughing in the buffer
 	while(fgets(buff, sizeof(buff), in)!=NULL){
 
-		CharString input = buff;
-		Iterator<CharString, Rooted>::Type iter = begin(input);
+		CharString input = buff; //convert buffer to CharString
+		Iterator<CharString, Rooted>::Type iter = begin(input); //create iterator for the current buffer
 
-    		readHeader(header, bamIOContext, iter, Sam());
-		//can we write the header?
-		String<char> text;
-		//awrite(text, header, bamIOContext, Bam());
-		writeHeader(bamFileOut, header);
+    		readHeader(header, bamIOContext, iter, Sam()); //read header from buffer (i assume this will just work if it's a header and if it's not it won't work?
 
-		BamAlignmentRecord align;
-
-    		while (!atEnd(iter))
+    		while (!atEnd(iter)) //go over stuff in the iterator
 		{
 			resize(alignments, length(alignments) + 1);
-			//readRecord(back(alignments), bamIOContext, iter, Sam());
-			readRecord(align, bamIOContext, iter, Sam());
-			//writeRecord(out, align);
-//			write(text, align, bamIOContext, Bam());
+			readRecord(back(alignments), bamIOContext, iter, Sam());
 		}
-
-		//cout << "Num alignments "<< iter << endl;
-		count++;
 	}
 
-/*
+	BamFileOut bamFileOut(toCString("meh.bam"));
+	writeHeader(bamFileOut,header);
+
 	for(auto& i : alignments)
 	{
-		cout << " " << i.seq << endl;
+		writeRecord(bamFileOut, i);
 	}
-*/
-
-/*
-	while(fgets(buff, sizeof(buff), in)!=NULL){
-		char * pch;
-                pch = strtok (buff,"\n");
-                while (pch != NULL)
-                {
-
-			//it's a header
-			if(pch[0]=='@')
-                        {
-				headerstring = headerstring + string("\n") + string(pch);
-				headerchar = pch;
-				//CharString meh = pch; //meh contains the header
-				//headerchar = headerchar + meh;
-			} else {
-				if(headerwritten==false)
-				{
-					cout << "writing out eader" << endl;
-	//				headerstring = headerstring + string("\n");
-					CharString headinput = headerstring;
-					Iterator<CharString, Rooted>::Type iter = begin(headerchar);
-					readHeader(header, bamIOContext, iter, Sam());
-					cout << headerchar << endl;
-					writeHeader(out, header);
-					writeHeader(bamIO, header);
-					headerwritten = true;
-				}
-
-				CharString alignrecord = pch;
-				Iterator<CharString, Rooted>::Type iter = begin(alignrecord);
-				BamAlignmentRecord record;
-				readRecord(record, bamIOContext, iter, Sam());
-				//cout << "hello"<<endl;
-				//writeRecord(out, record);
-
-				//writeRecord(bamIO, record);
-			}
-			pch = strtok(NULL, "\n");
-
-		}
-
-	}
-*/
-	//close(bamIO);
-	close(bamFileOut);
-
-/*
-		char * pch;
-		pch = strtok (buff,"\n");
-		while (pch != NULL)
-  		{
-			char test = pch[0];
-			if(test=='@')
-			{
-				//if it's @HD, extract VN SO
-				string headerstring(pch);
-
-				if(headerstring.substr(0,3)=="@HD")
-				{
-					BamHeaderRecord firstRecord;
-					firstRecord.type = BAM_HEADER_FIRST;
-					//for each tab
-					vector<string> items;
-					stringstream instream(headerstring);
-					string entry;
-					while (getline(instream, entry, '\t'))
-					{
-						stringstream entrystream(entry);
-						string part;
-						string pair[2];
-						int count = 0;
-						while (getline(entrystream, part, ':'))
-                                        	{
-							pair[count] = part;
-							count++;
-						}
-						if(pair[0]=="VN"){
-							//cout << "Appended: " << pair[0] << " " << pair[1] << endl;
-							appendValue(firstRecord.tags, TTag(pair[0],pair[1]));
-						} else if(pair[0]=="SO") {
-							//cout << "Appended: " << pair[0] << " " << pair[1] << endl;
-							appendValue(firstRecord.tags, TTag(pair[0],pair[1]));
-						}
-					}
-					appendValue(header, firstRecord);
-				} 
-				else if(headerstring.substr(0,3)=="@SQ")
-				{
-					BamHeaderRecord seqRecord;
-					seqRecord.type = BAM_HEADER_REFERENCE;
-
-					vector<string> items;
-                                        stringstream instream(headerstring);
-                                        string entry;
-                                        while (getline(instream, entry, '\t'))
-                                        {
-                                                stringstream entrystream(entry);
-                                                string part;
-                                                string pair[2];
-                                                int count = 0;
-                                                while (getline(entrystream, part, ':'))
-                                                {
-                                                        pair[count] = part;
-                                                        count++;
-                                                }
-                                                if(pair[0]=="SN"){
-							//cout << "Appended: " << pair[0] << " " << pair[1] << endl;
-                                                        appendValue(seqRecord.tags, TTag(pair[0],pair[1]));
-							appendValue(contigNameStore, pair[1]);
-                                                } else if(pair[0]=="LN") {
-							//cout << "Appended: " << pair[0] << " " << pair[1] << endl;
-							appendValue(contigLengths(bamIOContext), stoi(pair[1]));
-                                                	appendValue(seqRecord.tags, TTag(pair[0],pair[1]));
-                                                }
-
-					}
-					appendValue(header, seqRecord);
-				}
-
-			} else {
-
-				printf ("%s\n",pch);
-
-				if(headerwritten == false){
-					writeHeader(bamIO, header);
-					headerwritten = true;
-				}
-
-				//now do again but with tabs
-				char * tch;
-				tch = strtok (pch,"\t");
-				int column_count = 0;
-				BamAlignmentRecord record;
-
-				while (tch != NULL)
-                		{
-					//printf ("%s\n",tch);
-
-					if(column_count==0)
-						record.qName = tch;
-					if(column_count==1)
-						record.flag = atoi(tch);
-					if(column_count==2){
-						if(tch[0]=='*')
-						{
-							record.rID = BamAlignmentRecord::INVALID_REFID;
-						} else {
-							int meh = 0;
-							getIdByName(meh,contigNameStore, tch);
-							record.rID = meh;
-						}
-					}
-					if(column_count==3){
-						cout << "Begin Pos " << tch<< endl;
-						record.beginPos = atoi(tch);
-					} if(column_count==4){
-						cout << "Mapping Quality " << tch<< endl;
-						record.mapQ = atoi(tch);
-					} if(column_count==5){
-						cout << "CIGAR: " << tch << endl;
-						record.bin = atoi(tch);
-					} if(column_count==6){
-						if(tch[0]=='*')
-						{
-							record.rNextId = BamAlignmentRecord::INVALID_REFID;
-						} else {
-							record.rNextId = atoi(tch);
-						}
-						cout << "Next ID " << tch << endl;
-					} if(column_count==7){
-						if(tch[0]=='*')
-                                                {
-							record.pNext = BamAlignmentRecord::INVALID_POS;
-						} else {
-							record.pNext = atoi(tch);
-						}
-						cout << "Pos Next " << tch<< endl;
-					} if(column_count==8){
-						if(tch[0]=='0')
-						{
-							record.tLen = BamAlignmentRecord::INVALID_LEN;
-						} else {
-							record.tLen = atoi(tch);
-						}
-						
-						cout << "Length " << tch<< endl;
-					} if(column_count==9) {
-						cout << "seq " << tch<< endl;
-						record.seq = tch;
-					} if(column_count==10) {
-						cout << "qual " << tch<< endl;
-	        		        	record.qual = tch;
-					}
-					//if(column_count>11)
-						//do the next thing
-
-					tch = strtok (NULL, "\t");
-					column_count++;
-				}
-				
-				cout << record.qName << " " << record.rID << " " << record.rNextId << " " << record.pNext << " " << record.tLen << endl;
-				writeRecord(bamIO, record);
-			}
-
-			pch = strtok (NULL, "\n");
-		}
-	}
+	
 	pclose(in);
-	close(bamIO);
-
-*/
+	close(bamFileOut);
 
 	return 0;
 }
