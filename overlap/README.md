@@ -1,6 +1,6 @@
 # methylation_tools
 
-## Window By Annotation
+## Overlap Finder
 
 ### Compiling
 
