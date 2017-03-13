@@ -150,8 +150,6 @@ int findOverlaps(ModifyStringOptions options, completemap results)
 				//now go through each of the intervals that match and then do somethin g
                                 for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew)
 				{
-                                //        (*itnew).second.increment();
-                                //        (*itnew).second.addtags(to_bin_record.tagNames, to_bin_record.tagValues);
 					cout << to_bin_record.beginPos << " " << to_bin_record.endPos << " matches " << (*itnew).second.startPos() << " " << (*itnew).second.endPos() << endl;
                                 }
                                 
@@ -160,18 +158,16 @@ int findOverlaps(ModifyStringOptions options, completemap results)
                                         cout << "Error: Input data has no strand information but the reference does. The input data will be added to features in your annotation from both strands" << endl;
                                         stranderror = true;
                                 }
+
                                 for(auto& i : results[currRef])
                                 {
                                         itresnew = i.second.equal_range(key);
                                         for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew)
                                         {
-                                                //(*itnew).second.increment();
-                                                //(*itnew).second.addtags(to_bin_record.tagNames, to_bin_record.tagValues);
-						cout << to_bin_record.beginPos << " " << to_bin_record.endPos << " matches " << (*itnew).second.startPos() << " " << (*itnew).second.endPos() << endl;
+						cout << to_bin_record.beginPos << " " << to_bin_record.endPos << " matches " << (*itnew).second.startPos() << " " << (*itnew).second.endPos() << " " << (*itnew).second.strand() << " " << (*itnew).second.ref() << endl;
                                         }
                                 }
                         }
-
 
 			count++;
 
@@ -180,7 +176,6 @@ int findOverlaps(ModifyStringOptions options, completemap results)
 		{
                         std::cerr << "Warning: " << e.what() << " and died on line " << count << std::endl;
                 }
-
 
 	}
 	return 0;
