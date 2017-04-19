@@ -1,0 +1,22 @@
+sudo: false
+
+language: cpp
+
+matrix:
+  include :
+    - os: linux
+      compiler: gcc-4.9
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test', 'george-edison55-precise-backports']
+          packages: ['g++-4.9', 'cmake', 'cmake-data', 'zlib1g-dev', 'libbz2-dev', 'libboost-dev']
+      install: export CXX="g++-4.9" CC="gcc-4.9"
+
+before_script:
+ - git clone https://github.com/seqan/seqan.git seqan
+ - git clone https://github.com/martinjvickers/methylation_tools.git
+
+script:
+ - cd methylation_tools/unique_read_extractor
+ - cmake ../unique_read_extractor -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+ - make -j2
