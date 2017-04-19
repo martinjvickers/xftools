@@ -20,3 +20,4 @@ script:
  - cd methylation_tools/unique_read_extractor
  - cmake ../unique_read_extractor -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
  - make -j2
+
