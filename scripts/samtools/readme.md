@@ -13,5 +13,5 @@ samtools sort forward_strand.bam > forward_strand_sorted.bam
 samtools index forward_strand_sorted.bam
 ```
 
-![alt text](igv_strands.png "Strands viewed in different tracks within IGV")
+![alt text](images/igv_strands.png "Strands viewed in different tracks within IGV")
 
