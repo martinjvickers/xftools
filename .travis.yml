@@ -14,7 +14,7 @@ matrix:
 
 before_script:
  - git clone https://github.com/seqan/seqan.git seqan
- - git clone https://github.com/martinjvickers/methylation_tools.git
+ - git clone git@github.com:martinjvickers/methylation_tools.git
 
 script:
  - cd methylation_tools/unique_read_extractor
