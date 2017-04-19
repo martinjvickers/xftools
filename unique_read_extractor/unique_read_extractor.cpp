@@ -67,6 +67,9 @@ int main(int argc, char const ** argv)
 	ModifyStringOptions options;
 	seqan::ArgumentParser::ParseResult res = parseCommandLine(options, argc, argv);
 
+	if (res != seqan::ArgumentParser::PARSE_OK)
+		return res == seqan::ArgumentParser::PARSE_ERROR;
+
 	//open the fasta/fastq file	
 	BamFileIn bamFileIn;
 	if (!open(bamFileIn, toCString(options.inputFileName)))
