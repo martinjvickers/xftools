@@ -103,6 +103,7 @@ int main(int argc, char const ** argv)
 	vector<CharString> haveSeen;
 
 	int count = 0;
+	int largest = 0;
 
 	// Copy the file record by record.
 	GffRecord record;
@@ -143,7 +144,8 @@ int main(int argc, char const ** argv)
 	                        }
 	                }
 	
-			for(auto& p: map)
+			//for(auto& p: map)
+			for(auto p: map)
 			{
 				float score;
 				//write out GFF
@@ -152,13 +154,20 @@ int main(int argc, char const ** argv)
 				{
 					if ((p.second.c > 0) || (p.second.t > 0)){
 						score = (float)p.second.c / (float)(p.second.c + p.second.t);
+						int end = p.first;
+	//					std::map<int, WindowValues>::iterator iter = p;
+//						if(&p == map.end())
+///						{
+//							end = largest;
+//						}
+						cout << currentRef << "\t" << toCString(options.program_name) << "\t" << toCString(options.label) <<"\t"<< p.first - (options.window_size-1) << "\t" << end << "\t"<< score << "\t.\t.\tc=" << p.second.c << ";t=" << p.second.t << ";n=" << p.second.n << endl;
 					} else {
 						score = 0.0000;
 					}
-					cout << currentRef << "\t.\t" << toCString(options.label) <<"\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tc=" << p.second.c << ";t=" << p.second.t << ";n=" << p.second.n << endl;
+					//cout << currentRef << "\t" << toCString(options.program_name) << "\t" << toCString(options.label) <<"\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tc=" << p.second.c << ";t=" << p.second.t << ";n=" << p.second.n << endl;
 				} else if(options.type=="count") {
 					score = p.second.score;
-					cout << currentRef << "\t.\t" << toCString(options.label) << "\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tn=" << p.second.n << endl;
+					cout << currentRef << "\t" << toCString(options.program_name) << "\t" << toCString(options.label) << "\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tn=" << p.second.n << endl;
 				}
 			}
 	
@@ -169,6 +178,7 @@ int main(int argc, char const ** argv)
 			map.clear();
 
 			currentRef = record.ref;
+			largest = 0;
 		}
 
 		//here, we add to the hash
@@ -267,13 +277,14 @@ int main(int argc, char const ** argv)
 		{
 			if ((p.second.c > 0) || (p.second.t > 0)){
 				score = (float)p.second.c / (float)(p.second.c + p.second.t);
+				cout << currentRef << "\t" << toCString(options.program_name) << "\t" << toCString(options.label) << "\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tc=" << p.second.c << ";t=" << p.second.t << ";n=" << p.second.n << endl;
 			} else {
 				score = 0;
 			}
-			cout << currentRef << "\t.\t" << toCString(options.label) << "\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tc=" << p.second.c << ";t=" << p.second.t << ";n=" << p.second.n << endl;
+			//cout << currentRef << "\t.\t" << toCString(options.label) << "\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tc=" << p.second.c << ";t=" << p.second.t << ";n=" << p.second.n << endl;
 		} else if(options.type=="count") {
 			score = p.second.score;
-			cout << currentRef << "\t.\t" << toCString(options.label) << "\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tn=" << p.second.n << endl;
+			cout << currentRef << "\t" << toCString(options.program_name) << "\t" << toCString(options.label) << "\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tn=" << p.second.n << endl;
 		}
 	}
 
