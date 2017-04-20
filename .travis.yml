@@ -13,12 +13,16 @@ matrix:
       install: export CXX="g++-4.9" CC="gcc-4.9"
 
 before_script:
- - git clone https://github.com/seqan/seqan.git seqan
+ #- git clone https://github.com/seqan/seqan.git seqan
+ - wget https://github.com/seqan/seqan/archive/seqan-v2.2.0.tar.gz
+ - tar xvf seqan-v2.2.0.tar.gz
+ - mv seqan-seqan-v2.2.0 seqan
  - git clone git@github.com:martinjvickers/methylation_tools.git
 
 script:
  - cd methylation_tools/unique_read_extractor
  - cmake ../unique_read_extractor -DCMAKE_MODULE_PATH=../../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
  - make -j2
+ - ./unique_read_extractor --help
  - ./unique_read_extractor -i example_data/subsample.sam -o example_data/new_result.sam
  - diff example_data/result.sam example_data/new_result.sam
