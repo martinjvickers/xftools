@@ -5,6 +5,7 @@ struct ModifyStringOptions
         CharString inputFileName;
 	int window_size;
 	CharString label;
+	CharString program_name;
 	CharString type;
 };
 
@@ -34,7 +35,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 
 	addOption(parser, seqan::ArgParseOption("l", "label", "Column 3 GFF output label. Useful if using SignalMap", seqan::ArgParseArgument::STRING, "TEXT"));
 	setDefaultValue(parser, "label", "window");
-
+	addOption(parser, seqan::ArgParseOption("p", "program_name", "Column 2 GFF output label. Useful if using SignalMap", seqan::ArgParseArgument::STRING, "TEXT"));
+	setDefaultValue(parser, "program_name", "methyl_tools");
 	
 
 	addDescription(parser, "Create a w50 file from a w1 file.");
@@ -49,6 +51,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	getOptionValue(options.window_size, parser, "window-size");
 	getOptionValue(options.label, parser, "label");
 	getOptionValue(options.type, parser, "addition-type");
+	getOptionValue(options.program_name, parser, "program_name");
 
 	return seqan::ArgumentParser::PARSE_OK;
 
