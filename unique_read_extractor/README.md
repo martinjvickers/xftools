@@ -2,6 +2,8 @@
 
 ## unique_read_extractor
 
+This program extracts only unique reads from a tophat accepted hits file.
+
 ### Compiling
 
 Getting this to compile on work machine;
