@@ -28,4 +28,4 @@ script:
  - cd ../w50_creator
  - cmake ../w50_creator -DCMAKE_MODULE_PATH=../../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
  - make -j2
- - ./w50_creator --help
+ - ./w50_creator -i example_data/GSM952438_TFH39.all.cg-col.gff.gz -s 50 -p dzlab -l window > meh_ignore.gff
