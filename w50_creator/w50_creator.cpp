@@ -158,7 +158,6 @@ int main(int argc, char const ** argv)
 					} else {
 						score = 0.0000;
 					}
-					//cout << currentRef << "\t" << toCString(options.program_name) << "\t" << toCString(options.label) <<"\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tc=" << p.second.c << ";t=" << p.second.t << ";n=" << p.second.n << endl;
 				} else if(options.type=="count") {
 					score = p.second.score;
 					cout << currentRef << "\t" << toCString(options.program_name) << "\t" << toCString(options.label) << "\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tn=" << p.second.n << endl;
@@ -283,12 +282,10 @@ int main(int argc, char const ** argv)
 				}
 
 				score = (float)p.second.c / (float)(p.second.c + p.second.t);
-	//			cout << currentRef << "\t" << toCString(options.program_name) << "\t" << toCString(options.label) << "\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tc=" << p.second.c << ";t=" << p.second.t << ";n=" << p.second.n << endl;
 				cout << currentRef << "\t" << toCString(options.program_name) << "\t" << toCString(options.label) <<"\t"<< p.first - (options.window_size-1) << "\t" << end << "\t"<< score << "\t.\t.\tc=" << p.second.c << ";t=" << p.second.t << ";n=" << p.second.n << endl;
 			} else {
 				score = 0;
 			}
-			//cout << currentRef << "\t.\t" << toCString(options.label) << "\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tc=" << p.second.c << ";t=" << p.second.t << ";n=" << p.second.n << endl;
 		} else if(options.type=="count") {
 			score = p.second.score;
 			cout << currentRef << "\t" << toCString(options.program_name) << "\t" << toCString(options.label) << "\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tn=" << p.second.n << endl;
