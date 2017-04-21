@@ -69,12 +69,6 @@ int roundUp(int numToRound, int multiple)
 	return numToRound + multiple - remainder;
 }
 
-/*
-Aim: Safestyle, BOGOF: using hashes to window a GFF
-
-Current progress: It compiles!
-
-*/
 int main(int argc, char const ** argv)
 {
 
@@ -145,9 +139,10 @@ int main(int argc, char const ** argv)
 	                }
 	
 			//for(auto& p: map)
-			for(auto p: map)
+			for(auto iter = map.begin(); iter != map.end(); ++iter)
 			{
 				float score;
+				auto p = *iter;
 				//write out GFF
 
 				if(options.type=="methyl")
@@ -155,11 +150,10 @@ int main(int argc, char const ** argv)
 					if ((p.second.c > 0) || (p.second.t > 0)){
 						score = (float)p.second.c / (float)(p.second.c + p.second.t);
 						int end = p.first;
-	//					std::map<int, WindowValues>::iterator iter = p;
-//						if(&p == map.end())
-///						{
-//							end = largest;
-//						}
+						if(iter == --map.end())
+						{
+							end = largest;
+						}
 						cout << currentRef << "\t" << toCString(options.program_name) << "\t" << toCString(options.label) <<"\t"<< p.first - (options.window_size-1) << "\t" << end << "\t"<< score << "\t.\t.\tc=" << p.second.c << ";t=" << p.second.t << ";n=" << p.second.n << endl;
 					} else {
 						score = 0.0000;
@@ -251,11 +245,14 @@ int main(int argc, char const ** argv)
 			//update currentRef
 			currentRef = record.ref;
 
+			largest = record.beginPos+1;
+
 		}
 	}
 
 	//read out very last chromosome
-	for(auto& p: map)
+	//for(auto& p: map)
+	for(auto iter = map.begin(); iter != map.end(); ++iter)
 	{
 
 		//search to see if we've already seen this chromosome
@@ -272,12 +269,22 @@ int main(int argc, char const ** argv)
 
 
 		float score;
+		auto p = *iter;
+
 		//write out GFF 
 		if(options.type=="methyl")
 		{
 			if ((p.second.c > 0) || (p.second.t > 0)){
 				score = (float)p.second.c / (float)(p.second.c + p.second.t);
-				cout << currentRef << "\t" << toCString(options.program_name) << "\t" << toCString(options.label) << "\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tc=" << p.second.c << ";t=" << p.second.t << ";n=" << p.second.n << endl;
+				int end = p.first;
+                                if(iter == --map.end())
+                                {
+                                	end = largest;
+				}
+
+				score = (float)p.second.c / (float)(p.second.c + p.second.t);
+	//			cout << currentRef << "\t" << toCString(options.program_name) << "\t" << toCString(options.label) << "\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tc=" << p.second.c << ";t=" << p.second.t << ";n=" << p.second.n << endl;
+				cout << currentRef << "\t" << toCString(options.program_name) << "\t" << toCString(options.label) <<"\t"<< p.first - (options.window_size-1) << "\t" << end << "\t"<< score << "\t.\t.\tc=" << p.second.c << ";t=" << p.second.t << ";n=" << p.second.n << endl;
 			} else {
 				score = 0;
 			}
