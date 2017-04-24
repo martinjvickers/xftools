@@ -187,7 +187,8 @@ int findOverlaps(ModifyStringOptions options, completemap results)
 				//now go through each of the intervals that match and then do something
                                 for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew)
 				{
-					cout << to_bin_record.beginPos << " " << to_bin_record.endPos << " matches " << (*itnew).second.startPos() << " " << (*itnew).second.endPos() << endl;
+					//cout << to_bin_record.beginPos << " " << to_bin_record.endPos << " matches " << (*itnew).second.startPos() << " " << (*itnew).second.endPos() << endl;
+					cout << "Hello " << to_bin_record.beginPos << " " << to_bin_record.endPos << " matches " << (*itnew).second.startPos() << " " << (*itnew).second.endPos() << " " << (*itnew).second.strand() << " " << (*itnew).second.ref() << endl;
                                 }
                                 
                         } else {
@@ -201,7 +202,7 @@ int findOverlaps(ModifyStringOptions options, completemap results)
                                         itresnew = i.second.equal_range(key);
                                         for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew)
                                         {
-						cout << to_bin_record.beginPos << " " << to_bin_record.endPos << " matches " << (*itnew).second.startPos() << " " << (*itnew).second.endPos() << " " << (*itnew).second.strand() << " " << (*itnew).second.ref() << endl;
+						cout << "Hello " <<  to_bin_record.beginPos << " " << to_bin_record.endPos << " matches " << (*itnew).second.startPos() << " " << (*itnew).second.endPos() << " " << (*itnew).second.strand() << " " << (*itnew).second.ref() << endl;
                                         }
                                 }
                         }
