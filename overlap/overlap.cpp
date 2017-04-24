@@ -1,4 +1,40 @@
-#include "common.h"
+#include <iostream>
+#include <seqan/sequence.h>  // CharString, ...
+#include <seqan/stream.h>    // to stream a CharString into cout
+#include <seqan/file.h>
+#include <seqan/arg_parse.h>
+#include <seqan/seq_io.h>
+#include <math.h>       /* sqrt */
+#include <seqan/store.h> /* FragmentStore */
+#include <queue>
+#include <vector>
+#include <ctime>
+#include "boost/multi_array.hpp"
+#include <cassert>
+#include <boost/unordered_map.hpp>
+#include <string>
+#include <thread>
+#include <mutex>
+#include <stdlib.h>
+#include <stdio.h>
+#include <map>
+#include <iomanip>
+#include <functional>
+#include "boost/icl/interval.hpp"
+#include "boost/icl/interval_map.hpp"
+#include <boost/icl/split_interval_map.hpp>
+#include <boost/icl/interval_set.hpp>
+#include <boost/algorithm/string.hpp>
+#include "boost/lexical_cast.hpp"
+#include <set>
+
+#include <chrono>
+using namespace seqan;
+using namespace std;
+
+using namespace boost::icl;
+using boost::bad_lexical_cast;
+
 #include "feature.cpp"
 
 /*
@@ -148,7 +184,7 @@ int findOverlaps(ModifyStringOptions options, completemap results)
 				//Find the intervals in the results map that match out key range.
                                 itresnew = results[currRef][to_bin_record.strand].equal_range(key);
 
-				//now go through each of the intervals that match and then do somethin g
+				//now go through each of the intervals that match and then do something
                                 for(auto itnew = itresnew.first; itnew != itresnew.second; ++itnew)
 				{
 					cout << to_bin_record.beginPos << " " << to_bin_record.endPos << " matches " << (*itnew).second.startPos() << " " << (*itnew).second.endPos() << endl;
