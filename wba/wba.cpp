@@ -251,7 +251,9 @@ int main(int argc, char const ** argv)
 			count++;
 
 		} catch (Exception const & e) {
-			std::cout << "ERROR: " << e.what() << " and died on line " << count << std::endl;
+			std::cerr << "Warning: " << e.what() << " and died on line " << count << std::endl;
+			std::cerr << "Warning: This may simply be to do with the input GFF being made incorrectly." << std::endl;
+			std::cerr << "Warning: " << count << " lines were processed, if the input file contains that number of lines then it is fine." << std::endl;
 		}
 	}
 
@@ -281,6 +283,8 @@ int main(int argc, char const ** argv)
                 }
 
 		discrete_interval<int> key = discrete_interval<int> (featurerecord.beginPos, featurerecord.endPos);
+
+		//here is where we can take some user input to decide what to do with the 6th column. e.g. if we want to calculate methyl, average. count
 
 		int score = 0;
 		std::map<string, string> tagmap;
