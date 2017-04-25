@@ -20,15 +20,22 @@ before_script:
  - git clone git@github.com:martinjvickers/methylation_tools.git
 
 script:
- # compile run and app test unique_read_extractor
+ # compile, run and app test unique_read_extractor
  - cd methylation_tools/unique_read_extractor
  - cmake ../unique_read_extractor -DCMAKE_MODULE_PATH=../../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
  - make -j2
  - ./unique_read_extractor -i example_data/subsample.sam -o example_data/new_result.sam
  - diff example_data/result.sam example_data/new_result.sam
- # compile run and app test w50_creator
+ # compile, run and app test w50_creator
  - cd ../w50_creator
  - cmake ../w50_creator -DCMAKE_MODULE_PATH=../../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
  - make -j2
  - ./w50_creator -i example_data/GSM952438_TFH39.all.cg-col.gff.gz -s 50 -l window -p dzlab > result.w50.gff
  - diff result.w50.gff example_data/GSM952438_TFH39.all.cg-col.DZ.w50_mod.gff
+ # compile, run and app test single-c_combine
+ - cd ../single-c_combine
+ - cmake ../single-c_combine -DCMAKE_MODULE_PATH=../../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+ - make -j2
+ - ./single-c_combine -i example_data/d1d2_meiocyte_rep1.CG.tair10_sorted.gff -i example_data/d1d2_meiocyte_rep2.CG.tair10_sorted.gff -l CG -o meh.gff
+# - cat meh.gff | awk '{printf $1"\t"$2"\t"$3"\t"$4"\t"$5"\t%.2f\t"$7"\t"$8"\t"$9"\n", $6}' > meh_rounded.gff
+# - diff meh_rounded.gff example_data/combined.single-c_rounded.gff
