@@ -227,10 +227,11 @@ int main(int argc, char const ** argv)
 	CharString lastref;
 	GffRecord firstrecord;
 
-	while (!atEnd(gffFirstFileIn))
+	try
 	{
-		try
+		while (!atEnd(gffFirstFileIn))
 		{
+
 			//read record
 			readRecord(firstrecord, gffFirstFileIn);
 			pair <int, int> feature_position;
@@ -249,6 +250,7 @@ int main(int argc, char const ** argv)
 				tag.tagmap = addtags(firstrecord.tagNames, firstrecord.tagValues, tag.tagmap);
 				tag.strand = firstrecord.strand;
 				newresults[feature_position] = tag;
+//				cout << firstrecord.ref << " " << firstrecord.beginPos << " " << firstrecord.endPos << " " << tag.strand << endl;
 			} else {
 
 				//now do the same for every other file
@@ -262,16 +264,16 @@ int main(int argc, char const ** argv)
 
 				//now add the value we are sat at
 				WindowValues tag = newresults[feature_position];
+				tag.strand = firstrecord.strand;
 				tag.tagmap = addtags(firstrecord.tagNames, firstrecord.tagValues, tag.tagmap);
 				newresults[feature_position] = tag;
 			}
-		
 			count++;
 		}
-		catch(Exception const & e)
-		{
-			cerr << "ERROR: " << e.what() << endl;
-		}
+	}
+	catch(Exception const & e)
+	{
+		cerr << "ERROR: " << e.what() << endl;
 	}
 
 	for(int i = 1; i < options.inputFileNameList.size(); i++)
@@ -279,7 +281,7 @@ int main(int argc, char const ** argv)
 		add_new_data(options.inputFileNameList[i], lastref);
 	}
 	write_data(lastref, options); //write out final chromosome
-	
+
         close(gffFileOut);
 	close(gffFirstFileIn);
 
