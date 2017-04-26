@@ -14,11 +14,53 @@ Specify any number of input files using the `-i` flag.
 single-c_combine -i file1.gff -i file2.gff ..... -i fileN.gff -o output.gff
 ```
 
-To make a test file for diff
+## Testing
+
+Creating a combined file using the two input files
 
 ```
-cat combined.single-c.gff | awk '{printf $1"\t"$2"\t"$3"\t"$4"\t"$5"\t%4f\t"$7"\t"$8"\t"$9"\n", $6}'
+gff_arithmetics.pl 'methyl()' -a -s example_data/example_rep1.w1.gff example_data/example_rep2.w1.gff > old_program_result.w1_rep1_rep2.gff
 ```
+The interesting part here is that there if you run this the other way around;
+
+```
+gff_arithmetics.pl 'methyl()' -a -s example_data/example_rep2.w1.gff example_data/example_rep1.w1.gff > old_program_result.w1_rep2_rep1.gff
+```
+
+you get different results
+
+```
+wc -l old_program_result.w1_rep1_rep2.gff old_program_result.w1_rep2_rep1.gff
+  74615 old_program_result.w1_rep1_rep2.gff
+  74622 old_program_result.w1_rep2_rep1.gff
+ 149237 total
+
+```
+
+So there is a bug somewhere in the original program. When rep1 is followed by rep2 in the input we appear to be missing several lines which appear in `example_rep1.w1.gff` but not in `example_rep2.w1.gff`;
+
+```
+diff old_program_result.w1_rep1_rep2.gff old_program_result.w1_rep2_rep1.gff
+74615a74616,74622
+> CHRM	.	CG	135939	135939	0.01	+	.	c=4;t=722
+> CHRM	.	CG	135940	135940	0.00	-	.	c=1;t=563
+> CHRM	.	CG	135944	135944	0.01	+	.	c=4;t=693
+> CHRM	.	CG	135945	135945	0.00	-	.	c=1;t=587
+> CHRM	.	CG	135954	135954	0.01	+	.	c=8;t=670
+> CHRM	.	CG	135955	135955	0.00	-	.	c=0;t=590
+> CHRM	.	CG	135966	135966	0.01	+	.	c=9;t=682
+```
+
+To ensure this is correct, I first check to see if the results are the same both ways around and then I compare the results file against the working way around (`example_data/old_program_result.w1_rep2_rep1.gff`).
+
+### A note on diff
+
+The perl and C++ code differ on the way they print the score data. So in order to simply run `diff` between my output and the output from the old program I have used printf to force the score to be a float at 2 decimal places.
+
+```
+cat result.gff | awk '{printf $1"\t"$2"\t"$3"\t"$4"\t"$5"\t%.2f\t"$7"\t"$8"\t"$9"\n", $6}' > result_mod.gff
+```
+
 ## Performance
 
 ### Original 
