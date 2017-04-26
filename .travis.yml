@@ -36,6 +36,11 @@ script:
  - cd ../single-c_combine
  - cmake ../single-c_combine -DCMAKE_MODULE_PATH=../../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
  - make -j2
+ # run both ways
  - ./single-c_combine -i example_data/example_rep1.w1.gff -i example_data/example_rep2.w1.gff -l CG -o result.gff
  - cat result.gff | awk '{printf $1"\t"$2"\t"$3"\t"$4"\t"$5"\t%.2f\t"$7"\t"$8"\t"$9"\n", $6}' > result_mod.gff
-# - diff result_mod.gff example_data/old_program_result.w1.gff
+ - ./single-c_combine -i example_data/example_rep2.w1.gff -i example_data/example_rep1.w1.gff -l CG -o result2.gff
+ - cat result2.gff | awk '{printf $1"\t"$2"\t"$3"\t"$4"\t"$5"\t%.2f\t"$7"\t"$8"\t"$9"\n", $6}' > result2_mod.gff
+ # mine should be identical either way
+ - diff result_mod.gff result2_mod.gff
+ - diff result_mod.gff example_data/old_program_result.w1_rep2_rep1.gff
