@@ -1,3 +1,3 @@
-# methylation_tools
+# XFTOOLS
 
-To download clone form githhub
+Tools written by Martin Vickers for use within the Xiaoqi Feng lab at the John Innes Centre.
