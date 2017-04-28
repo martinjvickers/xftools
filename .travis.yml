@@ -17,7 +17,8 @@ before_script:
  - wget https://github.com/seqan/seqan/archive/seqan-v2.2.0.tar.gz
  - tar xvf seqan-v2.2.0.tar.gz
  - mv seqan-seqan-v2.2.0 seqan
- - git clone git@github.com:martinjvickers/methylation_tools.git
+# - git clone git@github.com:martinjvickers/methylation_tools.git
+ - git clone https://github.com/martinjvickers/xftools.git
 
 script:
  # compile, run and app test unique_read_extractor
