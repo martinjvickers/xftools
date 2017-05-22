@@ -1,4 +1,4 @@
-# methylation_tools
+#methylation_tools
 
 Getting this to compile on work machine;
 
@@ -14,8 +14,8 @@ e.g.
 
 
 ```
-wget https://github.com/martinjvickers/methylation_tools/releases/download/v0.0.2/methylation_tools_v0.0.2.tar.gz .
-tar xvf methylation_tools_v0.0.2.tar.gz
+wget https://github.com/martinjvickers/xftools/releases/download/v0.0.3/methylation_tools_v0.0.3.tar.gz .
+tar xvf methylation_tools_v0.0.3.tar.gz
 ```
 
 If you wish to try some example data;
