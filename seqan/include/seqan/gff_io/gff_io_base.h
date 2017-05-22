@@ -376,7 +376,8 @@ void readRecord(GffRecord & record, CharString & buffer, TFwdIterator & iter)
     clear(buffer);
     readUntil(buffer, iter, OrFunctor<IsTab, AssertFunctor<NotFunctor<IsNewline>, ParseError, Gff> >());
     record.beginPos = lexicalCast<uint32_t>(buffer);
-    --record.beginPos;  // Translate from 1-based to 0-based.
+    //commented out by mvickers
+    //--record.beginPos;  // Translate from 1-based to 0-based.
     skipOne(iter);
 
     // read column 5: end position
