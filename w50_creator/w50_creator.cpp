@@ -249,7 +249,7 @@ int main(int argc, char const ** argv)
 			//update currentRef
 			currentRef = record.ref;
 
-			largest = record.beginPos+1;
+			largest = record.beginPos;
 
 		}
 	}
