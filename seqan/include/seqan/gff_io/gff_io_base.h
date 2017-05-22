@@ -617,11 +617,14 @@ writeRecord(TTarget & target, GffRecord const & record, Tag<TFormat> const & tag
     write(target, record.type);
     writeValue(target, '\t');
 
-    // write column 4: begin position
-    if (record.beginPos != (unsigned)-1)
-        appendNumber(target, record.beginPos + 1);
-    else
+    // write column 4: begin position 
+    if (record.beginPos != (unsigned)-1) {
+	//appendNumber(target, record.beginPos + 1);
+	//altered by mvickers
+	appendNumber(target, record.beginPos);
+    } else {
         SEQAN_THROW(ParseError("No start position!"));
+    }
     writeValue(target, '\t');
 
     // write column 5: end position
