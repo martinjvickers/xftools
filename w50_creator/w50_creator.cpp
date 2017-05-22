@@ -287,7 +287,7 @@ int main(int argc, char const ** argv)
 				score = 0;
 			}
 		} else if(options.type=="count") {
-			score = p.second.score;
+			score = p.second.n;
 			cout << currentRef << "\t" << toCString(options.program_name) << "\t" << toCString(options.label) << "\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tn=" << p.second.n << endl;
 		}
 	}
