@@ -187,7 +187,12 @@ int main(int argc, char const ** argv)
 			READ HERE
 			https://seqan.readthedocs.io/en/master/Tutorial/InputOutput/GffAndGtfIO.html
 			*/
-			int window = roundUp(record.beginPos+1, options.window_size);
+			//int window = roundUp(record.beginPos+1, options.window_size);
+			//The above 0-based half open stuff is done by seqan when reading the record. 
+			//This causes a bunch of problems when you have a base at position 0. I've
+			//resolved this in SeqAn so now the representation should be exactly as the 
+			//GFF is written. So no need for the above record.beginPos+1
+			int window = roundUp(record.beginPos, options.window_size);
 
 			//we expect the following format of tags and values  c=4;t=0;n=1
 			//but we will not assume they are always in that order when reading 
