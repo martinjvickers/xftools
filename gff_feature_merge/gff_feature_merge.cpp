@@ -66,6 +66,7 @@ int main(int argc, char const ** argv)
 	vector<GffRecord> merged;
 	int count = 0;
 	bool meh = true;
+	int nvalue = 0;
 	//put all of our annotations into a vector and store the pairs in an interval map
 	while (!atEnd(gffIn))
         {
@@ -74,15 +75,31 @@ int main(int argc, char const ** argv)
 		{
 			merging = record;
 			meh = false;
+			
 		} else if(meh == true) {
 			merging = record;
 			meh = false;
 		} else {
+			for(int i = 0; i < length(record.tagNames); i++)
+			{
+				if(record.tagNames[i] == "n")
+					nvalue = nvalue + stoi(toCString(record.tagValues[i]));
+			}
+
+
+
 			if( (record.ref == merging.ref) && ((record.beginPos - merging.endPos) < options.size) )
 	               	{
-		//		cout << "Extending " << merging.ref << " " << merging.beginPos << " " << merging.endPos << endl;
 				merging.endPos = record.endPos;
 				meh = false;
+				//get the n= tag
+			/*
+				for(int i = 0; i < length(record.tagNames); i++)
+				{
+					if(record.tagNames[i] == "n")
+						nvalue = nvalue + stoi(toCString(record.tagValues[i]));
+				}
+			*/
 			} else {
 				//this is where we have finished the merging
 				//cout << merging << endl;
@@ -91,10 +108,13 @@ int main(int argc, char const ** argv)
 				merging.score = GffRecord::INVALID_SCORE();
 				appendValue(merging.tagNames, "windowSize");
 				appendValue(merging.tagValues, to_string(merging.endPos-merging.beginPos));
-				//merging.score = 0;
+				appendValue(merging.tagNames, "n");
+				appendValue(merging.tagValues, to_string(nvalue));
+				merging.score = (float)nvalue / (float) (merging.endPos-merging.beginPos);
 				writeRecord(gffOut, merging);
 				clear(merging);
 				merging = record;
+				nvalue = 0;
 		//		meh = true;
 			}
 		}
@@ -108,6 +128,9 @@ int main(int argc, char const ** argv)
 	merging.score = GffRecord::INVALID_SCORE();
 	appendValue(merging.tagNames, "windowSize");
 	appendValue(merging.tagValues, to_string(merging.endPos-merging.beginPos));
+	appendValue(merging.tagNames, "n");
+	appendValue(merging.tagValues, to_string(nvalue));
+	merging.score = (float)nvalue / (float) (merging.endPos-merging.beginPos);
 	writeRecord(gffOut, merging);
 
 	return 0;
