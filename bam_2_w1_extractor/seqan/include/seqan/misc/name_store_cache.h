@@ -396,6 +396,41 @@ getIdByName(TNameStore const & /*nameStore*/, TName const & name, TPos & pos, Na
 }
 
 // ----------------------------------------------------------------------------
+// By Martin
+// Function getNameById()
+// ----------------------------------------------------------------------------
+template <typename TCNameStore, typename TCName, typename TName, typename TPos>
+inline bool
+getNameById(TName & name, NameStoreCache<TCNameStore, TCName> const & context, TPos const & pos)
+{
+    typedef typename Position<TCNameStore const>::Type TId;
+    typedef NameStoreCache<TCNameStore, TCName> const TNameStoreCache;
+    typedef typename TNameStoreCache::TSet TSet;
+
+    int num = 0;
+    for( auto i : host(context) )
+    {
+        if(num == pos)
+        {
+                name = i;
+                return true;
+        }
+        num++;
+    }    
+
+    return false;
+}
+
+// deprecated.
+template<typename TNameStore, typename TName, typename TCName, typename TCNameStore, typename TPos>
+inline bool
+getNameById(TNameStore const & /*nameStore*/, TName & name, TPos const & pos, NameStoreCache<TCNameStore, TCName> const & context)
+{
+    return getNameById(name, context, pos);
+}
+// end Martin meddling
+
+// ----------------------------------------------------------------------------
 // Function nametoId()
 // ----------------------------------------------------------------------------
 
