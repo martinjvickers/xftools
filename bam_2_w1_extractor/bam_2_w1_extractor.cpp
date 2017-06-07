@@ -12,6 +12,7 @@ using namespace std;
 struct ModifyStringOptions
 {
         CharString inputFileName;
+	CharString outputFileName;
 };
 
 seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
@@ -20,12 +21,14 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         setShortDescription(parser, "XFTOOLS");
         setVersion(parser, "0.0.1");
         setDate(parser, "June 2017");
-        addUsageLine(parser, "-i input_w1.gff [\\fIOPTIONS\\fP] ");
+        addUsageLine(parser, "-i input.bam -o output.gff [\\fIOPTIONS\\fP] ");
 	addDescription(parser, "Create a w50 file from a w1 file.");
 
 	// accept an input file
 	addOption(parser, seqan::ArgParseOption("i", "input-file", "Path to the input file", seqan::ArgParseArgument::INPUT_FILE, "IN"));
         setRequired(parser, "input-file");
+	addOption(parser, seqan::ArgParseOption("o", "output-file", "Path to the output file", seqan::ArgParseArgument::OUTPUT_FILE, "OUT"));
+	setRequired(parser, "output-file");
 
         seqan::ArgumentParser::ParseResult res = seqan::parse(parser, argc, argv);
 
@@ -36,6 +39,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 
 	// parse the inputs into the options struct
         getOptionValue(options.inputFileName, parser, "input-file");
+	getOptionValue(options.outputFileName, parser, "output-file");
 
         return seqan::ArgumentParser::PARSE_OK;
 }
@@ -76,7 +80,7 @@ int main(int argc, char const ** argv)
 	//create output file
 	GffFileOut gffOutFile;
 	// out(std::cout, Gff());
-	if(!open(gffOutFile, toCString("output.gff")))
+	if(!open(gffOutFile, toCString(options.outputFileName)))
 	{
 		std::cerr << "ERROR: Could not open output.gff" " for reading.\n";
 		return 1;
