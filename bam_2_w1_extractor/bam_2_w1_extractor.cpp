@@ -55,7 +55,7 @@ void writeToFile(map<int,int> &counter, BamFileIn &inFile, int &rID, GffFileOut 
 		record.source = "xftools";
 		record.type = "label";
 		record.beginPos = i.first;
-		record.endPos = i.first;
+		record.endPos = (i.first+1);
 		record.strand = '.';
 		record.score = GffRecord::INVALID_SCORE();
 		appendValue(record.tagNames, "n");
