@@ -13,7 +13,7 @@ matrix:
           packages: ['g++', 'cmake', 'cmake-data', 'zlib1g-dev', 'libbz2-dev', 'libboost-dev']
   #    install: export CXX="g++-4.9" CC="gcc-4.9"
   ## This is the 12.04 version
-  include :
+
     - os: linux
       compiler: gcc-4.9
       addons:
