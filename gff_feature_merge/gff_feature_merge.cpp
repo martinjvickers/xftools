@@ -127,7 +127,7 @@ int main(int argc, char const ** argv)
 	clear(merging.tagValues);
 	merging.score = GffRecord::INVALID_SCORE();
 	appendValue(merging.tagNames, "windowSize");
-	appendValue(merging.tagValues, to_string(merging.endPos-merging.beginPos));
+	appendValue(merging.tagValues, to_string((merging.endPos)-merging.beginPos));
 	appendValue(merging.tagNames, "n");
 	appendValue(merging.tagValues, to_string(nvalue));
 	merging.score = (float)nvalue / (float) (merging.endPos-merging.beginPos);
