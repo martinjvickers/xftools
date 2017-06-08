@@ -35,7 +35,7 @@ before_script:
 script:
 # - git clone https://github.com/martinjvickers/xftools.git
  # compile, run and app test unique_read_extractor
- - cd xftools/unique_read_extractor
+ - cd martinjvickers/xftools/unique_read_extractor
  - cmake ../unique_read_extractor -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
  - make -j2
  - ./unique_read_extractor -i example_data/subsample.sam -o example_data/new_result.sam
