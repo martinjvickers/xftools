@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/martinjvickers/xftools.svg?branch=master)](https://travis-ci.org/martinjvickers/xftools)
+
 # XFTOOLS
 
 Tools written by Martin Vickers for use within the Xiaoqi Feng lab at the John Innes Centre.
