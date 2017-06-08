@@ -5,6 +5,7 @@ language: cpp
 matrix:
   include :
     - os: linux
+      dist: trusty
       compiler: gcc-4.9
       addons:
         apt:
@@ -54,4 +55,4 @@ script:
  - cd ../gff_feature_merge
  - cmake ../gff_feature_merge -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
  - make -j2
- - ./gff_feature_merge -h
+# - ./gff_feature_merge -h
