@@ -1,4 +1,26 @@
-#include "common.h"
+#include <iostream>
+#include <seqan/sequence.h>  // CharString, ...
+#include <seqan/stream.h>    // to stream a CharString into cout
+#include <seqan/file.h>
+#include <seqan/arg_parse.h>
+#include <seqan/seq_io.h>
+#include <math.h>       /* sqrt */
+#include <seqan/store.h> /* FragmentStore */
+#include <queue>
+#include <vector>
+#include <ctime>
+#include <cassert>
+#include <string>
+#include <thread>
+#include <mutex>
+#include <stdlib.h>
+#include <stdio.h>
+#include <map>
+#include <iomanip>
+using namespace seqan;
+using namespace std;
+
+
 #include <unordered_map>
 #include <set>
 
@@ -71,6 +93,7 @@ int main(int argc, char const ** argv)
 	while (!atEnd(gffIn))
         {
 		readRecord(record, gffIn);
+		//cout << "Doing something with " << record.beginPos << " " << record.endPos << endl;
 		if(count==0)
 		{
 			merging = record;
@@ -86,11 +109,12 @@ int main(int argc, char const ** argv)
 					nvalue = nvalue + stoi(toCString(record.tagValues[i]));
 			}
 
+			//cout << "Checking " << record.beginPos << " " << merging.endPos << " " << options.size << endl;
 
-
-			if( (record.ref == merging.ref) && ((record.beginPos - merging.endPos) < options.size) )
+			if( (record.ref == merging.ref) && ((record.beginPos - (merging.endPos+1)) < options.size) )
 	               	{
 				merging.endPos = record.endPos;
+				//cout << "Huh " << merging.endPos << endl;
 				meh = false;
 				//get the n= tag
 			/*
@@ -107,10 +131,10 @@ int main(int argc, char const ** argv)
 				clear(merging.tagValues);
 				merging.score = GffRecord::INVALID_SCORE();
 				appendValue(merging.tagNames, "windowSize");
-				appendValue(merging.tagValues, to_string(merging.endPos-merging.beginPos));
+				appendValue(merging.tagValues, to_string((merging.endPos+1)-merging.beginPos));
 				appendValue(merging.tagNames, "n");
 				appendValue(merging.tagValues, to_string(nvalue));
-				merging.score = (float)nvalue / (float) (merging.endPos-merging.beginPos);
+				merging.score = (float)nvalue / (float) ((merging.endPos+1)-merging.beginPos);
 				writeRecord(gffOut, merging);
 				clear(merging);
 				merging = record;
@@ -127,10 +151,10 @@ int main(int argc, char const ** argv)
 	clear(merging.tagValues);
 	merging.score = GffRecord::INVALID_SCORE();
 	appendValue(merging.tagNames, "windowSize");
-	appendValue(merging.tagValues, to_string((merging.endPos)-merging.beginPos));
+	appendValue(merging.tagValues, to_string((merging.endPos+1)-merging.beginPos));
 	appendValue(merging.tagNames, "n");
 	appendValue(merging.tagValues, to_string(nvalue));
-	merging.score = (float)nvalue / (float) (merging.endPos-merging.beginPos);
+	merging.score = (float)nvalue / (float) ((merging.endPos+1)-merging.beginPos);
 	writeRecord(gffOut, merging);
 
 	return 0;
