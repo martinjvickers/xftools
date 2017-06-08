@@ -50,3 +50,6 @@ script:
  - cmake ../bam_2_w1_extractor -DCMAKE_MODULE_PATH=./seqan/util/cmake -DSEQAN_INCLUDE_PATH=./seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
  - make -j2
  - ./bam_2_w1_extractor -i example_data/test.sam
+ ## compile gff_feature_merge
+ - cd ../gff_feature_merge
+ - cmake ../gff_feature_merge -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
