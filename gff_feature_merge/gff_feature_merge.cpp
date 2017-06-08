@@ -85,45 +85,37 @@ int main(int argc, char const ** argv)
 
 	GffRecord last_record;
 	GffRecord merging;
-	vector<GffRecord> merged;
 	int count = 0;
-	bool meh = true;
 	int nvalue = 0;
-	//put all of our annotations into a vector and store the pairs in an interval map
-	while (!atEnd(gffIn))
+
+	while (!atEnd(gffIn)) // loop through GFF file
         {
-		readRecord(record, gffIn);
-		//cout << "Doing something with " << record.beginPos << " " << record.endPos << endl;
-		if(count==0)
+		readRecord(record, gffIn); // read record
+
+		if(count==0) // if it's the first record
 		{
-			merging = record;
-			meh = false;
-			
-		} else if(meh == true) {
-			merging = record;
-			meh = false;
-		} else {
+			merging = record; // mark as our merging read.
 			for(int i = 0; i < length(record.tagNames); i++)
-			{
-				if(record.tagNames[i] == "n")
-					nvalue = nvalue + stoi(toCString(record.tagValues[i]));
-			}
+                                {
+                                        if(record.tagNames[i] == "n")
+                                        {
+                                                nvalue = nvalue + stoi(toCString(record.tagValues[i]));
+                                        }
+                        }
 
-			//cout << "Checking " << record.beginPos << " " << merging.endPos << " " << options.size << endl;
-
+		} else {
 			if( (record.ref == merging.ref) && ((record.beginPos - (merging.endPos+1)) < options.size) )
 	               	{
 				merging.endPos = record.endPos;
-				//cout << "Huh " << merging.endPos << endl;
-				meh = false;
-				//get the n= tag
-			/*
+
+				//get the n= tag and add the current one to it.
 				for(int i = 0; i < length(record.tagNames); i++)
 				{
 					if(record.tagNames[i] == "n")
+					{
 						nvalue = nvalue + stoi(toCString(record.tagValues[i]));
+					}
 				}
-			*/
 			} else {
 				//this is where we have finished the merging
 				//cout << merging << endl;
@@ -139,7 +131,15 @@ int main(int argc, char const ** argv)
 				clear(merging);
 				merging = record;
 				nvalue = 0;
-		//		meh = true;
+				
+				for(int i = 0; i < length(record.tagNames); i++)
+				{
+					//now get the current value
+					if(record.tagNames[i] == "n")
+                	                {
+                                		nvalue = nvalue + stoi(toCString(record.tagValues[i]));
+                                	}
+				}
 			}
 		}
 		//move along here, nothing to see
