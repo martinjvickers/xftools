@@ -60,7 +60,7 @@ script:
  - diff result_mod.gff example_data/old_program_result.w1_rep2_rep1.gff
  ## compile and run bam_2_w1_extractor
  - cd ../bam_2_w1_extractor
- - cmake ../bam_2_w1_extractor -DCMAKE_MODULE_PATH=./seqan/util/cmake -DSEQAN_INCLUDE_PATH=./seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+ - cmake ../bam_2_w1_extractor -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
  - make -j2
  - ./bam_2_w1_extractor -i example_data/test.sam -o test.gff.gz
  ## compile gff_feature_merge
