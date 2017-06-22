@@ -48,10 +48,11 @@ void writeToFile(map<int,int> &counter, BamFileIn &inFile, int &rID, GffFileOut 
 {
 	for(auto i : counter)
 	{
-		CharString qName;
-		getNameById(qName, contigNamesCache(context(inFile)), rID);
+		typedef FormattedFileContext<BamFileIn, void>::Type TBamContext;
+		TBamContext const & bamContext = context(inFile);
+
 		GffRecord record;
-		record.ref = qName;
+		record.ref = contigNames(bamContext)[rID];
 		record.source = "xftools";
 		record.type = "label";
 		record.beginPos = i.first;
