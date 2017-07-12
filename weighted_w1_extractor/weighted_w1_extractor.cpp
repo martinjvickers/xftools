@@ -44,24 +44,32 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         return seqan::ArgumentParser::PARSE_OK;
 }
 
-void writeToFile(map<int,int> &counter, BamFileIn &inFile, int &rID, GffFileOut &gffOutFile)
+typedef std::map<int, double> chrmap;
+typedef std::map<int, chrmap> completemap;
+
+void writeToFile(completemap &counter, BamFileIn &inFile, GffFileOut &gffOutFile)
 {
+	//completemap[rID][pos][count]
+
 	for(auto i : counter)
 	{
-		typedef FormattedFileContext<BamFileIn, void>::Type TBamContext;
-		TBamContext const & bamContext = context(inFile);
+		for(auto j : i.second)
+		{
+			typedef FormattedFileContext<BamFileIn, void>::Type TBamContext;
+			TBamContext const & bamContext = context(inFile);
 
-		GffRecord record;
-		record.ref = contigNames(bamContext)[rID];
-		record.source = "xftools";
-		record.type = "label";
-		record.beginPos = i.first;
-		record.endPos = (i.first+1);
-		record.strand = '.';
-		record.score = GffRecord::INVALID_SCORE();
-		appendValue(record.tagNames, "n");
-		appendValue(record.tagValues, to_string(i.second));
-		writeRecord(gffOutFile, record);
+			GffRecord record;
+			record.ref = contigNames(bamContext)[i.first];
+			record.source = "xftools";
+			record.type = "label";
+			record.beginPos = j.first;
+		//	record.endPos = (j.first+1);
+			record.endPos = j.first;
+			record.strand = '.';
+			record.score = (double)j.second;
+			writeRecord(gffOutFile, record);
+
+		}
 	}
 }
 
@@ -69,9 +77,7 @@ int main(int argc, char const ** argv)
 {
 	ModifyStringOptions options;
         seqan::ArgumentParser::ParseResult res = parseCommandLine(options, argc, argv);
-
-	cout << "about to read bam "<< endl;
-
+	
 	//read in input bam file
 	BamFileIn inFile;
 	if (!open(inFile, toCString(options.inputFileName)))
@@ -79,8 +85,6 @@ int main(int argc, char const ** argv)
 		std::cerr << "ERROR: Could not open " << options.inputFileName << " for reading.\n";
 		return 1;
 	}
-
-	cout << "finished reading bam"<< endl;
 
 	//create output file
 	GffFileOut gffOutFile;
@@ -90,35 +94,53 @@ int main(int argc, char const ** argv)
 		return 1;
 	}
 
-	//<position,count>
-	map<int,int> counter;
+	completemap megacounter;
+	vector<BamAlignmentRecord> meh;
 
 	BamHeader header;
 	readHeader(header, inFile);
 	BamAlignmentRecord record;
 	int rID = -1;
-
-	cout << "reading out file" << endl;
+	CharString qName;
 
 	do
 	{
 		readRecord(record, inFile);
-		if(rID < 0)
-			rID = record.rID;
 
-		if(record.rID != rID)
+		// if first time
+		if(rID < 0)
 		{
-			writeToFile(counter, inFile, rID, gffOutFile);
 			rID = record.rID;
-			counter.clear();
+			qName = record.qName;
 		}
 
-		for(int i = record.beginPos; i < (record.beginPos + length(record.seq)); i++)
-			counter[i]++;
+		// if the current record ID does not match the last one then we know it's a new read
+		if(record.qName != qName)
+		{
+			//go through each record in vector
+			for(auto rec : meh)
+			{
+				//go through each pos of the record
+				for(int i = rec.beginPos; i < (rec.beginPos + length(record.seq)); i++)
+				{
+					double tmp = megacounter[rec.rID][i];
+					tmp = (double)tmp + ((double)1.0/(double)meh.size());
+					megacounter[rec.rID][i] = tmp;
+	//				cout << "Adding " << rID << " " << i << " " << (double)megacounter[rID][i] << " " << ((double)1.0/(double)meh.size()) << endl;
+				}
+			}
+			meh.clear(); // clear vector
+			rID = record.rID;
+			qName = record.qName;
+		}
+
+		//add currect record to current vector
+		meh.push_back(record);
 		
 	} while(!atEnd(inFile));
 
-	writeToFile(counter, inFile, rID, gffOutFile);
+	writeToFile(megacounter, inFile, gffOutFile);
+
 	close(inFile);
 	close(gffOutFile);
 
