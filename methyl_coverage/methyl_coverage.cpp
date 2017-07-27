@@ -87,6 +87,31 @@ int count_cs(ModifyStringOptions options, SeqFileIn &referenceFileIn, map<string
 	return 0;
 }
 
+void histo(GffFileIn &gffCGFileIn, GffFileIn &gffCHGFileIn, GffFileIn &gffCHHFileIn, map<int,int> &counter)
+{
+	// value (as in c+t) followed by counter
+//	map<int, int> counter;
+
+	while(!atEnd(gffCGFileIn))
+        {
+		GffRecord record;
+		readRecord(record, gffCGFileIn);
+		int c;
+		int t;
+		
+		// go through tags
+		for(int i = 0; i < length(record.tagNames); i++)
+		{
+			if(record.tagNames[i] == "c")
+				c = stoi(toCString(record.tagValues[i]));
+			if(record.tagNames[i] == "t")
+				t = stoi(toCString(record.tagValues[i]));
+		}
+
+		counter[c+t]++;
+	}
+}
+
 int main(int argc, char const ** argv)
 {
 	//parse our options
@@ -118,6 +143,13 @@ int main(int argc, char const ** argv)
 
 //	for(auto i : contig_c_counts)
 //		cout << i.first << " " << i.second << endl;
+
+	//create histo
+	map<int, int> counter;
+	histo(gffCGFileIn, gffCHGFileIn, gffCHHFileIn, counter);
+
+	for(auto i : counter)
+		cout << i.first << " " << i.second << endl;
 
 	close(gffCGFileIn), close(gffCHGFileIn), close(gffCHHFileIn), close(referenceFileIn);
 
