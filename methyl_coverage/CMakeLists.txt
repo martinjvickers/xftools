@@ -12,7 +12,7 @@ project (methyl_coverage CXX)
 find_package (ZLIB)
 
 # Load the SeqAn module and fail if not found.
-find_package (SeqAn REQUIRED)
+find_package (SeqAn)
 
 # ----------------------------------------------------------------------------
 # Build Setup
