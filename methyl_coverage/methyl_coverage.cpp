@@ -116,8 +116,8 @@ int main(int argc, char const ** argv)
 	// create a map that is <chr,total_c's> from our reference
 	count_cs(options, referenceFileIn, contig_c_counts);
 
-	for(auto i : contig_c_counts)
-		cout << i.first << " " << i.second << endl;
+//	for(auto i : contig_c_counts)
+//		cout << i.first << " " << i.second << endl;
 
 	close(gffCGFileIn), close(gffCHGFileIn), close(gffCHHFileIn), close(referenceFileIn);
 
