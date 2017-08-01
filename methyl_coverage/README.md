@@ -8,5 +8,5 @@ I need the three w1 files so that I can do the counting. I also need to know the
 ## Compile
 
 ```
-~/cmake-3.6.0-rc2-Linux-x86_64/bin/cmake ../methyl_coverage -DCMAKE_MODULE_PATH=../../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+~/cmake-3.6.0-rc2-Linux-x86_64/bin/cmake ../methyl_coverage -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
 ```
