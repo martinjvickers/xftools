@@ -55,7 +55,7 @@ void writeToFile(map<int,int> &counter, BamFileIn &inFile, int &rID, GffFileOut 
 		record.ref = contigNames(bamContext)[rID];
 		record.source = "xftools";
 		record.type = "label";
-		record.beginPos = i.first;
+		record.beginPos = i.first+1;
 		record.endPos = (i.first+1);
 		record.strand = '.';
 		record.score = GffRecord::INVALID_SCORE();
@@ -70,6 +70,8 @@ int main(int argc, char const ** argv)
 	ModifyStringOptions options;
         seqan::ArgumentParser::ParseResult res = parseCommandLine(options, argc, argv);
 
+	cout << "about to read bam "<< endl;
+
 	//read in input bam file
 	BamFileIn inFile;
 	if (!open(inFile, toCString(options.inputFileName)))
@@ -77,6 +79,8 @@ int main(int argc, char const ** argv)
 		std::cerr << "ERROR: Could not open " << options.inputFileName << " for reading.\n";
 		return 1;
 	}
+
+	cout << "finished reading bam"<< endl;
 
 	//create output file
 	GffFileOut gffOutFile;
@@ -94,6 +98,8 @@ int main(int argc, char const ** argv)
 	readHeader(header, inFile);
 	BamAlignmentRecord record;
 	int rID = -1;
+
+	cout << "reading out file" << endl;
 
 	do
 	{
