@@ -80,3 +80,10 @@ script:
  - cd ../methyl_coverage
  - cmake ../methyl_coverage -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
  - make -j2
+
+ # Compile and build
+ - cd ../fasta_insert
+ - cmake ../fasta_insert -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+ - make -j2
+ - gunzip example_data/TAIR10_reference_wCM.fa.gz
+ - ./fasta_insert -r example_data/TAIR10_reference_wCM.fa -i example_data/example_insert.fasta -o output.fasta -c Chr4 -p 6780927
