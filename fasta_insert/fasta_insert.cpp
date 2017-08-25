@@ -28,6 +28,8 @@ struct ModifyStringOptions
 	CharString outputFileName;
 	CharString referenceFileName;
 	CharString insertFileName;
+	CharString contig;
+	int position;
 };
 
 seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
@@ -39,8 +41,12 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	setRequired(parser, "insert-file");
 	addOption(parser, seqan::ArgParseOption("o", "output-file", "Path to the output file", seqan::ArgParseArgument::OUTPUT_FILE, "OUT"));
 	setRequired(parser, "output-file");
+	
+	addOption(parser, seqan::ArgParseOption("c", "contig", "The contig in the reference file you wish to insert your fasta into. This is case sensitive.", seqan::ArgParseArgument::STRING, "TEXT"));
+	setRequired(parser, "contig");
 
-	addOption(parser, seqan::ArgParseOption("e", "exclude", "Remove reads in fasta file that have IDs in the text file."));
+	addOption(parser, seqan::ArgParseOption("p", "position", "This is the zero-based position in the reference file you wish to insert your fasta into. ", seqan::ArgParseArgument::INTEGER, "INT"));
+	setRequired(parser, "position");
 
 	setShortDescription(parser, "Methylation tools");
 	setVersion(parser, "0.0.1");
@@ -58,8 +64,17 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	getOptionValue(options.referenceFileName, parser, "reference-file");
 	getOptionValue(options.insertFileName, parser, "insert-file");
 	getOptionValue(options.outputFileName, parser, "output-file");
+	getOptionValue(options.contig, parser, "contig");
+	getOptionValue(options.position, parser, "position");
 
 	return seqan::ArgumentParser::PARSE_OK;
+}
+
+IupacString insert_seq(IupacString current, IupacString to_insert, int position)
+{
+	IupacString modified = current;
+	insert(modified, position, to_insert);
+	return modified;
 }
 
 /*
@@ -70,6 +85,70 @@ int main(int argc, char const ** argv)
 	//parse our options
 	ModifyStringOptions options;
 	seqan::ArgumentParser::ParseResult res = parseCommandLine(options, argc, argv);
+
+	if (res != seqan::ArgumentParser::PARSE_OK)
+		return res == seqan::ArgumentParser::PARSE_ERROR;
+
+	//read in the reference file
+	CharString id;
+	IupacString seq;
+
+	// reference file
+	SeqFileIn seqFileIn;
+	if (!open(seqFileIn, toCString(options.referenceFileName)))
+	{
+		std::cerr << "ERROR: Could not open the reference file: " << options.referenceFileName << "\n";
+		return 1;
+	}
+
+	// output file
+	SeqFileOut seqFileOut;
+	if (!open(seqFileOut, toCString(options.outputFileName)))
+	{
+		std::cerr << "ERROR: Could not open the output file: " << options.outputFileName << "\n";
+		return 1;
+	}
+
+	while (!atEnd(seqFileIn))
+	{
+		readRecord(id, seq, seqFileIn);
+		
+		if(id == options.contig)
+		{
+			//open up the insert!
+			SeqFileIn insertSeqFileIn(toCString(options.insertFileName));
+			StringSet<CharString> ids;
+			StringSet<IupacString> seqs;
+			readRecords(ids, seqs, insertSeqFileIn);
+
+			if(length(seqs) > 1)
+			{
+				cerr << "ERROR: There is more than one contig in the insert-file: " << options.insertFileName << endl;
+				cerr << "INFO : You can only insert a single contig at a time." << endl;
+				return 1;
+			}
+
+			cout << id << " was length: " << length(seq) << endl;
+			IupacString modified_seq = insert_seq(seq, seqs[0], options.position); // should always be seqs[0] as is length(seqs) > 1 it would have thrown an error.
+			cout << id << " now length: " << length(modified_seq) << endl;
+			writeRecord(seqFileOut, id, modified_seq);
+		} else {
+			writeRecord(seqFileOut, id, seq);
+			cout << id << " length: " << length(seq) << endl;
+		}
+			//insert();
+	}
+
+	//only allow the options.insertFileName to have one contig
+
+
+
+	//check that the specific chromosome and position exist
+		//maybe have a lazy version? until the first space?
+
+	//go through reference until contig is found
+		//insert
+	
 
 	return 0;
 }
