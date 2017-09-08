@@ -13,6 +13,7 @@ struct ModifyStringOptions
 {
         CharString inputFileName;
 	CharString outputFileName;
+	bool cigar_aware;
 };
 
 seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
@@ -29,6 +30,9 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         setRequired(parser, "input-file");
 	addOption(parser, seqan::ArgParseOption("o", "output-file", "Path to the output file", seqan::ArgParseArgument::OUTPUT_FILE, "OUT"));
 	setRequired(parser, "output-file");
+	addOption(parser, seqan::ArgParseOption("c", "cigar-aware", "This will use the full CIGAR span length. NOTE: presently this does not account for a gap due to a reference insertion. So this may not be what you want. I may change this in the future"));
+	options.cigar_aware = isSet(parser, "cigar-aware");
+
 
         seqan::ArgumentParser::ParseResult res = seqan::parse(parser, argc, argv);
 
@@ -114,8 +118,23 @@ int main(int argc, char const ** argv)
 			counter.clear();
 		}
 
-		for(int i = record.beginPos; i < (record.beginPos + length(record.seq)); i++)
-			counter[i]++;
+		//this is the bit right? I need to work out the length from the CIGAR score
+		if(options.cigar_aware == true)
+		{
+			int spanlength;
+			_getLengthInRef(spanlength, record.cigar);
+			for(int i = record.beginPos; i < spanlength; i++)
+			{
+				counter[i]++;
+			}
+		}
+		else 
+		{
+			for(int i = record.beginPos; i < (record.beginPos + length(record.seq)); i++)
+			{
+				counter[i]++;
+			}
+		}
 		
 	} while(!atEnd(inFile));
 
