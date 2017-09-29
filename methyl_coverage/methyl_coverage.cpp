@@ -20,6 +20,7 @@
 #include <map>
 #include <iomanip>
 #include "boost/lexical_cast.hpp"
+
 using boost::bad_lexical_cast;
 using namespace seqan;
 using namespace std;
@@ -30,6 +31,7 @@ struct ModifyStringOptions
 	CharString chgInputFile;
 	CharString chhInputFile;
 	CharString referenceFile;
+	bool byContig = false;
 };
 
 seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
@@ -87,7 +89,7 @@ int count_cs(ModifyStringOptions options, SeqFileIn &referenceFileIn, map<string
 	return 0;
 }
 
-void histo(GffFileIn &gffCGFileIn, GffFileIn &gffCHGFileIn, GffFileIn &gffCHHFileIn, map<int,int> &counter)
+void histo(GffFileIn &gffCGFileIn, GffFileIn &gffCHGFileIn, GffFileIn &gffCHHFileIn, map<string, map<int,int>> &counter, map<int,int> &all)
 {
 	// value (as in c+t) followed by counter
 //	map<int, int> counter;
@@ -108,8 +110,51 @@ void histo(GffFileIn &gffCGFileIn, GffFileIn &gffCHGFileIn, GffFileIn &gffCHHFil
 				t = stoi(toCString(record.tagValues[i]));
 		}
 
-		counter[c+t]++;
+		counter[toCString(record.ref)][c+t]++;
+		all[c+t]++;
 	}
+
+        while(!atEnd(gffCHGFileIn))
+        {
+                GffRecord record;
+                readRecord(record, gffCHGFileIn);
+                int c;
+                int t;
+
+                // go through tags
+                for(int i = 0; i < length(record.tagNames); i++)
+                {
+                        if(record.tagNames[i] == "c")
+                                c = stoi(toCString(record.tagValues[i]));
+                        if(record.tagNames[i] == "t")
+                                t = stoi(toCString(record.tagValues[i]));
+                }
+
+                counter[toCString(record.ref)][c+t]++;
+                all[c+t]++;
+        }
+
+        while(!atEnd(gffCHHFileIn))
+        {
+                GffRecord record;
+                readRecord(record, gffCHHFileIn);
+                int c;
+                int t;
+
+                // go through tags
+                for(int i = 0; i < length(record.tagNames); i++)
+                {
+                        if(record.tagNames[i] == "c")
+                                c = stoi(toCString(record.tagValues[i]));
+                        if(record.tagNames[i] == "t")
+                                t = stoi(toCString(record.tagValues[i]));
+                }
+
+                counter[toCString(record.ref)][c+t]++;
+                all[c+t]++;
+        }
+
+
 }
 
 int main(int argc, char const ** argv)
@@ -141,15 +186,33 @@ int main(int argc, char const ** argv)
 	// create a map that is <chr,total_c's> from our reference
 	count_cs(options, referenceFileIn, contig_c_counts);
 
-//	for(auto i : contig_c_counts)
-//		cout << i.first << " " << i.second << endl;
+	long long int total = 0;
+	for(auto i : contig_c_counts)
+		total = total + i.second;
 
 	//create histo
-	map<int, int> counter;
-	histo(gffCGFileIn, gffCHGFileIn, gffCHHFileIn, counter);
+	map<string, map<int, int>> counter;
+	map<int, int> all;
+	histo(gffCGFileIn, gffCHGFileIn, gffCHHFileIn, counter, all);
 
-	for(auto i : counter)
-		cout << i.first << " " << i.second << endl;
+	if(options.byContig == true)
+	{
+		for(auto ref : counter)
+		{
+			cout << "Histogram for " << ref.first << endl;
+			for(auto i : ref.second)
+			{
+				cout << i.first << " " << i.second << endl;
+			}
+		}
+	}
+
+	cout << "Combined histogram " << endl;
+	long long int runningtotal = 0;
+	for (auto iter = all.rbegin(); iter != all.rend(); ++iter) {
+		runningtotal = runningtotal + iter->second;
+		cout << iter->first << " " << iter->second << " " << runningtotal << " " << (double)iter->second / (double)total << " " << (double)runningtotal / (double)total << endl;
+	}
 
 	close(gffCGFileIn), close(gffCHGFileIn), close(gffCHHFileIn), close(referenceFileIn);
 
