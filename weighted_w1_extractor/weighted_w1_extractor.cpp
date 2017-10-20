@@ -44,9 +44,15 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         return seqan::ArgumentParser::PARSE_OK;
 }
 
+/*
+	Stores the counts for each base
+*/
 typedef std::map<int, double> chrmap;
 typedef std::map<int, chrmap> completemap;
 
+/*
+	Write out the counts to a GFF file
+*/
 void writeToFile(completemap &counter, BamFileIn &inFile, GffFileOut &gffOutFile)
 {
 
@@ -76,7 +82,7 @@ int main(int argc, char const ** argv)
 	ModifyStringOptions options;
         seqan::ArgumentParser::ParseResult res = parseCommandLine(options, argc, argv);
 	
-	//read in input bam file
+	// read in input bam file
 	BamFileIn inFile;
 	if (!open(inFile, toCString(options.inputFileName)))
 	{
@@ -84,7 +90,7 @@ int main(int argc, char const ** argv)
 		return 1;
 	}
 
-	//create output file
+	// create output file
 	GffFileOut gffOutFile;
 	if(!open(gffOutFile, toCString(options.outputFileName)))
 	{
@@ -115,12 +121,13 @@ int main(int argc, char const ** argv)
 		// if the current record ID does not match the last one then we know it's a new read
 		if(record.qName != qName)
 		{
-			//go through each record in vector
+			// go through each record in vector
 			for(auto rec : mapping_results)
 			{
-				//go through each pos of the record
+				// go through each pos of the record
 				for(int i = rec.beginPos; i < (rec.beginPos + length(record.seq)); i++)
 				{
+					// calculate the weighted count
 					double tmp = base_counter[rec.rID][i];
 					tmp = (double)tmp + ((double)1.0/(double)mapping_results.size());
 					base_counter[rec.rID][i] = tmp;
@@ -131,7 +138,7 @@ int main(int argc, char const ** argv)
 			qName = record.qName;
 		}
 
-		//add currect record to current vector
+		// add currect record to current vector
 		mapping_results.push_back(record);
 		
 	} while(!atEnd(inFile));
