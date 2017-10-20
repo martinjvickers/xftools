@@ -1,86 +1,95 @@
 sudo: false
-
 language: cpp
 
 matrix:
-  include :
+  include:
     - os: linux
       dist: trusty
       compiler: gcc-4.9
       addons:
         apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-4.9', 'libboost-dev']
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-4.9
+            - libboost-dev
       install: export CXX="g++-4.9" CC="gcc-4.9"
 
-before_script:
- #- git clone https://github.com/seqan/seqan.git seqan
- #- wget https://github.com/seqan/seqan/archive/seqan-v2.2.0.tar.gz
- #- tar xvf seqan-v2.2.0.tar.gz
- #- mv seqan-seqan-v2.2.0 seqan
-# - git clone git@github.com:martinjvickers/methylation_tools.git
-# - git clone https://github.com/martinjvickers/xftools.git
+before_script: 
 
 script:
- # compile, run and app test unique_read_extractor
- - cd unique_read_extractor
- - cmake ../unique_read_extractor -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
- - make -j2
- - ./unique_read_extractor -i example_data/subsample.sam -o example_data/new_result.sam
- - diff example_data/result.sam example_data/new_result.sam
+  # unique_read_extractor
+  - cd unique_read_extractor
+  - cmake ../unique_read_extractor -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - make -j2
+  - ./unique_read_extractor -i example_data/subsample.sam -o example_data/new_result.sam
+  - diff example_data/result.sam example_data/new_result.sam
 
- # compile, run and app test w50_creator
- - cd ../w50_creator
- - cmake ../w50_creator -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
- - make -j2
- - ./w50_creator -i example_data/GSM952438_TFH39.all.cg-col.gff.gz -s 50 -l window -p dzlab > result.w50.gff
- - diff result.w50.gff example_data/GSM952438_TFH39.all.cg-col.DZ.w50_mod.gff
+  # w50_creator
+  - cd ../w50_creator
+  - cmake ../w50_creator -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - make -j2
+  - ./w50_creator -i example_data/GSM952438_TFH39.all.cg-col.gff.gz -s 50 -l window -p dzlab > result.w50.gff
+  - diff result.w50.gff example_data/GSM952438_TFH39.all.cg-col.DZ.w50_mod.gff
 
- # compile, run and app test single-c_combine
- - cd ../single-c_combine
- - cmake ../single-c_combine -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
- - make -j2
- # run both ways
- - ./single-c_combine -i example_data/example_rep1.w1.gff -i example_data/example_rep2.w1.gff -l CG -o result.gff
- - cat result.gff | awk '{printf $1"\t"$2"\t"$3"\t"$4"\t"$5"\t%.2f\t"$7"\t"$8"\t"$9"\n", $6}' > result_mod.gff
- - ./single-c_combine -i example_data/example_rep2.w1.gff -i example_data/example_rep1.w1.gff -l CG -o result2.gff
- - cat result2.gff | awk '{printf $1"\t"$2"\t"$3"\t"$4"\t"$5"\t%.2f\t"$7"\t"$8"\t"$9"\n", $6}' > result2_mod.gff
- # mine should be identical either way
- - diff result_mod.gff result2_mod.gff
- - diff result_mod.gff example_data/old_program_result.w1_rep2_rep1.gff
+  # single-c_combine
+  - cd ../single-c_combine
+  - cmake ../single-c_combine -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - make -j2
+  - ./single-c_combine -i example_data/example_rep1.w1.gff -i example_data/example_rep2.w1.gff -l CG -o result.gff
+  - cat result.gff | awk '{printf $1"\t"$2"\t"$3"\t"$4"\t"$5"\t%.2f\t"$7"\t"$8"\t"$9"\n", $6}' > result_mod.gff
+  - ./single-c_combine -i example_data/example_rep2.w1.gff -i example_data/example_rep1.w1.gff -l CG -o result2.gff
+  - cat result2.gff | awk '{printf $1"\t"$2"\t"$3"\t"$4"\t"$5"\t%.2f\t"$7"\t"$8"\t"$9"\n", $6}' > result2_mod.gff
+  - diff result_mod.gff result2_mod.gff
+  - diff result_mod.gff example_data/old_program_result.w1_rep2_rep1.gff
 
- ## compile and run bam_2_w1_extractor
- - cd ../bam_2_w1_extractor
- - cmake ../bam_2_w1_extractor -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
- - make -j2
- - ./bam_2_w1_extractor -i example_data/test.sam -o test.gff.gz
- - ./bam_2_w1_extractor -i example_data/test.bam -o test2.gff
+  # bam_2_w1_extractor
+  - cd ../bam_2_w1_extractor
+  - cmake ../bam_2_w1_extractor -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - make -j2
+  - ./bam_2_w1_extractor -i example_data/test.sam -o test.gff.gz
+  - ./bam_2_w1_extractor -i example_data/test.bam -o test2.gff
 
- ## compile gff_feature_merge
- - cd ../gff_feature_merge
- - cmake ../gff_feature_merge -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
- - make -j2
- - ./gff_feature_merge -h
+  # gff_feature_merge
+  - cd ../gff_feature_merge
+  - cmake ../gff_feature_merge -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - make -j2
+  - ./gff_feature_merge -h
 
- ## compile and build 
- - cd ../weighted_w1_extractor
- - cmake ../weighted_w1_extractor -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
- - make -j2
- - ./weighted_w1_extractor -i example_data/test.bam -o test.gff
+  # weighted_w1_extractor
+  - cd ../weighted_w1_extractor
+  - cmake ../weighted_w1_extractor -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - make -j2
+  - ./weighted_w1_extractor -i example_data/test.bam -o test.gff
 
- #  Compile and build
- - cd ../methyl_coverage
- - cmake ../methyl_coverage -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
- - make -j2
+  # methyl_coverage
+  - cd ../methyl_coverage
+  - cmake ../methyl_coverage -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - make -j2
+  - ./methyl_coverage
 
- # Compile and build
- - cd ../fasta_insert
- - cmake ../fasta_insert -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
- - make -j2
- - gunzip example_data/TAIR10_reference_wCM.fa.gz
- - ./fasta_insert -r example_data/TAIR10_reference_wCM.fa -i example_data/example_insert.fasta -o output.fasta -c Chr4 -p 6780927
+  # fasta_insert
+  - cd ../fasta_insert
+  - cmake ../fasta_insert -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - make -j2
+  - gunzip example_data/TAIR10_reference_wCM.fa.gz
+  - ./fasta_insert -r example_data/TAIR10_reference_wCM.fa -i example_data/example_insert.fasta -o output.fasta -c Chr4 -p 6780927
 
- # Compile and build
- - cd ../bam2bed
- - cmake ../bam2bed -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
- - make -j2
+  # bam2bed
+  - cd ../bam2bed
+  - cmake ../bam2bed -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - make -j2
+  - ./bam2bed
+
+  - cd ../
+
+  # now make make the release
+  - tar cvzf xftools.tar.gz gff_feature_merge/gff_feature_merge single-c_combine/single-c_combine weighted_w1_extractor/weighted_w1_extractor bam2bed/bam2bed methyl_coverage/methyl_coverage bam_2_w1_extractor/bam_2_w1_extractor fasta_insert/fasta_insert w50_creator/w50_creator
+
+deploy:
+  provider: releases
+  api_key:
+    secure: qi2Rz7Zmc7UAi44FLwdVe0k5uUAp+Xvz4xcwxelgZpfN93pNuSLtFwvykChujc/W4Ci9NWNeEqvmIWs2vBE41pYpBdhQwx3z6exmKn9f5dw47JyUXzItaMW9DsDgcentowvuSUrIhnUPYVuim3Oq4so8ZepLojgIvxwspXQ7+rVIPPUILVBFiASazDTIh3wgVRb4HXE9vE/tr5Uyq/S9SxcGCzwp+2DJqQRoPoSvOzbGZ54BWADFPhlAbb5CHcP/NUjrm6gLDnsuPNUtlcWqmikMQ0P+b87pYYiaEVoDYxkzltwUP+RZMtx0yyREu9WuMAFF9jGrYIekPfVbllaaH/ZA7KTuAzvBLxi1ldcamK0oWUdZ5QYCRYuPNeg0vRPBnvUdJyne4nNGftnxoZbNT57zReQNp+dKWC6yAo/QPHnITnZZBKT6YH0rG1XFiw06zY3IHvIwWaNEQ11PtBT5cWPMtzlRYQT4YDrahOXRuNsEX01p0Eu30aavlVFEbcFDyeTl/6cxmVY4kpgN0SCfBWwhIMB4eQZ6HjVQyaQRBHsuwOAUOtEsCvjBuchdgobVII5JSTuziiO02+ftaBw81GuVKIrgDFLEr87UG7G7oDpFZXEv3oNckSUBXE76eZaFQDXkEbkr4bFWwTeN66qQ5nFq5JMKfyIw/3uW/QsCZbM=
+  file: xftools.tar.gz
+  on:
+    repo: martinjvickers/xftools
