@@ -54,7 +54,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	setRequired(parser, "label");
 	setShortDescription(parser, "Methylation Tools");
 	setVersion(parser, "0.0.1");
-	setDate(parser, "Apr 2017");
+	setDate(parser, "October 2017");
 	addUsageLine(parser, "-i input_w1.gff [\\fIOPTIONS\\fP] ");
 
 	addDescription(parser, "Merge multiple single-c gff files.");
