@@ -17,12 +17,12 @@ struct ModifyStringOptions
 
 seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
 {
-        seqan::ArgumentParser parser("bam_2_w1_extractor");
+        seqan::ArgumentParser parser("weighted_w1_extractor");
         setShortDescription(parser, "XFTOOLS");
         setVersion(parser, "0.0.1");
-        setDate(parser, "June 2017");
+        setDate(parser, "October 2017");
         addUsageLine(parser, "-i input.bam -o output.gff [\\fIOPTIONS\\fP] ");
-	addDescription(parser, "Create a w50 file from a w1 file.");
+	addDescription(parser, "The purpose of this program is to create a GFF file containing the (weighted) number of times a base is covered by a read. A GFF which contains information about each base in our lab is known as a w1 file (AKA window of size 1). A regular w1 file is would simply count the number of times a base is covered by a read, if this is the functionality you desire, then use the bam_2_w1_extractor program. The weighted part of this is that if your alignment file contains reads which have mapped multiple times, e.g. for when looking at sRNA using bowtie2 searching and reporting all results, you may have a read that has mapped in several locations. If you have a read that maps to three locations, rather than counting that as +1 to each location, it will be counted as +(1/3) to each location. ");
 
 	// accept an input file
 	addOption(parser, seqan::ArgParseOption("i", "input-file", "Path to the input file", seqan::ArgParseArgument::INPUT_FILE, "IN"));
@@ -49,7 +49,6 @@ typedef std::map<int, chrmap> completemap;
 
 void writeToFile(completemap &counter, BamFileIn &inFile, GffFileOut &gffOutFile)
 {
-	//completemap[rID][pos][count]
 
 	for(auto i : counter)
 	{
@@ -63,7 +62,6 @@ void writeToFile(completemap &counter, BamFileIn &inFile, GffFileOut &gffOutFile
 			record.source = "xftools";
 			record.type = "label";
 			record.beginPos = j.first;
-		//	record.endPos = (j.first+1);
 			record.endPos = j.first;
 			record.strand = '.';
 			record.score = (double)j.second;
@@ -126,7 +124,6 @@ int main(int argc, char const ** argv)
 					double tmp = megacounter[rec.rID][i];
 					tmp = (double)tmp + ((double)1.0/(double)meh.size());
 					megacounter[rec.rID][i] = tmp;
-	//				cout << "Adding " << rID << " " << i << " " << (double)megacounter[rID][i] << " " << ((double)1.0/(double)meh.size()) << endl;
 				}
 			}
 			meh.clear(); // clear vector
