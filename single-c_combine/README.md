@@ -10,7 +10,7 @@ Specify any number of input files using the `-i` flag.
 single-c_combine -i file1.gff -i file2.gff ..... -i fileN.gff -o output.gff
 ```
 
-## Complile
+## Compile
 
 Getting this to compile on work machine;
 
