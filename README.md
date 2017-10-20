@@ -15,3 +15,22 @@ For ease of use I have created static binaries which can be downloaded, extracte
 ## Compile from source
 
 TODO:
+
+## Deployment
+
+Deployments are managed automagically through Travis-CI. When we're ready for a new version ensure the following checklist is completed;
+
+- [ ] New apps have a completed README.md, up-to-date version number and correction `--help` documentation/description
+- [ ] Existing apps have the correct version number
+
+After checklist, add the tag and push to origin
+
+```
+martin@x250:~/xftools$ git tag -a v0.0.4
+martin@x250:~/xftools$ git push origin --tags
+```
+
+Post deployment checklist (Hopefully this can be automated)
+
+- [ ] Deploy on the HPC
+- [ ] Ensure that the static binaries work correctly on HPC
