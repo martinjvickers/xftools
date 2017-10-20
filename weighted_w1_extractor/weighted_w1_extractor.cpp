@@ -93,7 +93,7 @@ int main(int argc, char const ** argv)
 	}
 
 	completemap megacounter;
-	vector<BamAlignmentRecord> meh;
+	vector<BamAlignmentRecord> mapping_results; // stores all the mapping records for the same read
 
 	BamHeader header;
 	readHeader(header, inFile);
@@ -116,23 +116,23 @@ int main(int argc, char const ** argv)
 		if(record.qName != qName)
 		{
 			//go through each record in vector
-			for(auto rec : meh)
+			for(auto rec : mapping_results)
 			{
 				//go through each pos of the record
 				for(int i = rec.beginPos; i < (rec.beginPos + length(record.seq)); i++)
 				{
 					double tmp = megacounter[rec.rID][i];
-					tmp = (double)tmp + ((double)1.0/(double)meh.size());
+					tmp = (double)tmp + ((double)1.0/(double)mapping_results.size());
 					megacounter[rec.rID][i] = tmp;
 				}
 			}
-			meh.clear(); // clear vector
+			mapping_results.clear(); // clear vector
 			rID = record.rID;
 			qName = record.qName;
 		}
 
 		//add currect record to current vector
-		meh.push_back(record);
+		mapping_results.push_back(record);
 		
 	} while(!atEnd(inFile));
 
