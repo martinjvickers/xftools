@@ -76,6 +76,11 @@ int main(int argc, char const ** argv)
 	ModifyStringOptions options;
 	seqan::ArgumentParser::ParseResult res = parseCommandLine(options, argc, argv);
 	
+	// If parsing was not successful then exit with code 1 if there were errors.
+	// Otherwise, exit with code 0 (e.g. help was printed).
+	if (res != seqan::ArgumentParser::PARSE_OK)
+		return res == seqan::ArgumentParser::PARSE_ERROR;
+
 	GffFileIn gffFileIn;
 	if (!open(gffFileIn, toCString(options.inputFileName)))
 	{
