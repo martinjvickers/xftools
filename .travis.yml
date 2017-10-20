@@ -85,6 +85,8 @@ script:
 
   # now make make the release
   - tar cvzf xftools.tar.gz gff_feature_merge/gff_feature_merge single-c_combine/single-c_combine weighted_w1_extractor/weighted_w1_extractor bam2bed/bam2bed methyl_coverage/methyl_coverage bam_2_w1_extractor/bam_2_w1_extractor fasta_insert/fasta_insert w50_creator/w50_creator
+  - pwd
+  - ls -lath
 
 deploy:
   provider: releases
