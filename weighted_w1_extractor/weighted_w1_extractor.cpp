@@ -13,6 +13,7 @@ struct ModifyStringOptions
 {
         CharString inputFileName;
 	CharString outputFileName;
+	CharString label;
 };
 
 seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
@@ -29,6 +30,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         setRequired(parser, "input-file");
 	addOption(parser, seqan::ArgParseOption("o", "output-file", "Path to the output file", seqan::ArgParseArgument::OUTPUT_FILE, "OUT"));
 	setRequired(parser, "output-file");
+	addOption(parser, seqan::ArgParseOption("l", "label", "Column 3 GFF output label. Useful if using SignalMap as GFFs with the same label will be merged.", seqan::ArgParseArgument::STRING, "TEXT"));
+	setDefaultValue(parser, "label", "window");
 
         seqan::ArgumentParser::ParseResult res = seqan::parse(parser, argc, argv);
 
@@ -40,6 +43,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	// parse the inputs into the options struct
         getOptionValue(options.inputFileName, parser, "input-file");
 	getOptionValue(options.outputFileName, parser, "output-file");
+	getOptionValue(options.label, parser, "label");
 
         return seqan::ArgumentParser::PARSE_OK;
 }
@@ -53,7 +57,7 @@ typedef std::map<int, chrmap> completemap;
 /*
 	Write out the counts to a GFF file
 */
-void writeToFile(completemap &counter, BamFileIn &inFile, GffFileOut &gffOutFile)
+void writeToFile(completemap &counter, BamFileIn &inFile, GffFileOut &gffOutFile, ModifyStringOptions options)
 {
 
 	for(auto i : counter)
@@ -66,7 +70,7 @@ void writeToFile(completemap &counter, BamFileIn &inFile, GffFileOut &gffOutFile
 			GffRecord record;
 			record.ref = contigNames(bamContext)[i.first];
 			record.source = "xftools";
-			record.type = "label";
+			record.type = options.label;
 			record.beginPos = j.first;
 			record.endPos = j.first;
 			record.strand = '.';
@@ -143,7 +147,7 @@ int main(int argc, char const ** argv)
 		
 	} while(!atEnd(inFile));
 
-	writeToFile(base_counter, inFile, gffOutFile);
+	writeToFile(base_counter, inFile, gffOutFile, options);
 
 	close(inFile);
 	close(gffOutFile);
