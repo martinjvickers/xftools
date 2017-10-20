@@ -92,7 +92,7 @@ int main(int argc, char const ** argv)
 		return 1;
 	}
 
-	completemap megacounter;
+	completemap base_counter;
 	vector<BamAlignmentRecord> mapping_results; // stores all the mapping records for the same read
 
 	BamHeader header;
@@ -121,9 +121,9 @@ int main(int argc, char const ** argv)
 				//go through each pos of the record
 				for(int i = rec.beginPos; i < (rec.beginPos + length(record.seq)); i++)
 				{
-					double tmp = megacounter[rec.rID][i];
+					double tmp = base_counter[rec.rID][i];
 					tmp = (double)tmp + ((double)1.0/(double)mapping_results.size());
-					megacounter[rec.rID][i] = tmp;
+					base_counter[rec.rID][i] = tmp;
 				}
 			}
 			mapping_results.clear(); // clear vector
@@ -136,7 +136,7 @@ int main(int argc, char const ** argv)
 		
 	} while(!atEnd(inFile));
 
-	writeToFile(megacounter, inFile, gffOutFile);
+	writeToFile(base_counter, inFile, gffOutFile);
 
 	close(inFile);
 	close(gffOutFile);
