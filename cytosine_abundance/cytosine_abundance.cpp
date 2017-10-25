@@ -14,6 +14,7 @@ struct ModifyStringOptions
         CharString inputFileName;
 	CharString outputFileName;
 	CharString label;
+	int window_size;
 };
 
 seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
@@ -31,6 +32,9 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	addOption(parser, seqan::ArgParseOption("o", "output-file", "Path to the output file", seqan::ArgParseArgument::OUTPUT_FILE, "OUT"));
 	setRequired(parser, "output-file");
 	addOption(parser, seqan::ArgParseOption("l", "label", "Column 3 GFF output label. Useful if using SignalMap as GFFs with the same label will be merged.", seqan::ArgParseArgument::STRING, "TEXT"));
+	addOption(parser, seqan::ArgParseOption("s", "window-size", "Size of window",seqan::ArgParseArgument::INTEGER, "INT"));
+	setDefaultValue(parser, "window-size", "50");
+	
 	setDefaultValue(parser, "label", "window");
 
         seqan::ArgumentParser::ParseResult res = seqan::parse(parser, argc, argv);
@@ -44,6 +48,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         getOptionValue(options.inputFileName, parser, "input-file");
 	getOptionValue(options.outputFileName, parser, "output-file");
 	getOptionValue(options.label, parser, "label");
+	getOptionValue(options.window_size, parser, "window-size");
 
         return seqan::ArgumentParser::PARSE_OK;
 }
@@ -65,6 +70,13 @@ int main(int argc, char const ** argv)
 		std::cerr << "ERROR: Could not open output.gff" " for reading.\n";
 		return 1;
 	}
+
+	// method.
+	// create index of reference
+	// loop through the reference in windows
+		// count c's + contexts
+		// reverse compliment and repeat
+		// print to GFF
 
 	close(gffOutFile);
 
