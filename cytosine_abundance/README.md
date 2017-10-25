@@ -22,6 +22,10 @@ cytosine_abundance -i reference.fa -o reference_cytosine.gff
     -l, --label TEXT
           Column 3 GFF output label. Useful if using SignalMap as GFFs with the same label will be merged. Default:
           window.
+    -s, --window-size INT
+          Size of window Default: 50.
+    -p, --percentage
+          Rather than calculating the number of C's, calculate the percentage of C's in the window.
 ```
 
 ## Complile
