@@ -75,18 +75,21 @@ void calculate_contexts(Dna5String &seq, map<string,int> &context_map)
 			{
 				context_map["CG"]++;		//CG
 				context_map[toCString(trin)]++;
+				//cout << "CG\t" << inf << "\t" << trin<< endl;
 			}
 			else
 			{
-				if(inf[i+2] == 'G')
+				if(inf[2] == 'G')
 				{
 					context_map["CHG"]++;	//CHG
 					context_map[toCString(trin)]++;
+					//cout << "CHG\t" << inf << "\t" << trin<< endl;
 				}
 				else
 				{
 					context_map["CHH"]++; 	//CHH
 					context_map[toCString(trin)]++;
+					//cout << "CHH\t" << inf << "\t" << trin<< endl;
 				}
 			}
 		}
@@ -96,7 +99,8 @@ void calculate_contexts(Dna5String &seq, map<string,int> &context_map)
 void print_map(map<string,int> &context_map)
 {
 	for (auto i : context_map)
-		cout << i.first << "=" << i.second << endl;
+		cout << i.first << "=" << i.second << "\t";
+	cout << endl;
 }
 
 void new_context_map(map<string,int> &context_map)
@@ -131,13 +135,14 @@ void write_record(GffFileOut &gffOutFile, FaiIndex &faiIndex, unsigned int &cont
 	record.ref = sequenceName(faiIndex, contig);
 	record.source = "xftools";
 	record.type = options.label;
-	record.beginPos = beginPos;
+	record.beginPos = beginPos + 1; 
 	record.endPos = endPos;
 	record.score = C_count;
 	record.strand = '.';
 	record.phase = '.';
 	StringSet<CharString> tagNames;
 	StringSet<CharString> tagValues;
+	//cout << beginPos << "\t" << endPos << endl;
 	for (auto i : context_map)
 	{
         	appendValue(record.tagNames, toCString(i.first));
@@ -179,9 +184,7 @@ int main(int argc, char const ** argv)
 	if (!build(faiIndex, toCString(options.inputFileName)))
     	{
         	std::cerr << "ERROR: Could not build FAI index for file " << options.inputFileName << ".\n";
-        	return 0;
-    	} else {
-		cout << "Index created of reference file. " << endl;
+        	return 1;
 	}
 
 	// I need to know the number of contigs
@@ -190,8 +193,10 @@ int main(int argc, char const ** argv)
 	// for each contig
 	for(unsigned int contig = 0; contig < numSeqs(faiIndex); contig++)
 	{
+		//cout << "Contig " << contig << "\t" << sequenceLength(faiIndex, contig) <<  endl;
+
 		unsigned int beginPos = 0;
-		while (beginPos < sequenceLength(faiIndex, contig))
+		while (beginPos+options.window_size < sequenceLength(faiIndex, contig))
 		{
 			map<string,int> context_map;
 			new_context_map(context_map);
@@ -216,16 +221,40 @@ int main(int argc, char const ** argv)
 			}
 			else 
 			{
-				// i will work out exceptions in a bit
-				//cout << length(reference_seq) << endl;
+				if(beginPos < 2)	//	 we're at the start!
+					readRegion(reference_seq, faiIndex, contig, beginPos, beginPos + options.window_size+2);
+				Dna5String pad = "NN";
+				pad += reference_seq;
+				reference_seq = pad;
+				calculate_contexts(reference_seq, context_map);
+				reverseComplement(reference_seq);
+				calculate_contexts(reference_seq, context_map);
 			}
 
 			write_record(gffOutFile, faiIndex, contig, beginPos, beginPos + options.window_size, total_C, context_map, options);
+			/* For debugging
+			cout << reference_seq << endl;
+			reverseComplement(reference_seq);
+			cout << reference_seq << endl;
+			print_map(context_map);
+			*/
 
 			beginPos = beginPos + options.window_size;
 		}
 		// Do the last one too. Will work that out later but it's just this
-		// readRegion(reference_seq, faiIndex, contig, beginPos, sequenceLength(faiIndex, contig));
+                map<string,int> context_map;
+                new_context_map(context_map);
+		readRegion(reference_seq, faiIndex, contig, beginPos, sequenceLength(faiIndex, contig));
+                unsigned int total_C = count_Cs(reference_seq);
+                reverseComplement(reference_seq);
+                total_C = total_C + count_Cs(reference_seq);
+		readRegion(reference_seq, faiIndex, contig, beginPos-2, sequenceLength(faiIndex, contig));
+		Dna5String pad = "NN";
+		reference_seq += pad;
+		calculate_contexts(reference_seq, context_map);
+		reverseComplement(reference_seq);
+		calculate_contexts(reference_seq, context_map);
+		write_record(gffOutFile, faiIndex, contig, beginPos, (int)sequenceLength(faiIndex, contig), total_C, context_map, options);
 	}
 
 
