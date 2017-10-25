@@ -82,7 +82,7 @@ script:
   - ./bam2bed
 
   # cytosine_abundance
-  - cd cytosine_abundance
+  - cd ../cytosine_abundance
   - cmake ../cytosine_abundance -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
   - make -j2
   - ./cytosine_abundance
