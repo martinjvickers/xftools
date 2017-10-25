@@ -40,11 +40,33 @@ The output looks like this;
 
 So if you want to see just the score and the three contexts (CG, CHG and CHH) you can do something like;
 
+```
 cat meh.gff  | awk '{split($9,a,";"); print $6"\t"a[9]"\t"a[15]"\t"a[16]}'
+```
 
-### Context layout
+If you wish to see the score and the distribution of contexts for CG;
 
-|Column | Context  |
+```
+cat meh.gff  | awk '{split($9,a,";"); print $6"\t"a[9]"\t"a[10]"\t"a[11]"\t"a[12]"\t"a[13]"\t"a[14]}'
+```
+
+If you wish to see the score and the distribution of contexts for CHG;
+
+```
+cat meh.gff  | awk '{split($9,a,";"); print $6"\t"a[15]"\t"a[3]"\t"a[7]"\t"a[17]"\t"a[21]}'
+```
+
+If you wish to see the score and the distribution of contexts for CHH;
+
+```
+cat meh.gff  | awk '{split($9,a,";"); print $6"\t"a[16]"\t"a[1]"\t"a[2]"\t"a[4]"\t"a[5]"\t"a[6]"\t"a[8]"\t"a[18]"\t"a[19]"\t"a[20]"\t"a[22]"\t"}'
+```
+
+### Context position layout within column 9 of the GFF
+
+Column 9 of the GFF output will adhere to this order.
+
+|Position | Context  |
 |-------|----------|
 |1	|	CAA|
 |2	|	CAC|
@@ -69,28 +91,3 @@ cat meh.gff  | awk '{split($9,a,";"); print $6"\t"a[9]"\t"a[15]"\t"a[16]}'
 |21	|	CTG|
 |22	|	CTT|
 
-
-`
-CAA=0
-CAC=0
-CAG=0
-CAT=0
-CCA=0
-CCC=0
-CCG=0
-CCT=0
-CG=0
-CGA=0
-CGC=0
-CGG=0
-CGN=0
-CGT=0
-CHG=0
-CHH=0
-CNG=0
-CNN=0
-CTA=0
-CTC=0
-CTG=0
-CTT=0
-```
