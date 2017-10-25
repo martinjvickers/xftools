@@ -3,8 +3,8 @@
 #include <seqan/stream.h>    // to stream a CharString into cout
 #include <seqan/file.h>
 #include <seqan/arg_parse.h>
-#include <seqan/bam_io.h>
 #include <seqan/gff_io.h>
+#include <seqan/seq_io.h>
 #include <string>
 using namespace seqan;
 using namespace std;
@@ -69,6 +69,16 @@ int main(int argc, char const ** argv)
 	{
 		std::cerr << "ERROR: Could not open output.gff" " for reading.\n";
 		return 1;
+	}
+
+	//index the reference
+	FaiIndex faiIndex;
+	if (!build(faiIndex, toCString(options.inputFileName)))
+    	{
+        	std::cerr << "ERROR: Could not build FAI index for file " << options.inputFileName << ".\n";
+        	return 0;
+    	} else {
+		cout << "Index created of reference file. " << endl;
 	}
 
 	// method.
