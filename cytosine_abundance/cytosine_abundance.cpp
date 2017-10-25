@@ -15,6 +15,7 @@ struct ModifyStringOptions
 	CharString outputFileName;
 	CharString label;
 	int window_size;
+	bool percentage = false;
 };
 
 seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
@@ -34,6 +35,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	addOption(parser, seqan::ArgParseOption("l", "label", "Column 3 GFF output label. Useful if using SignalMap as GFFs with the same label will be merged.", seqan::ArgParseArgument::STRING, "TEXT"));
 	addOption(parser, seqan::ArgParseOption("s", "window-size", "Size of window",seqan::ArgParseArgument::INTEGER, "INT"));
 	setDefaultValue(parser, "window-size", "50");
+	addOption(parser, seqan::ArgParseOption("p", "percentage", "Rather than calculating the number of C's, calculate the percentage of C's in the window."));
 	
 	setDefaultValue(parser, "label", "window");
 
@@ -49,6 +51,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	getOptionValue(options.outputFileName, parser, "output-file");
 	getOptionValue(options.label, parser, "label");
 	getOptionValue(options.window_size, parser, "window-size");
+	options.percentage = isSet(parser, "percentage");
 
         return seqan::ArgumentParser::PARSE_OK;
 }
@@ -256,14 +259,6 @@ int main(int argc, char const ** argv)
 		calculate_contexts(reference_seq, context_map);
 		write_record(gffOutFile, faiIndex, contig, beginPos, (int)sequenceLength(faiIndex, contig), total_C, context_map, options);
 	}
-
-
-	// method.
-	// create index of reference
-	// loop through the reference in windows
-		// count c's + contexts
-		// reverse compliment and repeat
-		// print to GFF
 
 	close(gffOutFile);
 
