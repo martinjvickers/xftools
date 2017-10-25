@@ -140,7 +140,10 @@ void write_record(GffFileOut &gffOutFile, FaiIndex &faiIndex, unsigned int &cont
 	record.type = options.label;
 	record.beginPos = beginPos + 1; 
 	record.endPos = endPos;
-	record.score = C_count;
+	if(options.percentage == true)
+		record.score = (float)C_count / (float)(endPos - beginPos + 1);
+	else
+		record.score = C_count;
 	record.strand = '.';
 	record.phase = '.';
 	StringSet<CharString> tagNames;
