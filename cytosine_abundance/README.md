@@ -5,8 +5,16 @@ The purpose of this program is to calculate the cytosine abundance and cytosine 
 ## Usage
 
 ```
-cytosine_abundance -i reference.fa -o reference_cytosine.gff
+cytosine_abundance -i reference.fa -o reference_cytosine.gff -w 50
 ```
+
+If you wish to use a GFF rather than a window size to calculate cytosine abundance then specify using the `-r` flag.
+
+```
+cytosine_abundance -i reference.fa -o reference_cytosine.gff -r region.gff
+```
+
+NOTE: The contig names need to be exactly the same (e.g. `Chr1` is not the same as `chr1`) in both the reference genome fasta file and the region GFF file.
 
 ## Options
 
@@ -26,6 +34,8 @@ cytosine_abundance -i reference.fa -o reference_cytosine.gff
           Size of window Default: 50.
     -p, --percentage
           Rather than calculating the number of C's, calculate the percentage of C's in the window.
+    -r, --input-region-file IN
+          Path to the input file contains regions you're interested in calculating stats for.
 ```
 
 ## Complile
