@@ -13,6 +13,7 @@ struct ModifyStringOptions
 {
         CharString inputFileName;
 	CharString outputFileName;
+	CharString inputRegionFileName;
 	CharString label;
 	int window_size;
 	bool percentage = false;
@@ -36,6 +37,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	addOption(parser, seqan::ArgParseOption("s", "window-size", "Size of window",seqan::ArgParseArgument::INTEGER, "INT"));
 	setDefaultValue(parser, "window-size", "50");
 	addOption(parser, seqan::ArgParseOption("p", "percentage", "Rather than calculating the number of C's, calculate the percentage of C's in the window."));
+	addOption(parser, seqan::ArgParseOption("r", "input-region-file", "Path to the input file contains regions you're interested in calculating stats for.", seqan::ArgParseArgument::INPUT_FILE, "IN"));
 	
 	setDefaultValue(parser, "label", "window");
 
@@ -49,6 +51,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	// parse the inputs into the options struct
         getOptionValue(options.inputFileName, parser, "input-file");
 	getOptionValue(options.outputFileName, parser, "output-file");
+	getOptionValue(options.inputRegionFileName, parser, "input-region-file");
 	getOptionValue(options.label, parser, "label");
 	getOptionValue(options.window_size, parser, "window-size");
 	options.percentage = isSet(parser, "percentage");
@@ -184,6 +187,14 @@ int main(int argc, char const ** argv)
 		std::cerr << "ERROR: Could not open output.gff" " for reading.\n";
 		return 1;
 	}
+
+        // create output file
+        GffFileIn gffInFile;
+        if(!open(gffInFile, toCString(options.inputRegionFileName)))
+        {
+                std::cerr << "ERROR: Could not open output.gff" " for reading.\n";
+                return 1;
+        }
 
 	//index the reference
 	FaiIndex faiIndex;
