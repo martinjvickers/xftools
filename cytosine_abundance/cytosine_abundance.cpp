@@ -207,39 +207,105 @@ int main(int argc, char const ** argv)
 	// I need to know the number of contigs
 	Dna5String reference_seq;
 
-	// for each contig
-	for(unsigned int contig = 0; contig < numSeqs(faiIndex); contig++)
+	if(options.inputRegionFileName == NULL)
 	{
-		//cout << "Contig " << contig << "\t" << sequenceLength(faiIndex, contig) <<  endl;
-
-		unsigned int beginPos = 0;
-		while (beginPos+options.window_size < sequenceLength(faiIndex, contig))
+		// for each contig
+		for(unsigned int contig = 0; contig < numSeqs(faiIndex); contig++)
 		{
+			//cout << "Contig " << contig << "\t" << sequenceLength(faiIndex, contig) <<  endl;
+
+			unsigned int beginPos = 0;
+			while (beginPos+options.window_size < sequenceLength(faiIndex, contig))
+			{
+				map<string,int> context_map;
+				new_context_map(context_map);
+	
+				readRegion(reference_seq, faiIndex, contig, beginPos, beginPos + options.window_size);
+
+				// count the c's
+				unsigned int total_C = count_Cs(reference_seq);
+				reverseComplement(reference_seq);
+				total_C = total_C + count_Cs(reference_seq);
+				//cout << contig << "\t" << beginPos << "\t" << beginPos + options.window_size << "\t" << total_C << endl;
+
+				// contexts
+				if(beginPos > 0 && (beginPos+options.window_size+2 < sequenceLength(faiIndex, contig)) )
+				{
+					// get what we want with +2 on either side
+					readRegion(reference_seq, faiIndex, contig, beginPos-2, beginPos + options.window_size+2);
+					calculate_contexts(reference_seq, context_map);
+					reverseComplement(reference_seq);
+					calculate_contexts(reference_seq, context_map);
+				//	print_map(context_map);
+				}
+				else 
+				{
+					if(beginPos < 2)	//	 we're at the start!
+						readRegion(reference_seq, faiIndex, contig, beginPos, beginPos + options.window_size+2);
+					Dna5String pad = "NN";
+					pad += reference_seq;
+					reference_seq = pad;
+					calculate_contexts(reference_seq, context_map);
+					reverseComplement(reference_seq);
+					calculate_contexts(reference_seq, context_map);
+				}
+
+				write_record(gffOutFile, faiIndex, contig, beginPos, beginPos + options.window_size, total_C, context_map, options);
+				/* For debugging
+				cout << reference_seq << endl;
+				reverseComplement(reference_seq);
+				cout << reference_seq << endl;
+				print_map(context_map);
+				*/
+
+				beginPos = beginPos + options.window_size;
+			}
+			// Do the last one too. Will work that out later but it's just this
+       	        	map<string,int> context_map;
+       		        new_context_map(context_map);
+			readRegion(reference_seq, faiIndex, contig, beginPos, sequenceLength(faiIndex, contig));
+	                unsigned int total_C = count_Cs(reference_seq);
+	                reverseComplement(reference_seq);
+	                total_C = total_C + count_Cs(reference_seq);
+			readRegion(reference_seq, faiIndex, contig, beginPos-2, sequenceLength(faiIndex, contig));
+			Dna5String pad = "NN";
+			reference_seq += pad;
+			calculate_contexts(reference_seq, context_map);
+			reverseComplement(reference_seq);
+			calculate_contexts(reference_seq, context_map);
+			write_record(gffOutFile, faiIndex, contig, beginPos, (int)sequenceLength(faiIndex, contig), total_C, context_map, options);
+		}
+	} 
+	else 
+	{
+		while(!atEnd(gffInFile))
+		{
+			GffRecord region;
+			readRecord(region, gffInFile);
+
 			map<string,int> context_map;
 			new_context_map(context_map);
+			unsigned idx = 0;
+			if (!getIdByName(idx, faiIndex, region.ref))
+				std::cout << "ERROR: FAI index has no entry for " << endl;
 
-			readRegion(reference_seq, faiIndex, contig, beginPos, beginPos + options.window_size);
+			readRegion(reference_seq, faiIndex, idx, region.beginPos, region.endPos);
 
-			// count the c's
 			unsigned int total_C = count_Cs(reference_seq);
 			reverseComplement(reference_seq);
 			total_C = total_C + count_Cs(reference_seq);
-			//cout << contig << "\t" << beginPos << "\t" << beginPos + options.window_size << "\t" << total_C << endl;
-
-			// contexts
-			if(beginPos > 0 && (beginPos+options.window_size+2 < sequenceLength(faiIndex, contig)) )
+					
+			if(region.beginPos > 0 && (region.endPos+2 < sequenceLength(faiIndex, idx)) )
 			{
-				// get what we want with +2 on either side
-				readRegion(reference_seq, faiIndex, contig, beginPos-2, beginPos + options.window_size+2);
+				readRegion(reference_seq, faiIndex, idx, region.beginPos-2, region.endPos+2);
 				calculate_contexts(reference_seq, context_map);
 				reverseComplement(reference_seq);
 				calculate_contexts(reference_seq, context_map);
-			//	print_map(context_map);
 			}
-			else 
+			else
 			{
-				if(beginPos < 2)	//	 we're at the start!
-					readRegion(reference_seq, faiIndex, contig, beginPos, beginPos + options.window_size+2);
+				if(region.beginPos < 2)
+					readRegion(reference_seq, faiIndex, idx, region.beginPos, region.endPos+2);
 				Dna5String pad = "NN";
 				pad += reference_seq;
 				reference_seq = pad;
@@ -248,30 +314,8 @@ int main(int argc, char const ** argv)
 				calculate_contexts(reference_seq, context_map);
 			}
 
-			write_record(gffOutFile, faiIndex, contig, beginPos, beginPos + options.window_size, total_C, context_map, options);
-			/* For debugging
-			cout << reference_seq << endl;
-			reverseComplement(reference_seq);
-			cout << reference_seq << endl;
-			print_map(context_map);
-			*/
-
-			beginPos = beginPos + options.window_size;
+			write_record(gffOutFile, faiIndex, idx, region.beginPos, region.endPos, total_C, context_map, options);
 		}
-		// Do the last one too. Will work that out later but it's just this
-                map<string,int> context_map;
-                new_context_map(context_map);
-		readRegion(reference_seq, faiIndex, contig, beginPos, sequenceLength(faiIndex, contig));
-                unsigned int total_C = count_Cs(reference_seq);
-                reverseComplement(reference_seq);
-                total_C = total_C + count_Cs(reference_seq);
-		readRegion(reference_seq, faiIndex, contig, beginPos-2, sequenceLength(faiIndex, contig));
-		Dna5String pad = "NN";
-		reference_seq += pad;
-		calculate_contexts(reference_seq, context_map);
-		reverseComplement(reference_seq);
-		calculate_contexts(reference_seq, context_map);
-		write_record(gffOutFile, faiIndex, contig, beginPos, (int)sequenceLength(faiIndex, contig), total_C, context_map, options);
 	}
 
 	close(gffOutFile);
