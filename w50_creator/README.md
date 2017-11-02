@@ -36,6 +36,12 @@ You can also use this for counts data by specifying the `-t count` flag which ha
 ./w50_creator -i example_data/reads_start_bases.gff -t count -s 1 > reads_summed_w1.gff
 ```
 
+You can also use the `-t avg` flag, this will average the score by the number of entries in that bin/window.
+
+```
+./w50_creator -i example_data/reads_start_bases.gff -t avg -s 50 > score_avg_w50.gff
+```
+
 ## Testing
 
 ### Test Machine
