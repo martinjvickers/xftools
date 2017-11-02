@@ -30,7 +30,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	setDefaultValue(parser, "window-size", "50");
 
 	addOption(parser, seqan::ArgParseOption("t", "addition-type", "Addition type specifies the behaviour when adding two or more rows together.", seqan::ArgParseArgument::STRING, "STR"));
-	setValidValues(parser, "addition-type", "count methyl");
+	setValidValues(parser, "addition-type", "count methyl avg");
 	setDefaultValue(parser, "addition-type", "methyl");
 
 	addOption(parser, seqan::ArgParseOption("l", "label", "Column 3 GFF output label. Useful if using SignalMap", seqan::ArgParseArgument::STRING, "TEXT"));
@@ -166,6 +166,9 @@ int main(int argc, char const ** argv)
 				} else if(options.type=="count") {
 					score = p.second.score;
 					cout << currentRef << "\t" << toCString(options.program_name) << "\t" << toCString(options.label) << "\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tn=" << p.second.n << endl;
+				} else if(options.type=="avg") {
+		                        score = p.second.score / p.second.n;
+		                        cout << currentRef << "\t" << toCString(options.program_name) << "\t" << toCString(options.label) << "\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tn=" << p.second.n << endl;
 				}
 			}
 	
@@ -298,6 +301,9 @@ int main(int argc, char const ** argv)
 			}
 		} else if(options.type=="count") {
 			score = p.second.n;
+			cout << currentRef << "\t" << toCString(options.program_name) << "\t" << toCString(options.label) << "\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tn=" << p.second.n << endl;
+		} else if(options.type=="avg") {
+			score = p.second.score / p.second.n;
 			cout << currentRef << "\t" << toCString(options.program_name) << "\t" << toCString(options.label) << "\t"<< p.first - (options.window_size-1) << "\t" << p.first << "\t"<< score << "\t.\t.\tn=" << p.second.n << endl;
 		}
 	}
