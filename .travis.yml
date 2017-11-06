@@ -81,6 +81,12 @@ script:
   - make -j2
   - ./bam2bed
 
+  # tss_label
+  - cd ../tss_label
+  - cmake ../tss_label -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - make -j2
+  - ./tss_label
+
   # cytosine_abundance
   - cd ../cytosine_abundance
   - cmake ../cytosine_abundance -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
@@ -88,10 +94,11 @@ script:
   - ./cytosine_abundance
   - ./cytosine_abundance -r example_data/region.gff -i example_data/TAIR10_reference_ChrC.fa -o meh.gff
 
+  # return back to parent directory
   - cd ../
 
   # now make make the release
-  - tar cvzf xftools.tar.gz gff_feature_merge/gff_feature_merge single-c_combine/single-c_combine weighted_w1_extractor/weighted_w1_extractor bam2bed/bam2bed methyl_coverage/methyl_coverage bam_2_w1_extractor/bam_2_w1_extractor fasta_insert/fasta_insert w50_creator/w50_creator cytosine_abundance/cytosine_abundance
+  - tar cvzf xftools.tar.gz gff_feature_merge/gff_feature_merge single-c_combine/single-c_combine weighted_w1_extractor/weighted_w1_extractor bam2bed/bam2bed methyl_coverage/methyl_coverage bam_2_w1_extractor/bam_2_w1_extractor fasta_insert/fasta_insert w50_creator/w50_creator cytosine_abundance/cytosine_abundance tss_label/tss_label
 
 deploy:
   provider: releases
