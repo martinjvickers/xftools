@@ -168,17 +168,7 @@ void process_annotation(GffFileIn &gffAnnotationIn, map< CharString, map<CharStr
 }
 
 /*
-        CharString name;
-        CharString chr;
-        int start;
-        int end;
-        int TSS_end;
-        bool TSS_initial;
-        int TSS_remaining;
-        char strand;
-        vector<GffRecord> exons;
-        double score_for_tss;
-        double score_for_gene;
+Write out to file, along with do the RPKM and ratio calculations
 */
 void print_out(map< CharString, map <CharString, geneElement>> &exons, double sum_score, ModifyStringOptions options)
 {

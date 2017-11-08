@@ -19,7 +19,7 @@ pausing_index - XFTOOLS
 =======================
 
 SYNOPSIS
-    pausing_index -i input.w1.gff -a reference.gff -tss 200 [OPTIONS]
+    pausing_index -i input.w1.gff -a reference.gff -tss 200 -o out.gff [OPTIONS]
 
 DESCRIPTION
     Calculates the pausing index of genes
@@ -31,11 +31,11 @@ OPTIONS
           Turn this option off to disable version update notifications of the application. One of 1, ON, TRUE, T, YES,
           0, OFF, FALSE, F, and NO. Default: 1.
     -i, --input-file INPUT_FILE
-          Path to the input file
+          Path to the input w1 file
     -a, --annotation-file INPUT_FILE
-          Path to the input file
-    -o, --output-file INPUT_FILE
-          Path to the input file
+          Path to your annotation file
+    -o, --output-file OUTPUT_FILE
+          Path to your output file
     --version
           Display version information.
     -tss, --tss-size INTEGER
