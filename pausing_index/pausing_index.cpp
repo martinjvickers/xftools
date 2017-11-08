@@ -28,6 +28,7 @@ struct ModifyStringOptions
 {
         CharString inputFileName;
 	CharString annotationFileName;
+	CharString outputFileName;
 	int tss;
 };
 
@@ -38,6 +39,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	setRequired(parser, "input-file");
 	addOption(parser, seqan::ArgParseOption("a", "annotation-file", "Path to the input file", seqan::ArgParseArgument::INPUT_FILE, "IN"));
 	setRequired(parser, "annotation-file");
+	addOption(parser, seqan::ArgParseOption("o", "output-file", "Path to the input file", seqan::ArgParseArgument::INPUT_FILE, "OUT"));
+	setRequired(parser, "output-file");
 	setShortDescription(parser, "XFTOOLS");
 	setVersion(parser, "0.0.1");
 	setDate(parser, "November 2017");
@@ -55,6 +58,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 
 	getOptionValue(options.inputFileName, parser, "input-file");
 	getOptionValue(options.annotationFileName, parser, "annotation-file");
+	getOptionValue(options.outputFileName, parser, "output-file");
 	getOptionValue(options.tss, parser, "tss-size");
 
 	return seqan::ArgumentParser::PARSE_OK;
@@ -67,6 +71,7 @@ struct geneElement
 	int start;
 	int end;
 	int TSS_end;
+	int sum_exon;
 	bool TSS_initial;
 	int TSS_remaining;
 	char strand;
@@ -74,45 +79,6 @@ struct geneElement
 	double score_for_tss;
 	double score_for_gene;
 };
-
-void calculate_values(GffRecord &record, auto &element)
-{
-	for(auto e : element.second.exons)
-	{
-		// count if it's within an exon
-		if ( (record.beginPos+1 >= e.beginPos+1) && (record.endPos <= e.endPos) )
-		{
-			// here, we are within the exon, so we increment either
-			// the tss or the gene depending on what side we're on
-			if(element.second.strand == '+')
-			{
-				if(record.beginPos+1 < element.second.TSS_end)
-				{
-					element.second.score_for_tss = element.second.score_for_tss + record.score;
-					cout << "Point:" << record.ref << " " << record.beginPos+1 << " with exon (" << element.second.name << ")[" << element.second.chr << "," << element.second.strand << " [" << e.beginPos+1 << "-" << e.endPos << "]" << " TSS_remain=" << element.second.TSS_remaining << " TSS score=" << element.second.score_for_tss << " " << element.second.TSS_end << " " << element.second.start << "-" << element.second.end << endl;
-				}	
-				else
-				{
-					element.second.score_for_gene = element.second.score_for_gene + record.score;
-					cout << "Point:" << record.ref << " " << record.beginPos+1 << " with exon (" << element.second.name << ")[" << element.second.chr << "," << element.second.strand << " [" << e.beginPos+1 << "-" << e.endPos << "]" << " TSS_remain=" << element.second.TSS_remaining << " GENE score=" << element.second.score_for_gene << " " << element.second.TSS_end << " " << element.second.start << "-" << element.second.end << endl;
-				}
-			} 
-			else if(element.second.strand == '-')
-			{
-				if(record.beginPos+1 > element.second.TSS_end)
-				{
-					element.second.score_for_tss = element.second.score_for_tss + record.score;
-					cout << "Point:" << record.ref << " " << record.beginPos+1 << " with exon (" << element.second.name << ")[" << element.second.chr << "," << element.second.strand << " [" << e.beginPos+1 << "-" << e.endPos << "]" << " TSS_remain=" << element.second.TSS_remaining << " TSS score=" << element.second.score_for_tss << " " << element.second.TSS_end << " " << element.second.start << "-" << element.second.end << endl;
-				}
-				else
-				{
-					element.second.score_for_gene = element.second.score_for_gene + record.score;
-                                        cout << "Point:" << record.ref << " " << record.beginPos+1 << " with exon (" << element.second.name << ")[" << element.second.chr << "," << element.second.strand << " [" << e.beginPos+1 << "-" << e.endPos << "]" << " TSS_remain=" << element.second.TSS_remaining << " GENE score=" << element.second.score_for_gene << " " << element.second.TSS_end << " " << element.second.start << "-" << element.second.end << endl;
-				}
-			}
-		}
-	}
-}
 
 // put the annotation into a datastructure
 /*
@@ -122,7 +88,7 @@ Chr1	TAIR10	exon	4486	4605	.	+	.	Parent=AT1G01010.1
 Chr1	TAIR10	exon	4706	5095	.	+	.	Parent=AT1G01010.1
 Chr1	TAIR10	exon	5174	5326	.	+	.	Parent=AT1G01010.1
 */
-void process_annotation(GffFileIn &gffAnnotationIn, map< CharString, geneElement> &exons, map< CharString, map <CharString, geneElement>> &newExons)
+void process_annotation(GffFileIn &gffAnnotationIn, map< CharString, map<CharString, geneElement>> &exons, ModifyStringOptions options)
 {
 	GffRecord record;
 	while (!atEnd(gffAnnotationIn))
@@ -130,148 +96,202 @@ void process_annotation(GffFileIn &gffAnnotationIn, map< CharString, geneElement
 		readRecord(record, gffAnnotationIn);
 		CharString label = record.tagValues[0];
 
-		newExons[record.ref][label].exons.push_back(record);
+		// caps for the ref
+		string curr_ref = toCString(record.ref);
+		for (string::size_type i = 0; i < curr_ref.length(); ++i)
+			boost::to_upper(curr_ref);
 
-		if ( exons.find(label) == exons.end() )
+		if ( exons[curr_ref].find(label) == exons[curr_ref].end() )
 		{
-			exons[label].name = label;
-			exons[label].start = record.beginPos;
-			exons[label].end = record.endPos;
+			exons[curr_ref][label].name = label;
+			exons[curr_ref][label].start = record.beginPos;
+			exons[curr_ref][label].end = record.endPos;
 
 			// Set chromosome
-			exons[label].chr = record.ref;
+			exons[curr_ref][label].chr = record.ref;
 
 			// set flag to say this is the first time we've
 			// encountered this label
-			exons[label].TSS_initial = true;
-			exons[label].TSS_remaining = 200;
+			exons[curr_ref][label].TSS_initial = true;
+			exons[curr_ref][label].TSS_remaining = options.tss;
+
+			//set scores to zero
+			exons[curr_ref][label].score_for_tss = 0.0;
+			exons[curr_ref][label].score_for_gene = 0.0;
 		} 
 		else 
 		{
 			// Set start
-			if(record.beginPos+1 < exons[label].start)
-				exons[label].start = record.beginPos+1;
+			if(record.beginPos+1 < exons[curr_ref][label].start)
+				exons[curr_ref][label].start = record.beginPos+1;
 
 			// Set end
-			if(record.endPos > exons[label].end)
-				exons[label].end = record.endPos;
+			if(record.endPos > exons[curr_ref][label].end)
+				exons[curr_ref][label].end = record.endPos;
 		}
 
 		// Push back the record
-		exons[label].exons.push_back(record);
-		exons[label].strand = record.strand;
+		exons[curr_ref][label].exons.push_back(record);
+		exons[curr_ref][label].strand = record.strand;
+		exons[curr_ref][label].sum_exon = exons[curr_ref][label].sum_exon + (record.endPos - record.beginPos);
 
-		if(exons[label].TSS_remaining > 0)
+		if(exons[curr_ref][label].TSS_remaining > 0)
 		{
 			// if the bases remaining is less than the 
-			if(exons[label].strand == '+')
+			if(exons[curr_ref][label].strand == '+')
 			{
 				// this decides if our current exon contains the end of our TSS
-				if((record.beginPos + exons[label].TSS_remaining) < record.endPos)
+				if((record.beginPos + exons[curr_ref][label].TSS_remaining) < record.endPos)
 				{
-					exons[label].TSS_end = record.beginPos + exons[label].TSS_remaining;
-					exons[label].TSS_remaining = 0;
+					exons[curr_ref][label].TSS_end = record.beginPos + exons[curr_ref][label].TSS_remaining;
+					exons[curr_ref][label].TSS_remaining = 0;
 				}
 				else // if it's not within this one, simply update the remaining
 				{
-					exons[label].TSS_remaining = exons[label].TSS_remaining - (record.endPos-record.beginPos);
+					exons[curr_ref][label].TSS_remaining = exons[curr_ref][label].TSS_remaining - (record.endPos-record.beginPos);
 				}
 			}
-			else if (exons[label].strand == '-')
+			else if (exons[curr_ref][label].strand == '-')
 			{
-				if((record.endPos - exons[label].TSS_remaining) > record.beginPos)
+				if((record.endPos - exons[curr_ref][label].TSS_remaining) > record.beginPos)
 				{
-					exons[label].TSS_end = record.endPos - exons[label].TSS_remaining;
-					exons[label].TSS_remaining = 0;
+					exons[curr_ref][label].TSS_end = record.endPos - exons[curr_ref][label].TSS_remaining;
+					exons[curr_ref][label].TSS_remaining = 0;
 				}
 				else
 				{
-					exons[label].TSS_remaining = exons[label].TSS_remaining - (record.endPos-record.beginPos);
+					exons[curr_ref][label].TSS_remaining = exons[curr_ref][label].TSS_remaining - (record.endPos-record.beginPos);
 				}
 			}
 		}
-
 	}
-
-	//// Now I've made this, I could transfer this into a better data structure 
-	//// as we understand the extents of the data set
-
-	// let's see our data structure
-/*
-	for(auto e : exons)
-	{
-		cout << e.first << "\t" << e.second.start << "\t" << e.second.end << "\t" << e.second.strand << "\t" << e.second.TSS_end << "\t" << e.second.TSS_remaining << endl;
-		for(auto i : e.second.exons)
-		{
-			cout << "\t" << i.beginPos << "\t" << i.endPos << endl;
-		}
-	}
-*/
 }
 
 /*
-w1 file;
-
-chr1	dzlab	window	5978	5978	1	.	.	n=1
-chr1	dzlab	window	6000	6000	2	.	.	n=2
-chr1	dzlab	window	6017	6017	1	.	.	n=1
-chr1	dzlab	window	6020	6020	1	.	.	n=1
-chr1	dzlab	window	6063	6063	3	.	.	n=3
-chr1	dzlab	window	6064	6064	1	.	.	n=1
-chr1	dzlab	window	6075	6075	2	.	.	n=2
-chr1	dzlab	window	6192	6192	1	.	.	n=1
-chr1	dzlab	window	6193	6193	2	.	.	n=2
-chr1	dzlab	window	6194	6194	1	.	.	n=1
-
-
-We are making a big assumption with this in that the input file and the 
-annotation file are sorted correctly. I probably should do a check on 
-this at the beginning.
+        CharString name;
+        CharString chr;
+        int start;
+        int end;
+        int TSS_end;
+        bool TSS_initial;
+        int TSS_remaining;
+        char strand;
+        vector<GffRecord> exons;
+        double score_for_tss;
+        double score_for_gene;
 */
-void process_data(GffFileIn &gffFileIn, map< CharString, geneElement> &exons)
+void print_out(map< CharString, map <CharString, geneElement>> &exons, double sum_score, ModifyStringOptions options)
+{
+	GffFileOut gffOutFile;
+	if(!open(gffOutFile, toCString(options.outputFileName)))
+		std::cerr << "ERROR: Could not open output.gff" " for reading.\n";
+
+	for(auto chr : exons)
+	{
+		for(auto gene : chr.second)
+		{
+			double tss_rpkm = ((gene.second.score_for_tss*1000000000)/sum_score) / options.tss;
+			double gene_rpkm = ((gene.second.score_for_gene*1000000000)/sum_score) / (gene.second.sum_exon - options.tss);
+
+			GffRecord record;
+			record.ref = gene.second.chr;
+			record.source = "pausing_index";
+			record.type = "gene";
+			record.beginPos = gene.second.start;
+			record.endPos = gene.second.end;
+			record.strand = gene.second.strand;
+			if(gene_rpkm == 0.0 || ((tss_rpkm / gene_rpkm) == 0))
+				record.score = GffRecord::INVALID_SCORE();
+			else
+				record.score = tss_rpkm / gene_rpkm;
+
+			appendValue(record.tagNames, "Parent");
+			appendValue(record.tagValues, gene.first);
+			appendValue(record.tagNames, "SumExonLenth");
+                        appendValue(record.tagValues, to_string(gene.second.sum_exon));
+			appendValue(record.tagNames, "SumTSS");
+			appendValue(record.tagValues, to_string(gene.second.score_for_tss));
+			appendValue(record.tagNames, "SumGene");
+                        appendValue(record.tagValues, to_string(gene.second.score_for_gene));
+			appendValue(record.tagNames, "rpkmTSS");
+                        appendValue(record.tagValues, to_string(tss_rpkm));
+                        appendValue(record.tagNames, "rpkmGene");
+                        appendValue(record.tagValues, to_string(gene_rpkm));
+
+			writeRecord(gffOutFile, record);
+		}
+	}
+
+	close(gffOutFile);
+}
+
+void process_input(GffFileIn &gffFileIn, map< CharString, map<int, GffRecord>> &w1_file, double &sum_score)
 {
 	GffRecord record;
-	int count = 0;
-        while (!atEnd(gffFileIn))
+	while (!atEnd(gffFileIn))
         {
 		readRecord(record, gffFileIn);
 
-		//this is super lazy right now but i just want it
-		//to work. I will consider a better alternative
-		//when i properly rewrite WBA
-		for(auto e : exons)
-		{
-			// get our contigs and check that they're the same
-			// conver to uppercase because it's easier
-			string data_ref = toCString(record.ref);
-			string exon_ref = toCString(e.second.chr);
-			for (string::size_type i = 0; i < data_ref.length(); ++i)
-				boost::to_upper(data_ref);
-			for (string::size_type i = 0; i < exon_ref.length(); ++i)
-				boost::to_upper(exon_ref);
+		// make upper case
+		string ref = toCString(record.ref);
+		for (string::size_type i = 0; i < ref.length(); ++i)
+			boost::to_upper(ref);
 
-			
-			if(data_ref == exon_ref)
-			{
-				// the data is within this gene. Now lets go through the exons
-				if( (record.beginPos+1 >= e.second.start) && (record.endPos <= e.second.end))
-				{
-//					geneElement meh = e.second;
-					calculate_values(record, e);
-				}
-			}
-		}	
-		count++;
+		w1_file[ref][record.beginPos+1] = record;
+		
+		// sum the score for RPKM later
+		sum_score += record.score;		
 	}
-	cout << "Processed " << count << endl;
 }
 
-/*
-	I'm not too happy with my implementation of this but time
-	constraints mean I'm struggling to get this in a nice way
-	so I'm just completing the task without considering 
-	performance.
-*/
+void calculate_counts(map< CharString, map <CharString, geneElement>> &exons, map< CharString, map<int, GffRecord>> &w1_file)
+{
+	for(auto &chr : exons) // chr now is a map of elements
+	{
+		for(auto &gene : chr.second) // gene is now a particular geneElement
+		{
+			for(auto &exon : gene.second.exons)
+			{
+				// make the ref upper case
+				string ref = toCString(exon.ref);
+				for (string::size_type i = 0; i < ref.length(); ++i)
+					boost::to_upper(ref);
+				
+				// let's find the finding
+				for(int i = exon.beginPos+1; i <= exon.endPos; i++)
+				{
+					if ( w1_file[ref].find(i) != w1_file[ref].end() )
+                			{
+						if(gene.second.strand == '+')
+						{
+                                			if(i < gene.second.TSS_end)
+							{
+								gene.second.score_for_tss = gene.second.score_for_tss + w1_file[ref][i].score;
+								
+							}
+							else
+							{
+								gene.second.score_for_gene = gene.second.score_for_gene + w1_file[ref][i].score;
+							}
+						}
+						else if(gene.second.strand == '-')
+						{
+							if(i > gene.second.TSS_end)
+							{
+								gene.second.score_for_tss = gene.second.score_for_tss + w1_file[ref][i].score;
+							}
+							else
+							{
+								gene.second.score_for_gene = gene.second.score_for_gene + w1_file[ref][i].score;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 int main(int argc, char const ** argv)
 {
 	//parse our options
@@ -290,13 +310,25 @@ int main(int argc, char const ** argv)
 	if (!open(gffAnnotationIn, toCString(options.annotationFileName)))
 		return 1;
 
-	// get the exons into memory
-	map< CharString, geneElement> exons;
-	map< CharString, map <CharString, geneElement>> newExons;
-	process_annotation(gffAnnotationIn, exons, newExons);
+	// Let's make a map of the input file
+	double sum_score = 0.0;
+	map< CharString, map<int, GffRecord>> w1_file;
+	process_input(gffFileIn, w1_file, sum_score);
+	close(gffFileIn);
 
-	// process through the w1 file
-	process_data(gffFileIn, exons);
+	// now we put the exons into RAM and get our TSS/gene info
+	map< CharString, map <CharString, geneElement>> exons;
+	process_annotation(gffAnnotationIn, exons, options);
+	close(gffAnnotationIn);
+
+	// do the calculations
+	calculate_counts(exons, w1_file);
+
+	// write out
+	print_out(exons, sum_score, options);
+
+	cout.precision(17);
+	cout << "The sum of the score (column 6) from " << options.inputFileName << " was " << sum_score << endl;
 
 	return 0;
 }
