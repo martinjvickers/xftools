@@ -35,11 +35,11 @@ struct ModifyStringOptions
 seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
 {
 	seqan::ArgumentParser parser("pausing_index");
-	addOption(parser, seqan::ArgParseOption("i", "input-file", "Path to the input file", seqan::ArgParseArgument::INPUT_FILE, "IN"));
+	addOption(parser, seqan::ArgParseOption("i", "input-file", "Path to the input w1 file", seqan::ArgParseArgument::INPUT_FILE, "IN"));
 	setRequired(parser, "input-file");
-	addOption(parser, seqan::ArgParseOption("a", "annotation-file", "Path to the input file", seqan::ArgParseArgument::INPUT_FILE, "IN"));
+	addOption(parser, seqan::ArgParseOption("a", "annotation-file", "Path to your annotation file", seqan::ArgParseArgument::INPUT_FILE, "IN"));
 	setRequired(parser, "annotation-file");
-	addOption(parser, seqan::ArgParseOption("o", "output-file", "Path to the input file", seqan::ArgParseArgument::INPUT_FILE, "OUT"));
+	addOption(parser, seqan::ArgParseOption("o", "output-file", "Path to your output file", seqan::ArgParseArgument::OUTPUT_FILE, "OUT"));
 	setRequired(parser, "output-file");
 	setShortDescription(parser, "XFTOOLS");
 	setVersion(parser, "0.0.1");
