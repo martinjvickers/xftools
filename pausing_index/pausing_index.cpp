@@ -244,7 +244,7 @@ void process_input(GffFileIn &gffFileIn, map< CharString, map<int, GffRecord>> &
 	}
 }
 
-void calculate_counts(map< CharString, map <CharString, geneElement>> &exons, map< CharString, map<int, GffRecord>> &w1_file)
+void calculate_counts(map< CharString, map <CharString, geneElement>> &exons, map< CharString, map<int, GffRecord>> &w1_file, ModifyStringOptions options)
 {
 	for(auto &chr : exons) // chr now is a map of elements
 	{
@@ -264,12 +264,17 @@ void calculate_counts(map< CharString, map <CharString, geneElement>> &exons, ma
                 			{
 						if(gene.second.strand == '+')
 						{
+							// if within the TSS
                                 			if(i < gene.second.TSS_end)
 							{
 								gene.second.score_for_tss = gene.second.score_for_tss + w1_file[ref][i].score;
 								
+							} // or the tss size we've specified is larger than the gene
+							else if(gene.second.TSS_end == 0 && ((gene.second.end - gene.second.start) < options.tss))
+							{
+								gene.second.score_for_tss = gene.second.score_for_tss + w1_file[ref][i].score;
 							}
-							else
+							else // else it's in the gene itself
 							{
 								gene.second.score_for_gene = gene.second.score_for_gene + w1_file[ref][i].score;
 							}
@@ -277,6 +282,10 @@ void calculate_counts(map< CharString, map <CharString, geneElement>> &exons, ma
 						else if(gene.second.strand == '-')
 						{
 							if(i > gene.second.TSS_end)
+							{
+								gene.second.score_for_tss = gene.second.score_for_tss + w1_file[ref][i].score;
+							}
+							else if(gene.second.TSS_end == 0 && ((gene.second.end - gene.second.start) < options.tss))
 							{
 								gene.second.score_for_tss = gene.second.score_for_tss + w1_file[ref][i].score;
 							}
@@ -322,7 +331,7 @@ int main(int argc, char const ** argv)
 	close(gffAnnotationIn);
 
 	// do the calculations
-	calculate_counts(exons, w1_file);
+	calculate_counts(exons, w1_file, options);
 
 	// write out
 	print_out(exons, sum_score, options);
