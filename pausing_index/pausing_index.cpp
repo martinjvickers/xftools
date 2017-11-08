@@ -67,6 +67,8 @@ struct geneElement
 	int start;
 	int end;
 	int TSS_end;
+	bool TSS_initial;
+	int TSS_remaining;
 	char strand;
 	vector<GffRecord> exons;
 	double score_for_tss;
@@ -80,9 +82,34 @@ void calculate_values(GffRecord &record, auto &element)
 		// count if it's within an exon
 		if ( (record.beginPos+1 >= e.beginPos+1) && (record.endPos <= e.endPos) )
 		{
-			cout << "Calc " << record.ref << " " << element.second.chr << " " << record.beginPos+1 << " " << e.beginPos+1 << " " << record.endPos << " " << e.endPos << endl;
-			//decide is we are within the TSS
-			
+			// here, we are within the exon, so we increment either
+			// the tss or the gene depending on what side we're on
+			if(element.second.strand == '+')
+			{
+				if(record.beginPos+1 < element.second.TSS_end)
+				{
+					element.second.score_for_tss = element.second.score_for_tss + record.score;
+					cout << "Point:" << record.ref << " " << record.beginPos+1 << " with exon (" << element.second.name << ")[" << element.second.chr << "," << element.second.strand << " [" << e.beginPos+1 << "-" << e.endPos << "]" << " TSS_remain=" << element.second.TSS_remaining << " TSS score=" << element.second.score_for_tss << " " << element.second.TSS_end << " " << element.second.start << "-" << element.second.end << endl;
+				}	
+				else
+				{
+					element.second.score_for_gene = element.second.score_for_gene + record.score;
+					cout << "Point:" << record.ref << " " << record.beginPos+1 << " with exon (" << element.second.name << ")[" << element.second.chr << "," << element.second.strand << " [" << e.beginPos+1 << "-" << e.endPos << "]" << " TSS_remain=" << element.second.TSS_remaining << " GENE score=" << element.second.score_for_gene << " " << element.second.TSS_end << " " << element.second.start << "-" << element.second.end << endl;
+				}
+			} 
+			else if(element.second.strand == '-')
+			{
+				if(record.beginPos+1 > element.second.TSS_end)
+				{
+					element.second.score_for_tss = element.second.score_for_tss + record.score;
+					cout << "Point:" << record.ref << " " << record.beginPos+1 << " with exon (" << element.second.name << ")[" << element.second.chr << "," << element.second.strand << " [" << e.beginPos+1 << "-" << e.endPos << "]" << " TSS_remain=" << element.second.TSS_remaining << " TSS score=" << element.second.score_for_tss << " " << element.second.TSS_end << " " << element.second.start << "-" << element.second.end << endl;
+				}
+				else
+				{
+					element.second.score_for_gene = element.second.score_for_gene + record.score;
+                                        cout << "Point:" << record.ref << " " << record.beginPos+1 << " with exon (" << element.second.name << ")[" << element.second.chr << "," << element.second.strand << " [" << e.beginPos+1 << "-" << e.endPos << "]" << " TSS_remain=" << element.second.TSS_remaining << " GENE score=" << element.second.score_for_gene << " " << element.second.TSS_end << " " << element.second.start << "-" << element.second.end << endl;
+				}
+			}
 		}
 	}
 }
@@ -95,13 +122,15 @@ Chr1	TAIR10	exon	4486	4605	.	+	.	Parent=AT1G01010.1
 Chr1	TAIR10	exon	4706	5095	.	+	.	Parent=AT1G01010.1
 Chr1	TAIR10	exon	5174	5326	.	+	.	Parent=AT1G01010.1
 */
-void process_annotation(GffFileIn &gffAnnotationIn, map< CharString, geneElement> &exons)
+void process_annotation(GffFileIn &gffAnnotationIn, map< CharString, geneElement> &exons, map< CharString, map <CharString, geneElement>> &newExons)
 {
 	GffRecord record;
 	while (!atEnd(gffAnnotationIn))
 	{
 		readRecord(record, gffAnnotationIn);
 		CharString label = record.tagValues[0];
+
+		newExons[record.ref][label].exons.push_back(record);
 
 		if ( exons.find(label) == exons.end() )
 		{
@@ -112,7 +141,10 @@ void process_annotation(GffFileIn &gffAnnotationIn, map< CharString, geneElement
 			// Set chromosome
 			exons[label].chr = record.ref;
 
-			// sort out our TSS end position
+			// set flag to say this is the first time we've
+			// encountered this label
+			exons[label].TSS_initial = true;
+			exons[label].TSS_remaining = 200;
 		} 
 		else 
 		{
@@ -124,11 +156,57 @@ void process_annotation(GffFileIn &gffAnnotationIn, map< CharString, geneElement
 			if(record.endPos > exons[label].end)
 				exons[label].end = record.endPos;
 		}
-		
+
 		// Push back the record
 		exons[label].exons.push_back(record);
 		exons[label].strand = record.strand;
+
+		if(exons[label].TSS_remaining > 0)
+		{
+			// if the bases remaining is less than the 
+			if(exons[label].strand == '+')
+			{
+				// this decides if our current exon contains the end of our TSS
+				if((record.beginPos + exons[label].TSS_remaining) < record.endPos)
+				{
+					exons[label].TSS_end = record.beginPos + exons[label].TSS_remaining;
+					exons[label].TSS_remaining = 0;
+				}
+				else // if it's not within this one, simply update the remaining
+				{
+					exons[label].TSS_remaining = exons[label].TSS_remaining - (record.endPos-record.beginPos);
+				}
+			}
+			else if (exons[label].strand == '-')
+			{
+				if((record.endPos - exons[label].TSS_remaining) > record.beginPos)
+				{
+					exons[label].TSS_end = record.endPos - exons[label].TSS_remaining;
+					exons[label].TSS_remaining = 0;
+				}
+				else
+				{
+					exons[label].TSS_remaining = exons[label].TSS_remaining - (record.endPos-record.beginPos);
+				}
+			}
+		}
+
 	}
+
+	//// Now I've made this, I could transfer this into a better data structure 
+	//// as we understand the extents of the data set
+
+	// let's see our data structure
+/*
+	for(auto e : exons)
+	{
+		cout << e.first << "\t" << e.second.start << "\t" << e.second.end << "\t" << e.second.strand << "\t" << e.second.TSS_end << "\t" << e.second.TSS_remaining << endl;
+		for(auto i : e.second.exons)
+		{
+			cout << "\t" << i.beginPos << "\t" << i.endPos << endl;
+		}
+	}
+*/
 }
 
 /*
@@ -189,6 +267,10 @@ void process_data(GffFileIn &gffFileIn, map< CharString, geneElement> &exons)
 }
 
 /*
+	I'm not too happy with my implementation of this but time
+	constraints mean I'm struggling to get this in a nice way
+	so I'm just completing the task without considering 
+	performance.
 */
 int main(int argc, char const ** argv)
 {
@@ -210,7 +292,8 @@ int main(int argc, char const ** argv)
 
 	// get the exons into memory
 	map< CharString, geneElement> exons;
-	process_annotation(gffAnnotationIn, exons);
+	map< CharString, map <CharString, geneElement>> newExons;
+	process_annotation(gffAnnotationIn, exons, newExons);
 
 	// process through the w1 file
 	process_data(gffFileIn, exons);
