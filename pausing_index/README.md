@@ -30,5 +30,5 @@ Getting this to compile on work machine;
 ## Usage
 
 ```
-./pausing_index -i example_data/example.w1.gff -a example_data/example_annotation.gff -tss 200
+./pausing_index -i example_data/example.w1.gff -a example_data/example_annotation.gff -tss 200 -o meh.gff
 ```
