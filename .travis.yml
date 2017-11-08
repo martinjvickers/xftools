@@ -99,7 +99,7 @@ script:
   - cmake ../pausing_index -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
   - make -j2
   - ./pausing_index
-  - ./pausing_index -i example_data/example.w1.gff -a example_data/example_annotation.gff -tss 200 > meh
+  - ./pausing_index -i example_data/example.w1.gff -a example_data/example_annotation.gff -tss 200 -o meh.gff
 
   # return back to parent directory
   - cd ../
