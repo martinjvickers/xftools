@@ -4,6 +4,44 @@
 
 Given a GFF containing single base counts (i.e. from RNA-Seq) and a GFF containing exons this program will calculate the ratio between the rpkm at TSS and the rpkm for the rest of the coding exons. Known as the "pausing index".
 
+## Usage
+
+Quick start:
+
+```
+./pausing_index -i example_data/example.w1.gff -a example_data/example_annotation.gff -tss 200 -o out.gff
+```
+
+
+
+```
+pausing_index - XFTOOLS
+=======================
+
+SYNOPSIS
+    pausing_index -i input.w1.gff -a reference.gff -tss 200 [OPTIONS]
+
+DESCRIPTION
+    Calculates the pausing index of genes
+
+OPTIONS
+    -h, --help
+          Display the help message.
+    --version-check BOOL
+          Turn this option off to disable version update notifications of the application. One of 1, ON, TRUE, T, YES,
+          0, OFF, FALSE, F, and NO. Default: 1.
+    -i, --input-file INPUT_FILE
+          Path to the input file
+    -a, --annotation-file INPUT_FILE
+          Path to the input file
+    -o, --output-file INPUT_FILE
+          Path to the input file
+    --version
+          Display version information.
+    -tss, --tss-size INTEGER
+          Size of the TSS you wish to extract Default: 200.
+```
+
 ## Files
 
 ### Annotation
@@ -90,8 +128,3 @@ Getting this to compile on work machine;
 ~/cmake-3.6.0-rc2-Linux-x86_64/bin/cmake ../pausing_index -DCMAKE_MODULE_PATH=../../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
 ```
 
-## Usage
-
-```
-./pausing_index -i example_data/example.w1.gff -a example_data/example_annotation.gff -tss 200 -o out.gff
-```
