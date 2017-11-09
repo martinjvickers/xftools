@@ -149,18 +149,24 @@ void process_annotation(GffFileIn &gffAnnotationIn, map< CharString, map<CharStr
 				else // if it's not within this one, simply update the remaining
 				{
 					exons[curr_ref][label].TSS_remaining = exons[curr_ref][label].TSS_remaining - (record.endPos-record.beginPos);
+					if(exons[curr_ref][label].TSS_remaining == 0)
+						exons[curr_ref][label].TSS_end = record.beginPos+1;
 				}
 			}
 			else if (exons[curr_ref][label].strand == '-')
 			{
-				if((record.endPos - exons[curr_ref][label].TSS_remaining) > record.beginPos)
+				if((record.endPos - exons[curr_ref][label].TSS_remaining) >= (record.beginPos+1))
 				{
-					exons[curr_ref][label].TSS_end = record.endPos - exons[curr_ref][label].TSS_remaining;
+					exons[curr_ref][label].TSS_end = (record.endPos - exons[curr_ref][label].TSS_remaining); 
 					exons[curr_ref][label].TSS_remaining = 0;
 				}
 				else
 				{
-					exons[curr_ref][label].TSS_remaining = exons[curr_ref][label].TSS_remaining - (record.endPos-record.beginPos);
+					exons[curr_ref][label].TSS_remaining = exons[curr_ref][label].TSS_remaining - (record.endPos-(record.beginPos));
+
+					//if after making this adjustment and it's suddenly zero, it means we are at the begin position of this exon
+					if(exons[curr_ref][label].TSS_remaining == 0)
+						exons[curr_ref][label].TSS_end = record.beginPos+1;
 				}
 			}
 		}
@@ -207,6 +213,8 @@ void print_out(map< CharString, map <CharString, geneElement>> &exons, double su
                         appendValue(record.tagValues, to_string(tss_rpkm));
                         appendValue(record.tagNames, "rpkmGene");
                         appendValue(record.tagValues, to_string(gene_rpkm));
+			appendValue(record.tagNames, "TSSPos");
+			appendValue(record.tagValues, to_string(gene.second.TSS_end));
 
 			writeRecord(gffOutFile, record);
 		}
