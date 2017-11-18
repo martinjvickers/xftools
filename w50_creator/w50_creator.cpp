@@ -1,23 +1,45 @@
-#include "common.h"
+#include <iostream>
+#include <seqan/sequence.h>  // CharString, ...
+#include <seqan/stream.h>    // to stream a CharString into cout
+#include <seqan/file.h>
+#include <seqan/arg_parse.h>
+#include <seqan/seq_io.h>
+#include <math.h>       /* sqrt */
+#include <seqan/store.h> /* FragmentStore */
+#include <queue>
+#include <vector>
+#include <ctime>
+#include "boost/multi_array.hpp"
+#include <cassert>
+#include <boost/unordered_map.hpp>
+#include <string>
+#include <thread>
+#include <mutex>
+#include <stdlib.h>
+#include <stdio.h>
+#include <map>
+#include <iomanip>
+using namespace seqan;
+using namespace std;
 
 struct ModifyStringOptions
 {
-        CharString inputFileName;
-	int window_size;
-	CharString label;
-	CharString program_name;
-	CharString type;
+   CharString inputFileName;
+   int window_size;
+   CharString label;
+   CharString program_name;
+   CharString type;
 };
 
 struct WindowValues
 {
-        int c;
-        int t;
-	int n;
-	float score;
+   int c;
+   int t;
+   int n;
+   float score;
 };
 
-seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
+ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
 {
 	seqan::ArgumentParser parser("w50_creator");
 	addOption(parser, seqan::ArgParseOption("i", "input-file", "Path to the input file", seqan::ArgParseArgument::INPUT_FILE, "IN"));
