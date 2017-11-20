@@ -29,8 +29,9 @@ script:
   - cd ../w50_creator
   - cmake ../w50_creator -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
   - make -j2
-  - ./w50_creator -i example_data/GSM952438_TFH39.all.cg-col.gff.gz -s 50 -l window -p dzlab > result.w50.gff
-  - diff result.w50.gff example_data/GSM952438_TFH39.all.cg-col.DZ.w50_mod.gff
+  - ./w50_creator -i example_data/GSM952438_TFH39.all.cg-col.gff.gz -s 50 -l window -p dzlab -o result.w50.gff
+  - cat result.w50.gff | awk '{printf "%s\t%s\t%s\t%s\t%s\t%.4f\t%s\t%s\t%s\n",$1,$2,$3,$4,$5,$6,$7,$8,$9}' > result.w50_mod.gff
+  - diff result.w50_mod.gff example_data/GSM952438_TFH39.all.cg-col.DZ.w50_mod.gff
 
   # single-c_combine
   - cd ../single-c_combine
