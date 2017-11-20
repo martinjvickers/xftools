@@ -25,6 +25,7 @@ using namespace std;
 struct ModifyStringOptions
 {
    CharString inputFileName;
+   CharString outputFileName;
    int window_size;
    CharString label;
    CharString program_name;
@@ -46,11 +47,15 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    ArgumentParser parser("w50_creator");
    addOption(parser, ArgParseOption("i", "input-file", 
                                     "Path to the input file", 
-                                     ArgParseArgument::INPUT_FILE, "IN"));
+                                    ArgParseArgument::INPUT_FILE, "IN"));
    setRequired(parser, "input-file");
+   addOption(parser, ArgParseOption("o", "output-file",
+                                    "Path to the output file",
+                                    ArgParseArgument::OUTPUT_FILE, "OUT"));
+   setRequired(parser, "output-file");
    setShortDescription(parser, "Methylation Tools");
    setVersion(parser, "0.0.3");
-   setDate(parser, "Jan 2017");
+   setDate(parser, "November 2017");
    addUsageLine(parser, "-i input_w1.gff [\\fIOPTIONS\\fP] ");
    addOption(parser, ArgParseOption("s", "window-size", "Size of window",
                                     ArgParseArgument::INTEGER, "INT"));
@@ -79,6 +84,7 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
       return res;
 
    getOptionValue(options.inputFileName, parser, "input-file");
+   getOptionValue(options.outputFileName, parser, "output-file");
    getOptionValue(options.window_size, parser, "window-size");
    getOptionValue(options.label, parser, "label");
    getOptionValue(options.type, parser, "addition-type");
@@ -100,17 +106,64 @@ int roundUp(int numToRound, int multiple)
    return numToRound + multiple - remainder;
 }
 
+// Search to see if we've already seen this chromosome 
+int checkSorted(vector<CharString> &haveSeen, CharString &currentRef, 
+                ModifyStringOptions options)
+{
+   for(auto const& value: haveSeen)
+   {
+      if(value == currentRef)
+      {
+         cerr << "ERROR: The input file ";
+         cerr << toCString(options.inputFileName);
+         cerr << " is not sorted by chromosome. Chromosome ";
+         cerr << currentRef << " is out of order. " << endl;
+         cerr << "To resolve this you need to sort your file by ";
+         cerr << "Chromosome order, something like; sort -k1n ";
+         cerr << toCString(options.inputFileName) << " > ";
+         cerr << toCString(options.inputFileName);
+         cerr << "_sorted.w1.gff" << endl;
+         cerr << "And then rerun this program using the ";
+         cerr << toCString(options.inputFileName);
+         cerr << "_sorted.w1.gff file" << endl;
+
+         return 1;
+      }
+   }
+
+   return 0;
+}
+
+int writeToGFF(GffFileOut &gffFileOut, CharString ref, unsigned int binPos,
+               unsigned int endPos, double score, ModifyStringOptions options, 
+               StringSet<CharString> tagNames, StringSet<CharString> tagValues)
+{
+   GffRecord record;
+   record.ref = ref;
+   record.source = options.program_name;
+   record.type = options.label;
+   record.beginPos = binPos - (options.window_size);
+   record.endPos = endPos;
+   record.score = score;
+   record.strand = '.';
+   record.phase = '.';
+   record.tagNames = tagNames;
+   record.tagValues = tagValues;
+
+   writeRecord(gffFileOut, record);
+
+   return 0;  
+}
+
 int main(int argc, char const ** argv)
 {
-   //parse our options
+   // Parse our options
    ModifyStringOptions options;
    ArgumentParser::ParseResult res = parseCommandLine(options, argc, argv);
-	
-   // If parsing was not successful then exit with code 1 if there were errors.
-   // Otherwise, exit with code 0 (e.g. help was printed).
    if (res != ArgumentParser::PARSE_OK)
       return res == ArgumentParser::PARSE_ERROR;
 
+   // Open out files
    GffFileIn gffFileIn;
    if (!open(gffFileIn, toCString(options.inputFileName)))
    {
@@ -118,10 +171,14 @@ int main(int argc, char const ** argv)
       return 1;
    }
 
-   bool meth = false;
+   GffFileOut gffFileOut;
+   if (!open(gffFileOut, toCString(options.outputFileName)))
+   {
+      cerr << "ERROR: Could not open the file.\n";
+      return 1;
+   }
 
    CharString currentRef = NULL;
-
    // Define our map to store windows
    map<int, WindowValues> map;
 
@@ -152,59 +209,37 @@ int main(int argc, char const ** argv)
 
       // First Chromosome
       if(currentRef == NULL)
-      {
          currentRef = record.ref;		
-      }
 
       // At this point we will have dump the contents of the hash
       if(record.ref != currentRef)
       {
-         // Search to see if we've already seen this chromosome	
-         for(auto const& value: haveSeen)
-         {
-            if(value == currentRef)
-            {
-               cerr << "ERROR: The input file ";
-               cerr << toCString(options.inputFileName);
-               cerr << " is not sorted by chromosome. Chromosome ";
-               cerr << currentRef << " is out of order. " << endl;
-               cerr << "To resolve this you need to sort your file by ";
-               cerr << "Chromosome order, something like; sort -k1n ";
-               cerr << toCString(options.inputFileName) << " > ";
-               cerr << toCString(options.inputFileName);
-               cerr << "_sorted.w1.gff" << endl;
-               cerr << "And then rerun this program using the ";
-               cerr << toCString(options.inputFileName);
-               cerr << "_sorted.w1.gff file" << endl;
+         if(checkSorted(haveSeen, currentRef, options) == 1)
+            return 1;
 
-               return 1;
-            }
-         }
-	
          for(auto iter = map.begin(); iter != map.end(); ++iter)
          {
             float score;
             auto p = *iter;
+            int end = p.first;
+            if(iter == --map.end())
+               end = largest + 1;
 
-            // Write out GFF
             if(options.type == "methyl")
             {
                if((p.second.c > 0) || (p.second.t > 0))
                {
                   score = (float)p.second.c / (float)(p.second.c + p.second.t);
-                  int end = p.first;
-                  
-                  if(iter == --map.end())
-                  {
-                     end = largest;
-                  }
-
-                  cout << currentRef << "\t";
-                  cout << toCString(options.program_name) << "\t";
-                  cout << toCString(options.label) << "\t";
-                  cout << p.first - (options.window_size-1) << "\t";
-                  cout << end << "\t"<< score << "\t.\t.\tc=" << p.second.c;
-                  cout << ";t=" << p.second.t << ";n=" << p.second.n << endl;
+                  StringSet<CharString> tagNames;
+                  StringSet<CharString> tagValues;
+                  appendValue(tagNames, "c");
+                  appendValue(tagValues, to_string(p.second.c));
+                  appendValue(tagNames, "t");
+                  appendValue(tagValues, to_string(p.second.t));
+                  appendValue(tagNames, "n");
+                  appendValue(tagValues, to_string(p.second.n));
+                  writeToGFF(gffFileOut, currentRef, p.first, end, score,
+                             options, tagNames, tagValues);
                }
                else
                {
@@ -214,20 +249,22 @@ int main(int argc, char const ** argv)
             else if(options.type == "count")
             {
                score = p.second.score;
-               cout << currentRef << "\t" << toCString(options.program_name);
-               cout << "\t" << toCString(options.label) << "\t";
-               cout << p.first - (options.window_size - 1) << "\t";
-               cout << p.first << "\t"<< score;
-               cout << "\t.\t.\tn=" << p.second.n << endl;
+               StringSet<CharString> tagNames;
+               StringSet<CharString> tagValues;
+               appendValue(tagNames, "n");
+               appendValue(tagValues, to_string(p.second.n));
+               writeToGFF(gffFileOut, currentRef, p.first, end, score,
+                          options, tagNames, tagValues);
             }
             else if(options.type == "avg") 
             {
                score = p.second.score / p.second.n;
-               cout << currentRef << "\t" << toCString(options.program_name);
-               cout << "\t" << toCString(options.label) << "\t";
-               cout << p.first - (options.window_size - 1) << "\t";
-               cout << p.first << "\t"<< score;
-               cout << "\t.\t.\tn=" << p.second.n << endl;
+               StringSet<CharString> tagNames;
+               StringSet<CharString> tagValues;
+               appendValue(tagNames, "n");
+               appendValue(tagValues, to_string(p.second.n));
+               writeToGFF(gffFileOut, currentRef, p.first, end, score,
+                          options, tagNames, tagValues);
             }
          }
 	
@@ -252,11 +289,14 @@ int main(int argc, char const ** argv)
          // https://seqan.readthedocs.io/en/master/Tutorial/InputOutput/GffAndGtfIO.html
 
          // int window = roundUp(record.beginPos+1, options.window_size);
-         // The above 0-based half open stuff is done by seqan when reading the record. 
-         // This causes a bunch of problems when you have a base at position 0. I've
-         // resolved this in SeqAn so now the representation should be exactly as the 
-         // GFF is written. So no need for the above record.beginPos+1
-         int window = roundUp(record.beginPos, options.window_size);
+         // The above 0-based half open stuff is done by seqan when reading 
+         // the record. 
+         // This causes a bunch of problems when you have a base at position 
+         // 0. I've resolved this in SeqAn so now the representation should be 
+         // exactly as the GFF is written. 
+         // So no need for the above record.beginPos+1
+
+         int window = roundUp(record.beginPos+1, options.window_size);
 
          // we expect the following format of tags and values  c=4;t=0;n=1
          // but we will not assume they are always in that order when reading 
@@ -271,14 +311,10 @@ int main(int argc, char const ** argv)
          for(int i = 0; i < length(record.tagNames); i++)
          {	
             if(record.tagNames[i] == "c")
-            {
                currWindowVal.c = atoi(toCString(record.tagValues[i]));
-            }
 
             if(record.tagNames[i] == "t")
-            {
                currWindowVal.t = atoi(toCString(record.tagValues[i]));
-            }
 
             if(record.tagNames[i] == "n")
             {
@@ -291,9 +327,7 @@ int main(int argc, char const ** argv)
 
          // means we have no n's in the input file, so we add one
          if(haveN == 1)
-         {
             currWindowVal.n = 1;
-         }
 
          // get element in hash table, if not there, just put this one in it
          // if window exists, get values and add current Window to it
@@ -338,9 +372,11 @@ int main(int argc, char const ** argv)
          }
       }
 
-
       float score;
       auto p = *iter;
+      int end = p.first;
+      if(iter == --map.end())
+         end = largest + 1;
 
       // write out GFF 
       if(options.type == "methyl")
@@ -348,20 +384,17 @@ int main(int argc, char const ** argv)
          if((p.second.c > 0) || (p.second.t > 0))
          {
             score = (float)p.second.c / (float)(p.second.c + p.second.t);
-            int end = p.first;
 
-            if(iter == --map.end())
-            {
-               end = largest;
-            }
-
-            score = (float)p.second.c / (float)(p.second.c + p.second.t);
-            cout << currentRef << "\t" << toCString(options.program_name);
-            cout << "\t" << toCString(options.label) << "\t";
-            cout << p.first - (options.window_size - 1) << "\t";
-            cout << end << "\t"<< score << "\t.\t.\tc=";
-            cout << p.second.c << ";t=" << p.second.t;
-            cout << ";n=" << p.second.n << endl;
+            StringSet<CharString> tagNames;
+            StringSet<CharString> tagValues;
+            appendValue(tagNames, "c");
+            appendValue(tagValues, to_string(p.second.c));
+            appendValue(tagNames, "t");
+            appendValue(tagValues, to_string(p.second.t));
+            appendValue(tagNames, "n");
+            appendValue(tagValues, to_string(p.second.n));
+            writeToGFF(gffFileOut, currentRef, p.first, end, score,
+                       options, tagNames, tagValues);
          }
          else
          {
@@ -370,21 +403,23 @@ int main(int argc, char const ** argv)
       }
       else if(options.type == "count")
       {
-         score = p.second.n;
-         cout << currentRef << "\t" << toCString(options.program_name);
-         cout << "\t" << toCString(options.label) << "\t";
-         cout << p.first - (options.window_size - 1) << "\t";
-         cout << p.first << "\t"<< score;
-         cout << "\t.\t.\tn=" << p.second.n << endl;
+         score = p.second.score;
+         StringSet<CharString> tagNames;
+         StringSet<CharString> tagValues;
+         appendValue(tagNames, "n");
+         appendValue(tagValues, to_string(p.second.n));
+         writeToGFF(gffFileOut, currentRef, p.first, end, score,
+                    options, tagNames, tagValues);
       }
       else if(options.type == "avg")
       {
          score = p.second.score / p.second.n;
-         cout << currentRef << "\t" << toCString(options.program_name);
-         cout << "\t" << toCString(options.label) << "\t";
-         cout << p.first - (options.window_size-1) << "\t";
-         cout << p.first << "\t"<< score;
-         cout << "\t.\t.\tn=" << p.second.n << endl;
+         StringSet<CharString> tagNames;
+         StringSet<CharString> tagValues;
+         appendValue(tagNames, "n");
+         appendValue(tagValues, to_string(p.second.n));
+         writeToGFF(gffFileOut, currentRef, p.first, end, score,
+                    options, tagNames, tagValues);
       }
    }
 
