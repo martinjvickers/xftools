@@ -248,7 +248,7 @@ int main(int argc, char const ** argv)
             } 
             else if(options.type == "count")
             {
-               score = p.second.score;
+               score = p.second.n;
                StringSet<CharString> tagNames;
                StringSet<CharString> tagValues;
                appendValue(tagNames, "n");
@@ -296,7 +296,7 @@ int main(int argc, char const ** argv)
          // exactly as the GFF is written. 
          // So no need for the above record.beginPos+1
 
-         int window = roundUp(record.beginPos+1, options.window_size);
+         int window = roundUp(record.beginPos + 1, options.window_size);
 
          // we expect the following format of tags and values  c=4;t=0;n=1
          // but we will not assume they are always in that order when reading 
@@ -403,7 +403,7 @@ int main(int argc, char const ** argv)
       }
       else if(options.type == "count")
       {
-         score = p.second.score;
+         score = p.second.n;
          StringSet<CharString> tagNames;
          StringSet<CharString> tagValues;
          appendValue(tagNames, "n");
