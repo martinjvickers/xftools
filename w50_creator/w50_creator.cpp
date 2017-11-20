@@ -142,7 +142,7 @@ int writeToGFF(GffFileOut &gffFileOut, CharString ref, unsigned int binPos,
    record.ref = ref;
    record.source = options.program_name;
    record.type = options.label;
-   record.beginPos = binPos - (options.window_size);
+   record.beginPos = (binPos - (options.window_size));
    record.endPos = endPos;
    record.score = score;
    record.strand = '.';
