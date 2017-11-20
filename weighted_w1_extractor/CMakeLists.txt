@@ -4,21 +4,17 @@ cmake_minimum_required (VERSION 3.0.0)
 # Name of project and that it is C++ only.
 project (weighted_w1_extractor CXX)
 
-set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-SET(BUILD_SHARED_LIBRARIES OFF)
-set(CMAKE_EXE_LINKER_FLAGS "-static")
-
 # ----------------------------------------------------------------------------
 # Dependencies
 # ----------------------------------------------------------------------------
+
+set(CMAKE_CXX_FLAGS "-static ${CMAKE_CXX_FLAGS} -Wl,--whole-archive -Wl,-no-whole-archive")
 
 # Search for zlib as a dependency for SeqAn.
 find_package (ZLIB REQUIRED)
 
 # Load the SeqAn module and fail if not found.
 find_package (SeqAn REQUIRED)
-
-set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
 
 # ----------------------------------------------------------------------------
 # Build Setup
