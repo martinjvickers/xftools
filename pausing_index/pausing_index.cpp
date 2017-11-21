@@ -42,7 +42,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	addOption(parser, seqan::ArgParseOption("o", "output-file", "Path to your output file", seqan::ArgParseArgument::OUTPUT_FILE, "OUT"));
 	setRequired(parser, "output-file");
 	setShortDescription(parser, "XFTOOLS");
-	setVersion(parser, "0.0.1");
+	setVersion(parser, "0.0.6");
 	setDate(parser, "November 2017");
 	addUsageLine(parser, "-i input.w1.gff -a reference.gff -tss 200 -o out.gff [\\fIOPTIONS\\fP] ");
 	addOption(parser, seqan::ArgParseOption("tss", "tss-size", "Size of the TSS you wish to extract",seqan::ArgParseArgument::INTEGER, "INT"));
