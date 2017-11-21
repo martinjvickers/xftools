@@ -63,6 +63,15 @@ SEQAN_DEFINE_TEST(check_sorted_test_2)
    SEQAN_ASSERT_EQ(checkSorted(chromosomes, current, options, false), 0);
 }
 
+// 
+SEQAN_DEFINE_TEST(check_insertIntoMap_1)
+{
+
+//insertIntoMap(std::map<int, WindowValues> &bins,
+  //                ModifyStringOptions options, int &largest,
+    //              CharString &currentRef, GffRecord &record)
+}
+
 SEQAN_BEGIN_TESTSUITE(test_w50_creator)
 {
    // Call roundUp() tests
