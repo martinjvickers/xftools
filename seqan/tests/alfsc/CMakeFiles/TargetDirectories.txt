@@ -1,3 +1,0 @@
-/usr/users/JIC_c1/mvickers/development/seqan/tests/alfsc/CMakeFiles/edit_cache.dir
-/usr/users/JIC_c1/mvickers/development/seqan/tests/alfsc/CMakeFiles/rebuild_cache.dir
-/usr/users/JIC_c1/mvickers/development/seqan/tests/alfsc/CMakeFiles/test_alfsc.dir
