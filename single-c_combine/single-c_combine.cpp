@@ -52,9 +52,9 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	setRequired(parser, "output-file");
 	addOption(parser, seqan::ArgParseOption("l", "label", "Column 3 GFF output label. Useful if using SignalMap", seqan::ArgParseArgument::STRING, "TEXT"));
 	setRequired(parser, "label");
-	setShortDescription(parser, "Methylation Tools");
-	setVersion(parser, "0.0.1");
-	setDate(parser, "October 2017");
+	setShortDescription(parser, "XFTOOLS");
+	setVersion(parser, "0.0.6");
+	setDate(parser, "November 2017");
 	addUsageLine(parser, "-i input_w1.gff [\\fIOPTIONS\\fP] ");
 
 	addDescription(parser, "Merge multiple single-c gff files.");

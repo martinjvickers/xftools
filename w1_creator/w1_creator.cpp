@@ -19,8 +19,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	addOption(parser, seqan::ArgParseOption("i", "input-file", "Path to the input file", seqan::ArgParseArgument::INPUT_FILE, "IN"));
 	setRequired(parser, "input-file");
 	setShortDescription(parser, "Methylation Tools");
-	setVersion(parser, "0.0.1");
-	setDate(parser, "October 2016");
+	setVersion(parser, "0.0.6");
+	setDate(parser, "November 2017");
 	addUsageLine(parser, "-i CX_report.txt [\\fIOPTIONS\\fP] ");
 	addOption(parser, seqan::ArgParseOption("l", "window-length", "Size of window",seqan::ArgParseArgument::INTEGER, "INT"));
 	setDefaultValue(parser, "window-length", "50");

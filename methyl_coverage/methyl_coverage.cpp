@@ -46,8 +46,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	addOption(parser, seqan::ArgParseOption("r", "ref", "Path to the Genome Reference input file", seqan::ArgParseArgument::INPUT_FILE, "IN", true));
         setRequired(parser, "ref");
 	setShortDescription(parser, "XFTOOLS");
-	setVersion(parser, "0.0.1");
-	setDate(parser, "Apr 2017");
+	setVersion(parser, "0.0.6");
+	setDate(parser, "November 2017");
 	addUsageLine(parser, "--cg sample.cg.w1.gff --chg sample.chg.w1.gff --chh sample.chh.w1.gff -r ref.fasta  [\\fIOPTIONS\\fP] ");
 
 	addDescription(parser, "Calculate coverage");

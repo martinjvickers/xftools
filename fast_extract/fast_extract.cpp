@@ -22,9 +22,9 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 
 	addOption(parser, seqan::ArgParseOption("e", "exclude", "Remove reads in fasta file that have IDs in the text file."));
 
-	setShortDescription(parser, "Methylation Tools");
-	setVersion(parser, "0.0.1");
-	setDate(parser, "Jan 2017");
+	setShortDescription(parser, "XFTOOLS");
+	setVersion(parser, "0.0.6");
+	setDate(parser, "November 2017");
 	addUsageLine(parser, "-i input.fastq -f filter.txt -o output.fastq [\\fIOPTIONS\\fP] ");
 
 	addDescription(parser, "Extract or exclude reads based on an input list text file of IDs.");

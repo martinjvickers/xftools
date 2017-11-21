@@ -42,8 +42,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	setDefaultValue(parser, "size", "4");
 
 	setShortDescription(parser, "GFF Feature Merge");
-	setVersion(parser, "0.0.1");
-	setDate(parser, "Jan 2017");
+	setVersion(parser, "0.0.6");
+	setDate(parser, "November 2017");
 	addUsageLine(parser, "-i input.gff-o output.gff [\\fIOPTIONS\\fP] ");
 
 	addDescription(parser, "Given a GFF of features, this program will merge features into single features if they lay within a defined (user supplied) range.");

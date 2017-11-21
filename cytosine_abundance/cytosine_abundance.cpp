@@ -23,8 +23,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 {
         seqan::ArgumentParser parser("cytosine_abundance");
         setShortDescription(parser, "XFTOOLS");
-        setVersion(parser, "0.0.1");
-        setDate(parser, "October 2017");
+        setVersion(parser, "0.0.6");
+        setDate(parser, "November 2017");
         addUsageLine(parser, "-i input.fa -o output.gff [\\fIOPTIONS\\fP] ");
 	addDescription(parser, "The purpose of this program is to calculate the cytosine abundance and cytosine context's in a reference genome.");
 

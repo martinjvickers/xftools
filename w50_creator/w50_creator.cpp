@@ -54,7 +54,7 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
                                     ArgParseArgument::OUTPUT_FILE, "OUT"));
    setRequired(parser, "output-file");
    setShortDescription(parser, "Methylation Tools");
-   setVersion(parser, "0.0.3");
+   setVersion(parser, "0.0.6");
    setDate(parser, "November 2017");
    addUsageLine(parser, "-i input_w1.gff [\\fIOPTIONS\\fP] ");
    addOption(parser, ArgParseOption("s", "window-size", "Size of window",

@@ -20,8 +20,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 {
         seqan::ArgumentParser parser("bam_2_w1_extractor");
         setShortDescription(parser, "XFTOOLS");
-        setVersion(parser, "0.0.1");
-        setDate(parser, "June 2017");
+        setVersion(parser, "0.0.6");
+        setDate(parser, "November 2017");
         addUsageLine(parser, "-i input.bam -o output.gff [\\fIOPTIONS\\fP] ");
 	addDescription(parser, "Create a w50 file from a w1 file.");
 

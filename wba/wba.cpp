@@ -113,8 +113,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	addOption(parser, seqan::ArgParseOption("l", "lazy-ref", "Internally it will capitalise both the input and annoation reference names so that chr1, Chr1 and CHR1 will all match. The output GFF will be of the same format as the annoation file."));
 
 	setShortDescription(parser, "Window by Annotation");
-	setVersion(parser, "0.0.1");
-	setDate(parser, "Feb 2017");
+	setVersion(parser, "0.0.6");
+	setDate(parser, "November 2017");
 	addUsageLine(parser, "-i input.gff -a annotation.gff -o output.gff [\\fIOPTIONS\\fP] ");
 
 	addDescription(parser, "Given an annotation/feature file and an input w1 file, give counts for each feature");

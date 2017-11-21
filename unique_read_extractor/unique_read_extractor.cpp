@@ -37,8 +37,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	setRequired(parser, "output-file");
 
 	setShortDescription(parser, "unique_read_extractor");
-	setVersion(parser, "0.0.1");
-	setDate(parser, "Jan 2017");
+	setVersion(parser, "0.0.6");
+	setDate(parser, "November 2017");
 	addUsageLine(parser, "-i input.bam -o output.bam [\\fIOPTIONS\\fP] ");
 
 	addDescription(parser, "Exclude any mapped read that occurs more than one.");

@@ -48,9 +48,9 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	addOption(parser, seqan::ArgParseOption("p", "position", "This is the zero-based position in the reference file you wish to insert your fasta into. ", seqan::ArgParseArgument::INTEGER, "INT"));
 	setRequired(parser, "position");
 
-	setShortDescription(parser, "Methylation tools");
-	setVersion(parser, "0.0.1");
-	setDate(parser, "August 2017");
+	setShortDescription(parser, "XFTOOLS");
+	setVersion(parser, "0.0.6");
+	setDate(parser, "November 2017");
 	addUsageLine(parser, "-r reference.fasta -i insert.fasta -o result.fasta [\\fIOPTIONS\\fP] ");
 
 	addDescription(parser, "Allows you to insert a fasta file into another fasta file at a given position.");

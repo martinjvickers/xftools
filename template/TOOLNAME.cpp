@@ -40,7 +40,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(
         names so that chr1, Chr1 and CHR1 will all match. The output GFF will \
         be of the same format as the annoation file."));
    setShortDescription(parser, "Overlap");
-   setVersion(parser, "0.0.1");
+   setVersion(parser, "0.0.6");
    setDate(parser, "November 2017");
    addUsageLine(parser, "-i input.gff -a annotation.gff -o output.gff \
                          [\\fIOPTIONS\\fP] ");

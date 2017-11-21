@@ -21,8 +21,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 {
         seqan::ArgumentParser parser("bam2bed");
         setShortDescription(parser, "XFTOOLS");
-        setVersion(parser, "0.0.1");
-        setDate(parser, "October 2017");
+        setVersion(parser, "0.0.6");
+        setDate(parser, "November 2017");
         addUsageLine(parser, "-i input.bam -o output.gff [\\fIOPTIONS\\fP] ");
 	addDescription(parser, "Creates a BED file from a BAM/SAM file.");
 
