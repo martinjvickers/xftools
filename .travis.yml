@@ -20,7 +20,7 @@ before_script:
 script:
   # Get seqan
   - wget https://github.com/seqan/seqan/archive/seqan-v2.3.2.tar.gz
-  - tar xvfz seqan-v2.3.2.tar.gz
+  - nohup tar xvfz seqan-v2.3.2.tar.gz
   - mv seqan-seqan-v2.3.2 seqan
 
   # unique_read_extractor
