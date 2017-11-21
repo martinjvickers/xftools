@@ -323,12 +323,13 @@ int main(int argc, char const ** argv)
          // across it again out of order
          haveSeen.push_back(currentRef);
 
+         // Now that we've written out this chromosome information we can reset
          bins.clear();
          currentRef = record.ref;
          largestBaseFound = 0;
       }
 
-      // here, we add to the hash
+      // insert record into our map
       if(record.ref == currentRef)
          insertIntoMap(bins, options, largestBaseFound, currentRef, record);
 
@@ -338,6 +339,9 @@ int main(int argc, char const ** argv)
    // I hate this, there has to be a better way of doing this loop
    writeChromosomeBins(bins, options, gffFileOut, largestBaseFound, 
                        currentRef);
+
+   close(gffFileIn);
+   close(gffFileOut);
 
    return 0;
 }
