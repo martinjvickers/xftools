@@ -31,6 +31,8 @@ add_definitions ( -DSEQAN_DISABLE_VERSION_CHECK )
 set (CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${SEQAN_CXX_FLAGS} ")
 
 # Add executable and link against SeqAn dependencies.
-add_executable (w50_creator w50_creator.cpp)
+add_executable (w50_tests w50_tests.cpp w50_functions.cpp)
+target_link_libraries (w50_tests ${SEQAN_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+add_executable (w50_creator w50_creator.cpp w50_functions.cpp)
 target_link_libraries (w50_creator ${SEQAN_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
