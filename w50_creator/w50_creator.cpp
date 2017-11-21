@@ -182,8 +182,6 @@ int main(int argc, char const ** argv)
    // Define our map to store windows
    map<int, WindowValues> map;
 
-   cout << setprecision(4) << fixed;
-
    // Stores chromosomes we've seen
    vector<CharString> haveSeen;
 
