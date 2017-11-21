@@ -155,6 +155,117 @@ int writeToGFF(GffFileOut &gffFileOut, CharString ref, unsigned int binPos,
    return 0;  
 }
 
+int writeChromosomeBins(std::map<int, WindowValues> &bins, 
+                        ModifyStringOptions options, GffFileOut &gffFileOut, 
+                        int &largest, CharString &currentRef)
+{
+   for(std::map<int, WindowValues>::iterator iter = bins.begin(); iter != bins.end(); ++iter)
+   {
+      float score;
+      auto bin = *iter;
+      int end = bin.first;
+
+      if(iter == --bins.end())
+         end = largest + 1;
+
+      StringSet<CharString> tagNames;
+      StringSet<CharString> tagValues;
+      
+      if(options.type == "methyl")
+      {
+         if((bin.second.c > 0) || (bin.second.t > 0))
+         {
+            score = (float)bin.second.c / (float)(bin.second.c + bin.second.t);
+            appendValue(tagNames, "c");
+            appendValue(tagValues, to_string(bin.second.c));
+            appendValue(tagNames, "t");
+            appendValue(tagValues, to_string(bin.second.t));
+         }
+         else
+         {
+            score = 0.0000;
+         }
+      }
+      else if(options.type == "count")
+      {
+         score = bin.second.n;
+      }
+      else if(options.type == "avg") 
+      {
+         score = bin.second.score / bin.second.n;
+      }
+
+      appendValue(tagNames, "n");
+      appendValue(tagValues, to_string(bin.second.n));
+      writeToGFF(gffFileOut, currentRef, bin.first, end, score,
+                 options, tagNames, tagValues);
+
+   }
+
+   return 0;
+}
+
+int insertIntoMap(std::map<int, WindowValues> &bins,
+                  ModifyStringOptions options, int &largest, 
+                  CharString &currentRef, GffRecord &record)
+{
+   // SeqAn uses 0-based half-open intervals for internal representation
+   // however all the previous dzlab stuff (at least w50 creation so far)
+   // uses a 1-based half-open interval.
+
+   // READ HERE
+   // https://seqan.readthedocs.io/en/master/Tutorial/InputOutput/GffAndGtfIO.html
+   int window = roundUp(record.beginPos + 1, options.window_size);
+
+   // We expect the following format of tags and values  c=4;t=0;n=1
+   // but we will not assume they are always in that order when reading 
+   // them from the file. Since we have a struct to store the values,
+   // we don't need to store the tag names themselves, just values.
+
+   int c, t, n;
+   WindowValues currWindowVal;
+   bool haveN = false;
+
+   // iterate through looking for c,t,n (will ignore anything else)
+   for(int i = 0; i < length(record.tagNames); i++)
+   {
+      if(record.tagNames[i] == "c")
+         currWindowVal.c = atoi(toCString(record.tagValues[i]));
+
+      if(record.tagNames[i] == "t")
+         currWindowVal.t = atoi(toCString(record.tagValues[i]));
+
+      if(record.tagNames[i] == "n")
+      {
+         currWindowVal.n = atoi(toCString(record.tagValues[i]));
+         haveN = true;
+      }
+   }
+
+   currWindowVal.score = record.score;
+
+   // means we have no n's in the input file, so we add one
+   if(haveN == true)
+      currWindowVal.n = 1;
+
+   // get element in hash table, if not there, just put this one in it
+   // if window exists, get values and add current Window to it
+   WindowValues get = bins[window];
+   currWindowVal.c = get.c + currWindowVal.c;
+   currWindowVal.t = get.t + currWindowVal.t;
+   currWindowVal.n = get.n + currWindowVal.n;
+   currWindowVal.score = get.score + currWindowVal.score;
+
+   // now insert back into map
+   bins[window] = currWindowVal;
+
+   // update currentRef
+   currentRef = record.ref;
+   largest = record.beginPos;
+
+   return 0;
+}
+
 int main(int argc, char const ** argv)
 {
    // Parse our options
@@ -179,29 +290,30 @@ int main(int argc, char const ** argv)
    }
 
    CharString currentRef = NULL;
-   // Define our map to store windows
-   map<int, WindowValues> map;
+   GffRecord record;
+
+   // Define our map to store bin
+   std::map<int, WindowValues> bins;
 
    // Stores chromosomes we've seen
    vector<CharString> haveSeen;
 
-   int count = 0;
-   int largest = 0;
+   int gffLineNumber = 0;
+   int largestBaseFound = 0;
 
    // Copy the file record by record.
-   GffRecord record;
    while (!atEnd(gffFileIn))
    {
       try
       {
          readRecord(record, gffFileIn);
-         count++;
+         gffLineNumber++;
       }
       catch (Exception const & e)
       {
          cerr << "ERROR: " << e.what() << endl;
          cerr << "ERROR: " << record.ref << " ";
-         cerr << currentRef << " "<< count << endl;
+         cerr << currentRef << " " << gffLineNumber << endl;
          return 1;
       }
 
@@ -215,211 +327,26 @@ int main(int argc, char const ** argv)
          if(checkSorted(haveSeen, currentRef, options) == 1)
             return 1;
 
-         for(auto iter = map.begin(); iter != map.end(); ++iter)
-         {
-            float score;
-            auto p = *iter;
-            int end = p.first;
-            if(iter == --map.end())
-               end = largest + 1;
+         writeChromosomeBins(bins, options, gffFileOut, largestBaseFound, currentRef);
 
-            if(options.type == "methyl")
-            {
-               if((p.second.c > 0) || (p.second.t > 0))
-               {
-                  score = (float)p.second.c / (float)(p.second.c + p.second.t);
-                  StringSet<CharString> tagNames;
-                  StringSet<CharString> tagValues;
-                  appendValue(tagNames, "c");
-                  appendValue(tagValues, to_string(p.second.c));
-                  appendValue(tagNames, "t");
-                  appendValue(tagValues, to_string(p.second.t));
-                  appendValue(tagNames, "n");
-                  appendValue(tagValues, to_string(p.second.n));
-                  writeToGFF(gffFileOut, currentRef, p.first, end, score,
-                             options, tagNames, tagValues);
-               }
-               else
-               {
-                  score = 0.0000;
-               }
-            } 
-            else if(options.type == "count")
-            {
-               score = p.second.n;
-               StringSet<CharString> tagNames;
-               StringSet<CharString> tagValues;
-               appendValue(tagNames, "n");
-               appendValue(tagValues, to_string(p.second.n));
-               writeToGFF(gffFileOut, currentRef, p.first, end, score,
-                          options, tagNames, tagValues);
-            }
-            else if(options.type == "avg") 
-            {
-               score = p.second.score / p.second.n;
-               StringSet<CharString> tagNames;
-               StringSet<CharString> tagValues;
-               appendValue(tagNames, "n");
-               appendValue(tagValues, to_string(p.second.n));
-               writeToGFF(gffFileOut, currentRef, p.first, end, score,
-                          options, tagNames, tagValues);
-            }
-         }
-	
          // We should save the current reference as a check to see if we come 
          // across it again out of order
          haveSeen.push_back(currentRef);
 
-         map.clear();
+         bins.clear();
          currentRef = record.ref;
-         largest = 0;
+         largestBaseFound = 0;
       }
 
       // here, we add to the hash
       if(record.ref == currentRef)
-      {
-         //////ARGH!!!
-         // SeqAn uses 0-based half-open intervals for internal representation
-         // however all the previous dzlab stuff (at least w50 creation so far)
-         // uses a 1-based half-open interval.
+         insertIntoMap(bins, options, largestBaseFound, currentRef, record);
 
-         // READ HERE
-         // https://seqan.readthedocs.io/en/master/Tutorial/InputOutput/GffAndGtfIO.html
-
-         // int window = roundUp(record.beginPos+1, options.window_size);
-         // The above 0-based half open stuff is done by seqan when reading 
-         // the record. 
-         // This causes a bunch of problems when you have a base at position 
-         // 0. I've resolved this in SeqAn so now the representation should be 
-         // exactly as the GFF is written. 
-         // So no need for the above record.beginPos+1
-
-         int window = roundUp(record.beginPos + 1, options.window_size);
-
-         // we expect the following format of tags and values  c=4;t=0;n=1
-         // but we will not assume they are always in that order when reading 
-         // them from the file. Since we have a struct to store the values,
-         // we don't need to store the tag names themselves, just values.
-			
-         int c, t, n;
-         WindowValues currWindowVal;
-         bool haveN = 1;
-
-         // iterate through looking for c,t,n (will ignore anything else)
-         for(int i = 0; i < length(record.tagNames); i++)
-         {	
-            if(record.tagNames[i] == "c")
-               currWindowVal.c = atoi(toCString(record.tagValues[i]));
-
-            if(record.tagNames[i] == "t")
-               currWindowVal.t = atoi(toCString(record.tagValues[i]));
-
-            if(record.tagNames[i] == "n")
-            {
-               currWindowVal.n = atoi(toCString(record.tagValues[i]));
-               haveN = 0;
-            }
-         }
-         
-         currWindowVal.score = record.score;
-
-         // means we have no n's in the input file, so we add one
-         if(haveN == 1)
-            currWindowVal.n = 1;
-
-         // get element in hash table, if not there, just put this one in it
-         // if window exists, get values and add current Window to it
-         WindowValues get = map[window];
-         currWindowVal.c = get.c + currWindowVal.c;
-         currWindowVal.t = get.t + currWindowVal.t;
-         currWindowVal.n = get.n + currWindowVal.n;
-
-         currWindowVal.score = get.score + currWindowVal.score;
-
-         // now insert back into map
-         map[window] = currWindowVal;
-
-         // update currentRef
-         currentRef = record.ref;
-         largest = record.beginPos;
-      }
    }
 
    // read out very last chromosome
-   for(auto iter = map.begin(); iter != map.end(); ++iter)
-   {
-      // search to see if we've already seen this chromosome
-      for(auto const& value: haveSeen)
-      {
-         if(value == currentRef)
-         {
-            cerr << "ERROR: The input file ";
-            cerr << toCString(options.inputFileName);
-            cerr << " is not sorted by chromosome. Chromosome ";
-            cerr << currentRef << " is out of order. " << endl;
-            cerr << "To resolve this you need to sort your file by ";
-            cerr << "Chromosome order, something like; sort -k1n ";
-            cerr << toCString(options.inputFileName) << " > ";
-            cerr << toCString(options.inputFileName);
-            cerr << "_sorted.w1.gff" << endl;
-            cerr << "And then rerun this program using the ";
-            cerr << toCString(options.inputFileName);
-            cerr << "_sorted.w1.gff file" << endl;
-
-            return 1;
-         }
-      }
-
-      float score;
-      auto p = *iter;
-      int end = p.first;
-      if(iter == --map.end())
-         end = largest + 1;
-
-      // write out GFF 
-      if(options.type == "methyl")
-      {
-         if((p.second.c > 0) || (p.second.t > 0))
-         {
-            score = (float)p.second.c / (float)(p.second.c + p.second.t);
-
-            StringSet<CharString> tagNames;
-            StringSet<CharString> tagValues;
-            appendValue(tagNames, "c");
-            appendValue(tagValues, to_string(p.second.c));
-            appendValue(tagNames, "t");
-            appendValue(tagValues, to_string(p.second.t));
-            appendValue(tagNames, "n");
-            appendValue(tagValues, to_string(p.second.n));
-            writeToGFF(gffFileOut, currentRef, p.first, end, score,
-                       options, tagNames, tagValues);
-         }
-         else
-         {
-            score = 0;
-         }
-      }
-      else if(options.type == "count")
-      {
-         score = p.second.n;
-         StringSet<CharString> tagNames;
-         StringSet<CharString> tagValues;
-         appendValue(tagNames, "n");
-         appendValue(tagValues, to_string(p.second.n));
-         writeToGFF(gffFileOut, currentRef, p.first, end, score,
-                    options, tagNames, tagValues);
-      }
-      else if(options.type == "avg")
-      {
-         score = p.second.score / p.second.n;
-         StringSet<CharString> tagNames;
-         StringSet<CharString> tagValues;
-         appendValue(tagNames, "n");
-         appendValue(tagValues, to_string(p.second.n));
-         writeToGFF(gffFileOut, currentRef, p.first, end, score,
-                    options, tagNames, tagValues);
-      }
-   }
+   // I hate this, there has to be a better way of doing this loop
+   writeChromosomeBins(bins, options, gffFileOut, largestBaseFound, currentRef);
 
    return 0;
 }
