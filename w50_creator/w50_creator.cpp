@@ -137,7 +137,7 @@ int checkSorted(vector<CharString> &haveSeen, CharString &currentRef,
 int writeToGFF(GffFileOut &gffFileOut, CharString ref, unsigned int binPos,
                unsigned int endPos, double score, ModifyStringOptions options, 
                StringSet<CharString> tagNames, StringSet<CharString> tagValues)
-{
+{  
    GffRecord record;
    record.ref = ref;
    record.source = options.program_name;
@@ -159,32 +159,34 @@ int writeChromosomeBins(std::map<int, WindowValues> &bins,
                         ModifyStringOptions options, GffFileOut &gffFileOut, 
                         int &largest, CharString &currentRef)
 {
-   for(std::map<int, WindowValues>::iterator iter = bins.begin(); iter != bins.end(); ++iter)
+   for(std::map<int, WindowValues>::iterator iter = bins.begin(); 
+       iter != bins.end(); ++iter)
    {
       float score;
       auto bin = *iter;
       int end = bin.first;
+
+      // Fixes an odd situation where in the methylation input file you have
+      // something like this. The DZLAB program just skips, so this does too
+      // chr5 . CG 23576549 23576549 0.0000 . . c=0;t=0;n=1
+      if((options.type == "methyl") && (bin.second.c == 0) && 
+         (bin.second.t == 0))
+         continue;
 
       if(iter == --bins.end())
          end = largest + 1;
 
       StringSet<CharString> tagNames;
       StringSet<CharString> tagValues;
-      
+
       if(options.type == "methyl")
       {
-         if((bin.second.c > 0) || (bin.second.t > 0))
-         {
-            score = (float)bin.second.c / (float)(bin.second.c + bin.second.t);
-            appendValue(tagNames, "c");
-            appendValue(tagValues, to_string(bin.second.c));
-            appendValue(tagNames, "t");
-            appendValue(tagValues, to_string(bin.second.t));
-         }
-         else
-         {
-            score = 0.0000;
-         }
+         appendValue(tagNames, "c");
+         appendValue(tagValues, to_string(bin.second.c));
+         appendValue(tagNames, "t");
+         appendValue(tagValues, to_string(bin.second.t));
+
+         score = (float)bin.second.c / (float)(bin.second.c + bin.second.t);
       }
       else if(options.type == "count")
       {
@@ -197,6 +199,7 @@ int writeChromosomeBins(std::map<int, WindowValues> &bins,
 
       appendValue(tagNames, "n");
       appendValue(tagValues, to_string(bin.second.n));
+
       writeToGFF(gffFileOut, currentRef, bin.first, end, score,
                  options, tagNames, tagValues);
 
