@@ -1,24 +1,10 @@
 #include <iostream>
-#include <seqan/sequence.h>  // CharString, ...
-#include <seqan/stream.h>    // to stream a CharString into cout
-#include <seqan/file.h>
 #include <seqan/arg_parse.h>
 #include <seqan/seq_io.h>
-#include <math.h>       /* sqrt */
-#include <seqan/store.h> /* FragmentStore */
-#include <queue>
 #include <vector>
-#include <ctime>
-#include "boost/multi_array.hpp"
-#include <cassert>
-#include <boost/unordered_map.hpp>
 #include <string>
-#include <thread>
-#include <mutex>
-#include <stdlib.h>
-#include <stdio.h>
 #include <map>
-#include <iomanip>
+
 using namespace seqan;
 using namespace std;
 
@@ -330,7 +316,8 @@ int main(int argc, char const ** argv)
          if(checkSorted(haveSeen, currentRef, options) == 1)
             return 1;
 
-         writeChromosomeBins(bins, options, gffFileOut, largestBaseFound, currentRef);
+         writeChromosomeBins(bins, options, gffFileOut, largestBaseFound, 
+                             currentRef);
 
          // We should save the current reference as a check to see if we come 
          // across it again out of order
@@ -349,7 +336,8 @@ int main(int argc, char const ** argv)
 
    // read out very last chromosome
    // I hate this, there has to be a better way of doing this loop
-   writeChromosomeBins(bins, options, gffFileOut, largestBaseFound, currentRef);
+   writeChromosomeBins(bins, options, gffFileOut, largestBaseFound, 
+                       currentRef);
 
    return 0;
 }
