@@ -8,7 +8,7 @@ project (methyl_coverage CXX)
 # Dependencies
 # ----------------------------------------------------------------------------
 
-set (CMAKE_CXX_FLAGS  "-fprofile-arcs -ftest-coverage -static ${CMAKE_CXX_FLAGS} ${SEQAN_CXX_FLAGS} -Wl,--whole-archive -lpthread -Wl,-no-whole-archive")
+set (CMAKE_CXX_FLAGS  "-fprofile-arcs -ftest-coverage -static ${CMAKE_CXX_FLAGS} ${SEQAN_CXX_FLAGS} -Wl,--whole-archive -Wl,-no-whole-archive")
 
 # Search for zlib as a dependency for SeqAn.
 find_package (ZLIB)
