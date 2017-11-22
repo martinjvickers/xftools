@@ -8,7 +8,7 @@ project (unique_read_extractor CXX)
 # Dependencies
 # ----------------------------------------------------------------------------
 
-set(CMAKE_CXX_FLAGS "-static ${CMAKE_CXX_FLAGS} -Wl,--whole-archive -Wl,-no-whole-archive")
+set(CMAKE_CXX_FLAGS "-fprofile-arcs -ftest-coverage -static ${CMAKE_CXX_FLAGS} -Wl,--whole-archive -Wl,-no-whole-archive")
 
 # Search for zlib as a dependency for SeqAn.
 find_package (ZLIB)
@@ -28,7 +28,6 @@ add_definitions (${SEQAN_DEFINITIONS})
 
 # Add CXX flags found by find_package (SeqAn).
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SEQAN_CXX_FLAGS}")
-#set (CMAKE_CXX_FLAGS  "-static ${CMAKE_CXX_FLAGS} ${SEQAN_CXX_FLAGS} -Wl,--whole-archive -Wl,-no-whole-archive")
 
 # Add executable and link against SeqAn dependencies.
 add_executable (unique_read_extractor unique_read_extractor.cpp)

@@ -4,7 +4,7 @@ cmake_minimum_required (VERSION 3.0.0)
 # Name of project and that it is C++ only.
 project (fasta_insert CXX)
 
-set(CMAKE_CXX_FLAGS "-static ${CMAKE_CXX_FLAGS} -Wl,--whole-archive -Wl,-no-whole-archive")
+set(CMAKE_CXX_FLAGS "-fprofile-arcs -ftest-coverage -static ${CMAKE_CXX_FLAGS} -Wl,--whole-archive -Wl,-no-whole-archive")
 
 # ----------------------------------------------------------------------------
 # Dependencies
