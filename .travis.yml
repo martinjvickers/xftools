@@ -29,6 +29,10 @@ script:
   - make -j2
   - ./unique_read_extractor -i example_data/subsample.sam -o example_data/new_result.sam
   - diff example_data/result.sam example_data/new_result.sam
+  - cd CMakeFiles/unique_read_extractor.dir
+  - for i in `ls -1 *.gcno`; do echo "gcov -n -o . "$i; done |sh > /dev/null
+  - bash <(curl -s https://codecov.io/bash)
+  - cd ../../
 
   # w50_creator
   - cd ../w50_creator
@@ -39,7 +43,7 @@ script:
   - cat result.w50.gff | awk '{printf "%s\t%s\t%s\t%s\t%s\t%.4f\t%s\t%s\t%s\n",$1,$2,$3,$4,$5,$6,$7,$8,$9}' > result.w50_mod.gff
   - diff result.w50_mod.gff example_data/GSM952438_TFH39.all.cg-col.DZ.w50_mod.gff
   - cd CMakeFiles/w50_tests.dir
-  - for i in `ls -1 *.gcno`; do echo "gcov -n -o . "$i; done |sh
+  - for i in `ls -1 *.gcno`; do echo "gcov -n -o . "$i; done |sh > /dev/null
   - bash <(curl -s https://codecov.io/bash)
   - cd ../../
 
