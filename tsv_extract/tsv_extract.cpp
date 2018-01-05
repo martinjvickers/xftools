@@ -3,10 +3,17 @@
 #include <stdio.h>
 #include <seqan/arg_parse.h>
 
+#include <fstream>
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/zlib.hpp>
+
+using namespace boost::iostreams;
+
 using namespace seqan;
 using namespace std;
 
-#define LENGTH 0x1000
+#define DEFAULT_BUF_LENGTH (16 * 16384)
 
 struct ModifyStringOptions {
    CharString inputFileName;
@@ -72,28 +79,22 @@ int main(int argc, char const ** argv)
    if (res != ArgumentParser::PARSE_OK)
       return res == ArgumentParser::PARSE_ERROR;
 
-   //char lineText[100];
-   //ifstream in("example_data/GSM1085191_mC_calls_Aa_0.tsv.gz");
+   char buf[DEFAULT_BUF_LENGTH];
 
-   gzFile file = gzopen("example_data/GSM1085191_mC_calls_Aa_0.tsv.gz", "r");
-
-   while(1)
+   for(;;) 
    {
-      int err;
-      int bytes_read;
-      unsigned char buffer[LENGTH];
-      bytes_read = gzread (file, buffer, LENGTH - 1);
-      buffer[bytes_read] = '\0';
-    //  printf ("%s", buffer);
+      cin.read(buf, sizeof(buf));
+      int size = cin.gcount();
+      if (size == 0) break;
 
-      if(bytes_read < LENGTH-1)
+      int16_t* data = (int16_t*) buf; //to int
+
+      cout << buf << endl;
+
+      for(int i=0;i<size/sizeof(int16_t);i++)
       {
-         if(gzeof(file))
-            break;
-         else
-            cerr << "ERROR: It's all gone wrong" << endl;
+         cout << data[i] << endl;
       }
-
    }
 
    return 0;
