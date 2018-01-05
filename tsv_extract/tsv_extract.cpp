@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <seqan/arg_parse.h>
-
+#include <seqan/seq_io.h>
 #include <fstream>
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
@@ -20,6 +20,7 @@ struct ModifyStringOptions {
    CharString inputAnnotationFileName;
    CharString outputFileName;
    CharString filename = "example_data/GSM1085191_mC_calls_Aa_0.tsv.gz";
+   CharString outputPrefix = "temp";
    bool exclude;
    bool lazyRef;
 };
@@ -39,20 +40,16 @@ seqan::ArgumentParser::ParseResult parseCommandLine(
                                     "Path to the input filter file", 
                                     ArgParseArgument::INPUT_FILE, 
                                     "IN"));
-   //setRequired(parser, "input-annotation-file");
-   addOption(parser, ArgParseOption("o", "output-file", 
-                                    "Path to the output file", 
-                                    ArgParseArgument::OUTPUT_FILE,
-                                    "OUT"));
-   //setRequired(parser, "output-file");
-   addOption(parser, ArgParseOption("l", "lazy-ref", 
-       "Internally it will capitalise both the input and annoation reference \
-        names so that chr1, Chr1 and CHR1 will all match. The output GFF will \
-        be of the same format as the annoation file."));
+   setRequired(parser, "input-annotation-file");
+   addOption(parser, ArgParseOption("p", "output-prefix", 
+             "Specify the prefix for your output files.", 
+             ArgParseArgument::STRING, "TEXT"));
+   setRequired(parser, "output-prefix");
+   setDefaultValue(parser, "output-prefix", "temp");
    setShortDescription(parser, "Overlap");
    setVersion(parser, "0.0.6");
    setDate(parser, "November 2017");
-   addUsageLine(parser, "-i input.gff -a annotation.gff -o output.gff \
+   addUsageLine(parser, "-i input.gff -a annotation.gff -p outputPrefix \
                          [\\fIOPTIONS\\fP] ");
    addDescription(parser, "Given an annotation/feature file and an input w1 \
                            file, give counts for each feature");
@@ -64,10 +61,28 @@ seqan::ArgumentParser::ParseResult parseCommandLine(
    getOptionValue(options.inputFileName, parser, "input-file");
    getOptionValue(options.inputAnnotationFileName, 
                   parser, "input-annotation-file");
-   getOptionValue(options.outputFileName, parser, "output-file");
-   options.lazyRef = isSet(parser, "lazy-ref");
+   getOptionValue(options.outputPrefix, parser, "output-prefix");
 
    return ArgumentParser::PARSE_OK;
+}
+
+struct Methyl
+{
+   char strand;
+   string context;
+   int methylated_bases;
+   int total_bases;
+   bool methylation_call;
+};
+
+string calculate_context(string mc_class)
+{
+   if(mc_class[1] == 'G')
+      return "CG";
+   else if(mc_class[2] == 'G')
+      return "CHG";
+   else
+      return "CHH";
 }
 
 // A basic template to get up and running quickly
@@ -79,22 +94,195 @@ int main(int argc, char const ** argv)
    if (res != ArgumentParser::PARSE_OK)
       return res == ArgumentParser::PARSE_ERROR;
 
-   char buf[DEFAULT_BUF_LENGTH];
-
-   for(;;) 
+   // chromosomes, position, details
+   map<CharString, map<unsigned int, Methyl>> data;
+   
+   // read input file into memory
+   std::string line;
+   while (std::getline(std::cin, line))
    {
-      cin.read(buf, sizeof(buf));
-      int size = cin.gcount();
-      if (size == 0) break;
-
-      int16_t* data = (int16_t*) buf; //to int
-
-      cout << buf << endl;
-
-      for(int i=0;i<size/sizeof(int16_t);i++)
+      istringstream iss( line );
+      string word;
+      int pos = 0;
+      Methyl row;
+      string chromosome;
+      unsigned int base;
+      /*
+      0	chrom
+      1	pos
+      2 strand
+      3 context
+      4 methylated_bases
+      5 total_bases
+      6 methylation_call
+      */
+      while(getline(iss, word, '\t'))
       {
-         cout << data[i] << endl;
+         stringstream convert(word);
+         if(pos == 0)
+         {
+            chromosome = word;
+         }
+         else if(pos == 1)
+         {
+            convert >> base;
+         }
+         else if(pos == 2)
+         {
+            char strand;
+            convert >> strand;
+            row.strand = strand;
+         }
+         else if(pos == 3)
+         {
+            row.context = word;
+         }
+         else if(pos == 4)
+         {
+            int methylated_bases;
+            convert >> methylated_bases;
+            row.methylated_bases = methylated_bases;
+         }
+         else if(pos == 5)
+         {
+            int total_bases; 
+            convert >> total_bases;
+            row.total_bases = total_bases;
+         }
+         else if(pos == 6)
+         {
+            bool methylation_call;
+            convert >> methylation_call;
+            row.methylation_call = methylation_call;
+         }
+
+         pos++;
       }
+
+      if(pos != 7)
+      {
+         cerr << "Error: line does not contain the correct number of columns";
+         cerr << endl;
+      }
+
+      data[chromosome][base] = row;
+   }
+
+   // create three output GFF file handlers, for each context
+   GffFileOut gffCGFileOut, gffCHGFileOut, gffCHHFileOut;
+   string cg_out = toCString(options.outputPrefix) + string(".CG.gff");
+   string chg_out = toCString(options.outputPrefix) + string(".CHG.gff");
+   string chh_out = toCString(options.outputPrefix) + string(".CHH.gff");
+   if (!open(gffCGFileOut, toCString(cg_out)))
+   {
+      cerr << "ERROR: Could not open the file.\n";
+      return 1;
+   }
+   if (!open(gffCHGFileOut, toCString(chg_out)))
+   {
+      cerr << "ERROR: Could not open the file.\n";
+      return 1;
+   }
+   if (!open(gffCHHFileOut, toCString(chh_out)))
+   {
+      cerr << "ERROR: Could not open the file.\n";
+      return 1;
+   }
+
+   string raw_out = toCString(options.outputPrefix) + string(".raw.txt");
+   ofstream ofFile; 
+   ofFile.open(raw_out);
+
+   GffFileIn gffFileIn;
+   if (!open(gffFileIn, toCString(options.inputAnnotationFileName)))
+   {
+      cerr << "ERROR: Could not open the file.\n";
+      return 1;
+   }
+   GffRecord record;
+
+   while (!atEnd(gffFileIn))
+   {
+      try
+      {
+         readRecord(record, gffFileIn);
+      }
+      catch(Exception const & e)
+      {
+         cerr << "ERROR: " << e.what() << endl;
+      }
+
+      // zero counter for this GFF record
+      int CG_tot = 0;
+      int CHG_tot = 0;
+      int CHH_tot = 0;
+      int CG_meth = 0;
+      int CHG_meth = 0;
+      int CHH_meth = 0;
+
+      for(int i = record.beginPos; i < record.endPos; i++)
+      {
+         if(data.find(record.ref) != data.end() && data[record.ref].find(i) != data[record.ref].end())
+         {
+            //work out the context and count total and methyl bases
+            string context = calculate_context(data[record.ref][i].context);
+
+            if(context == "CG")
+            {
+               CG_tot += data[record.ref][i].total_bases;
+               CG_meth += data[record.ref][i].methylated_bases;
+            }
+            else if(context == "CHG")
+            {
+               CHG_tot += data[record.ref][i].total_bases;
+               CHG_meth += data[record.ref][i].methylated_bases;
+            }
+            else if(context == "CHH")
+            {
+               CHH_tot += data[record.ref][i].total_bases;
+               CHH_meth += data[record.ref][i].methylated_bases;
+            }
+
+            ofFile << record.ref << "\t" << i << "\t" << data[record.ref][i].strand;
+            ofFile << "\t" << data[record.ref][i].context;
+            ofFile << "\t" << data[record.ref][i].methylated_bases;
+            ofFile << "\t" << data[record.ref][i].total_bases;
+            ofFile << "\t" << data[record.ref][i].methylation_call;
+            ofFile << endl;
+            
+         }
+      }
+
+      // calculate the record information
+      GffRecord cgRecord = record;
+      cgRecord.score = (float)CG_meth / (float)CG_tot;
+      appendValue(cgRecord.tagNames, "c");
+      appendValue(cgRecord.tagValues, to_string(CG_meth));
+      appendValue(cgRecord.tagNames, "t");
+      appendValue(cgRecord.tagValues, to_string(CG_tot-CG_meth));
+      appendValue(cgRecord.tagNames, "n");
+      appendValue(cgRecord.tagValues, to_string(CG_tot));
+      writeRecord(gffCGFileOut, cgRecord);
+
+      GffRecord chgRecord = record;
+      chgRecord.score = (float)CHG_meth / (float)CHG_tot;
+      appendValue(chgRecord.tagNames, "c");
+      appendValue(chgRecord.tagValues, to_string(CHG_meth));
+      appendValue(chgRecord.tagNames, "t");
+      appendValue(chgRecord.tagValues, to_string(CHG_tot-CHG_meth));
+      appendValue(chgRecord.tagNames, "n");
+      appendValue(chgRecord.tagValues, to_string(CHG_tot));
+      writeRecord(gffCHGFileOut, chgRecord);
+
+      GffRecord chhRecord = record;
+      chhRecord.score = (float)CHH_meth / (float)CHH_tot;
+      appendValue(chhRecord.tagNames, "c");
+      appendValue(chhRecord.tagValues, to_string(CHH_meth));
+      appendValue(chhRecord.tagNames, "t");
+      appendValue(chhRecord.tagValues, to_string(CHH_tot-CHH_meth));
+      appendValue(chhRecord.tagNames, "n");
+      appendValue(chhRecord.tagValues, to_string(CHH_tot));
+      writeRecord(gffCHHFileOut, chhRecord);
    }
 
    return 0;
