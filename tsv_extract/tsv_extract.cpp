@@ -16,13 +16,9 @@ using namespace std;
 #define DEFAULT_BUF_LENGTH (16 * 16384)
 
 struct ModifyStringOptions {
-   CharString inputFileName;
+   CharString outputPrefix;
    CharString inputAnnotationFileName;
    CharString outputFileName;
-   CharString filename = "example_data/GSM1085191_mC_calls_Aa_0.tsv.gz";
-   CharString outputPrefix = "temp";
-   bool exclude;
-   bool lazyRef;
 };
 
 seqan::ArgumentParser::ParseResult parseCommandLine(
@@ -30,12 +26,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(
 	int argc, 
 	char const ** argv) {
 
-   ArgumentParser parser("Overlap");
-   addOption(parser, ArgParseOption("i", "input-file", 
-                                    "Path to the input file", 
-                                    ArgParseArgument::INPUT_FILE,
-                                    "IN"));
-   //setRequired(parser, "input-file");
+   ArgumentParser parser("tsv_extract");
    addOption(parser, ArgParseOption("a", "input-annotation-file", 
                                     "Path to the input filter file", 
                                     ArgParseArgument::INPUT_FILE, 
@@ -45,20 +36,19 @@ seqan::ArgumentParser::ParseResult parseCommandLine(
              "Specify the prefix for your output files.", 
              ArgParseArgument::STRING, "TEXT"));
    setRequired(parser, "output-prefix");
-   setDefaultValue(parser, "output-prefix", "temp");
    setShortDescription(parser, "Overlap");
    setVersion(parser, "0.0.6");
    setDate(parser, "November 2017");
-   addUsageLine(parser, "-i input.gff -a annotation.gff -p outputPrefix \
+   addUsageLine(parser, "-a annotation.gff -p outputPrefix \
                          [\\fIOPTIONS\\fP] ");
-   addDescription(parser, "Given an annotation/feature file and an input w1 \
-                           file, give counts for each feature");
+   addDescription(parser, "Extract methylation data from TSV based on input GFF annotation.\
+                           Ensure you pipe your tsv into tsv_extract. eg \
+                           zcat input.tsv.gz | tsv_extract -a annotation.gff -p sampleName");
    ArgumentParser::ParseResult res = parse(parser, argc, argv);
 
    if (res != ArgumentParser::PARSE_OK)
       return res;
 
-   getOptionValue(options.inputFileName, parser, "input-file");
    getOptionValue(options.inputAnnotationFileName, 
                   parser, "input-annotation-file");
    getOptionValue(options.outputPrefix, parser, "output-prefix");
@@ -262,6 +252,7 @@ int main(int argc, char const ** argv)
       appendValue(cgRecord.tagValues, to_string(CG_tot-CG_meth));
       appendValue(cgRecord.tagNames, "n");
       appendValue(cgRecord.tagValues, to_string(CG_tot));
+      cgRecord.type = toCString(options.outputPrefix) + string("_CG");
       writeRecord(gffCGFileOut, cgRecord);
 
       GffRecord chgRecord = record;
@@ -272,6 +263,7 @@ int main(int argc, char const ** argv)
       appendValue(chgRecord.tagValues, to_string(CHG_tot-CHG_meth));
       appendValue(chgRecord.tagNames, "n");
       appendValue(chgRecord.tagValues, to_string(CHG_tot));
+      chgRecord.type = toCString(options.outputPrefix) + string("_CHG");
       writeRecord(gffCHGFileOut, chgRecord);
 
       GffRecord chhRecord = record;
@@ -282,6 +274,7 @@ int main(int argc, char const ** argv)
       appendValue(chhRecord.tagValues, to_string(CHH_tot-CHH_meth));
       appendValue(chhRecord.tagNames, "n");
       appendValue(chhRecord.tagValues, to_string(CHH_tot));
+      chhRecord.type = toCString(options.outputPrefix) + string("_CHH");
       writeRecord(gffCHHFileOut, chhRecord);
    }
 
