@@ -119,6 +119,13 @@ script:
   - ./pausing_index
   - ./pausing_index -i example_data/example.w1.gff -a example_data/example_annotation.gff -tss 200 -o meh.gff
 
+  # at_compare
+  - cd ../at_compare
+  - cmake ../at_compare -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - make -j2
+  - gunzip example_data/TAIR10_reference.fas
+  - ./at_compare -i example_data/TAIR10_reference.fas -1 example_data/TAIR10_GFF3-gene_only_MV.gff -2 example_data/TAIR10_TE_Anno.XF.gff -o1 example_data/TAIR10_gene_at.gff -o2 example_data/TAIR10_TE_at.gff
+
   # code coverage and upload
   #- cd ../cov_data
   #- for i in `ls -1 *.gcno`; do echo "gcov -n -o . "$i; done |sh > /dev/null
