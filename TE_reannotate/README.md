@@ -49,5 +49,5 @@ Getting this to compile on work machine;
 
 ```
 
-./TE_reannotate -a example_data/WT_SN_H.SHXF018A.SDXF29.SDXF35.tair10.single-c.CG.XF.gff -i example_data/WT_pollen.bam -o meh.txt
+./TE_reannotate -a example_data/meh.gff -i example_data/meh.bam -o meh.txt
 ```
