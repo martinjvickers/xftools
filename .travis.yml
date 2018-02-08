@@ -127,7 +127,7 @@ script:
   - ./at_compare -i example_data/TAIR10_reference.fas -1 example_data/TAIR10_GFF3-gene_only_MV.gff -2 example_data/TAIR10_TE_Anno.XF.gff -o1 example_data/TAIR10_gene_at.gff -o2 example_data/TAIR10_TE_at.gff
 
   - cd ../TE_reannotate
-  - ~/cmake-3.6.0-rc2-Linux-x86_64/bin/cmake ../TE_reannotate -DCMAKE_MODULE_PATH=../../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
+  - cmake ../TE_reannotate -DCMAKE_MODULE_PATH=../../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
   - make -j2
   - ./TE_reannotate -a example_data/meh.gff -i example_data/meh.bam -o meh.txt > meh.txt
 
