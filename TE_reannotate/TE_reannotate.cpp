@@ -62,6 +62,9 @@ seqan::ArgumentParser::ParseResult parseCommandLine(
 }
 
 map<CharString, vector<pair<unsigned int, unsigned int>>> blocks;
+BamFileOut outBam;
+GffFileOut outGFF;
+
 
 int getMethylationBlocks(ModifyStringOptions options, GffFileIn &gffIn)
 {
@@ -187,8 +190,16 @@ int search(BamFileIn &inFile, pair<unsigned int, unsigned int> block, CharString
          {
             for(auto i : current_run)
             {
-               cout << i.qName << "\t" << i.beginPos << "\t" << i.beginPos+length(i.seq) << "\t";
-               cout << "Block" << "\t" << block.first << "\t" << block.second << endl;
+   /*            GffRecord record;
+               record.ref = ref;
+               record.source = "TE_reannoation";
+               record.type = "CG_block";
+               record.beginPos = block.first;
+               record.endPos = block.second;
+               record.strand = '.';
+               record.score = GffRecord::INVALID_SCORE();
+               writeRecord(outGFF, record);*/
+               writeRecord(outBam, i);
             }
          }
          current_run.clear();
@@ -204,8 +215,8 @@ int search(BamFileIn &inFile, pair<unsigned int, unsigned int> block, CharString
 
 int findReads(ModifyStringOptions options, BamIndex<Bai> &baiIndex, BamFileIn &inFile)
 {
-   BamHeader header;
-   readHeader(header, inFile);
+ //  BamHeader header;
+   //readHeader(header, inFile);
 
    for(auto chromosome : blocks)
    {
@@ -258,13 +269,30 @@ int main(int argc, char const ** argv)
       return 1;
    }
 
+   if(!open(outGFF, toCString("blocks.gff")))
+   {
+      cerr << "ERROR: Could not open ";
+      cerr << "blocks.gff" << endl;
+      return 1;
+   }
+
    getMethylationBlocks(options, gffIn);
 
-/* For debugging
    for(auto i : blocks)
-      for(auto j : i.second)
-         cout << i.first << "\t" << j.first << "\t" << j.second << endl;
-*/
+   {
+      for(auto block : i.second)
+      {
+      GffRecord record;
+      record.ref = i.first;
+      record.source = "TE_reannoation";
+      record.type = "CG_block";
+      record.beginPos = block.first;
+      record.endPos = block.second;
+      record.strand = '.';
+      record.score = GffRecord::INVALID_SCORE();
+      writeRecord(outGFF, record);
+      }
+   }
 
    BamFileIn inFile;
    if (!open(inFile, toCString(options.inputFileName)))
@@ -272,6 +300,16 @@ int main(int argc, char const ** argv)
       std::cerr << "ERROR: Could not open " << options.inputFileName << " for reading.\n";
       return 1;
    }
+
+   if (!open(outBam, toCString("reads.bam")))
+   {
+      return 1;
+   }
+
+   BamHeader header;
+   readHeader(header, inFile);
+   outBam.context = context(inFile);
+   writeHeader(outBam, header);
 
    BamIndex<Bai> baiIndex;
    string baiString = toCString(options.inputFileName) + string(".bai");
@@ -286,6 +324,8 @@ int main(int argc, char const ** argv)
    // find reads that overlap block
 //   findReads(ModifyStringOptions options);
    findReads(options, baiIndex, inFile); 
+
+   close(outBam);
    return 0;
 
 }
