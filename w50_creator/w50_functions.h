@@ -23,9 +23,9 @@ struct ModifyStringOptions
 
 struct WindowValues
 {
-   int c;
-   int t;
-   int n;
+   long long unsigned int c;
+   long long unsigned int t;
+   long long unsigned int n;
    float score;
 };
 
