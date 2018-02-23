@@ -24,11 +24,6 @@ seqan::ArgumentParser::ParseResult parseCommandLine(
 	char const ** argv) {
 
    ArgumentParser parser("TE_reannotate");
-   addOption(parser, ArgParseOption("i", "input-file", 
-                                    "Path to the input file", 
-                                    ArgParseArgument::INPUT_FILE,
-                                    "IN"));
-   setRequired(parser, "input-file");
    addOption(parser, ArgParseOption("a", "input-annotation-file", 
                                     "Path to the input filter file", 
                                     ArgParseArgument::INPUT_FILE, 
@@ -55,7 +50,6 @@ seqan::ArgumentParser::ParseResult parseCommandLine(
    if (res != ArgumentParser::PARSE_OK)
       return res;
 
-   getOptionValue(options.inputFileName, parser, "input-file");
    getOptionValue(options.inputAnnotationFileName, 
                   parser, "input-annotation-file");
    getOptionValue(options.outputFileName, parser, "output-file");
@@ -314,6 +308,73 @@ void blockCull(ModifyStringOptions options)
    }
 }
 
+
+
+int initial_merge(ModifyStringOptions options, GffFileIn &gffIn, vector<GffRecord> &merging)
+{
+   GffRecord record;
+   GffRecord last;
+
+   readRecord(last, gffIn);
+
+   while (!atEnd(gffIn)) // loop through GFF file
+   {
+      readRecord(record, gffIn);
+      unsigned int pos = 0;
+      for(auto i : record.tagNames)
+      {
+         if(i == "gene_id")
+         {
+            break;
+         }
+
+         pos++;
+      }
+      
+      if(record.tagValues[pos] == last.tagValues[pos] && record.strand == last.strand && record.ref == last.ref)
+      {
+         last.endPos = record.endPos;
+      }
+      else
+      {
+         merging.push_back(last);
+         last = record;
+      }
+   }
+
+   merging.push_back(last);
+
+   return 0;
+}
+
+int within_range(ModifyStringOptions options, vector<GffRecord> &merging)
+{
+   GffRecord last = merging[0];   
+   vector<GffRecord> newMerging;
+
+   for(unsigned int i = 1; i < merging.size(); i++)
+   {
+
+      GffRecord record = merging[i];
+      if(record.strand == last.strand && record.ref == last.ref && (record.beginPos-last.endPos) <= 200)
+      {
+         last.endPos = record.endPos;
+      }
+      else
+      {
+         newMerging.push_back(last);
+         last = record;
+      }
+
+   }
+
+   newMerging.push_back(last);
+
+   merging = newMerging;
+
+   return 0;
+}
+
 // A basic template to get up and running quickly
 int main(int argc, char const ** argv)
 {
@@ -332,63 +393,15 @@ int main(int argc, char const ** argv)
       return 1;
    }
 
-   if(!open(outGFF, toCString("blocks.gff")))
-   {
-      cerr << "ERROR: Could not open ";
-      cerr << "blocks.gff" << endl;
-      return 1;
-   }
+   vector<GffRecord> merging;
 
-   getMethylationBlocks(options, gffIn);
-   blockMerge(options);
-   blockCull(options);
+   // initial merge which would combine them if they are the same gene_id
+   initial_merge(options, gffIn, merging);
 
-   for(auto i : blocks)
-   {
-      for(auto block : i.second)
-      {
-      GffRecord record;
-      record.ref = i.first;
-      record.source = "TE_reannoation";
-      record.type = "CG_block";
-      record.beginPos = block.first;
-      record.endPos = block.second;
-      record.strand = '.';
-      record.score = GffRecord::INVALID_SCORE();
-      writeRecord(outGFF, record);
-      }
-   }
+   within_range(options, merging);
 
-   BamFileIn inFile;
-   if (!open(inFile, toCString(options.inputFileName)))
-   {
-      std::cerr << "ERROR: Could not open " << options.inputFileName << " for reading.\n";
-      return 1;
-   }
-
-   if (!open(outBam, toCString("reads.bam")))
-   {
-      return 1;
-   }
-
-   BamHeader header;
-   readHeader(header, inFile);
-   outBam.context = context(inFile);
-   writeHeader(outBam, header);
-
-   BamIndex<Bai> baiIndex;
-   string baiString = toCString(options.inputFileName) + string(".bai");
-   if (!open(baiIndex, toCString(baiString) ))
-   {
-      cerr << "ERROR: Could not read BAI index file " << "\n";
-      cerr << "Ensure you've sorted and indexed your BAM file using samtools.";
-      cerr << endl;
-      return 1;
-   }
-
-   // find reads that overlap block
-//   findReads(ModifyStringOptions options);
-   findReads(options, baiIndex, inFile); 
+   for(auto i : merging)
+      cout << i.ref << "\t" << i.beginPos << "\t" << i.endPos << "\t" << endl;
 
    close(outBam);
    return 0;

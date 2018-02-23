@@ -32,3 +32,5 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SEQAN_CXX_FLAGS}")
 # Add executable and link against SeqAn dependencies.
 add_executable (TE_reannotate TE_reannotate.cpp)
 target_link_libraries (TE_reannotate ${SEQAN_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+add_executable (Transcript_Merge Transcript_Merge.cpp)
+target_link_libraries (Transcript_Merge ${SEQAN_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
