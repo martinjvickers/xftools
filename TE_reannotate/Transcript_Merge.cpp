@@ -62,254 +62,6 @@ map<CharString, vector<pair<unsigned int, unsigned int>>> blocks;
 BamFileOut outBam;
 GffFileOut outGFF;
 
-
-int getMethylationBlocks(ModifyStringOptions options, GffFileIn &gffIn)
-{
-   GffRecord record;
-   GffRecord last;
-   CharString ref = NULL;
-   int beginBlock = -1;
-   int endBlock = -1;
-   bool inBlock = false;
-   while (!atEnd(gffIn)) // loop through GFF file
-   {
-      readRecord(record, gffIn);
-      if(inBlock == false && record.score > options.methyl_cutoff) // start of block
-      {
-         inBlock = true;
-         ref = record.ref;
-         beginBlock = record.beginPos;
-         endBlock = record.endPos;
-      }
-      else if((inBlock == true && record.score == options.methyl_cutoff) || (record.ref != ref && inBlock == true)) // finished block
-      {
-         pair<unsigned int, unsigned int> block = make_pair(beginBlock, endBlock);
-         blocks[ref].push_back(block);
-         inBlock = false;
-         beginBlock = -1;
-         endBlock = -1;
-      }
-      else if(inBlock == true && record.score > options.methyl_cutoff) // within block
-      {
-         endBlock = record.endPos;
-      }
-   }
-
-   if(inBlock == true) // finished block
-   {
-      pair<unsigned int, unsigned int> block = make_pair(beginBlock, endBlock);
-      blocks[ref].push_back(block);
-      inBlock = false;
-      beginBlock = -1;
-      endBlock = -1;
-   }
-
-   
-   return 0;
-}
-
-bool overlap(BamAlignmentRecord record1, BamAlignmentRecord record2)
-{
-   if(max(record1.beginPos+length(record1.seq), record2.beginPos+length(record2.seq))
-      - min(record1.beginPos, record2.beginPos)
-      <
-      (record1.beginPos+length(record1.seq) - record1.beginPos) +
-      (record2.beginPos+length(record2.seq) - record2.beginPos)
-     )
-   {
-      return true;
-   }
-   else
-   {
-      return false;
-   }
-}
-
-bool overlap(BamAlignmentRecord record1, pair<unsigned int, unsigned int> record2)
-{
-   unsigned int record1_first = record1.beginPos;
-   unsigned int record1_second = record1.beginPos+length(record1.seq);
-
-   if(max(record1_second, record2.second)
-      - min(record1_first, record2.first)
-      <
-      (record1_second - record1_first) +
-      (record2.second - record2.first)
-     )
-   {
-      return true;
-   }
-   else
-   {
-      return false;
-   }
-}
-
-
-/*
-   The way I'm going to tackle this is to try to make an unbroken
-   overlap of reads from X bp of the 5' end until I make contact
-   with the feature, wiping attempts until we have an unbroken one.
-
-   I should do this twice, one for each strand.
-*/
-int search(BamFileIn &inFile, pair<unsigned int, unsigned int> block, CharString ref)
-{
-   BamAlignmentRecord record;
-   readRecord(record, inFile);
-
-   vector<BamAlignmentRecord> current_run;
-   current_run.push_back(record); // this record shouldn't overlap with
-                                  // the block
-
-   bool blockOverlap = false;
-
-   // do while the record
-   do
-   {
-      if(atEnd(inFile))
-         return 1;
-      else
-         readRecord(record, inFile);
-      
-
-      if(overlap(record, block) == true)
-         blockOverlap = true;
-
-      // if they overlap, then add record to the run
-      if(overlap(current_run[current_run.size()-1], record))
-      {
-         current_run.push_back(record);
-      }
-      else
-      {
-         if(blockOverlap == true)
-         {
-            for(auto i : current_run)
-            {
-   /*            GffRecord record;
-               record.ref = ref;
-               record.source = "TE_reannoation";
-               record.type = "CG_block";
-               record.beginPos = block.first;
-               record.endPos = block.second;
-               record.strand = '.';
-               record.score = GffRecord::INVALID_SCORE();
-               writeRecord(outGFF, record);*/
-               writeRecord(outBam, i);
-            }
-         }
-         current_run.clear();
-
-         if(record.beginPos < block.second)
-            current_run.push_back(record);
-      }
-
-   }
-   while(current_run.size() != 0 && record.beginPos < block.second);
-
-}
-
-int findReads(ModifyStringOptions options, BamIndex<Bai> &baiIndex, BamFileIn &inFile)
-{
- //  BamHeader header;
-   //readHeader(header, inFile);
-
-   for(auto chromosome : blocks)
-   {
-      int rID = 0;
-      if (!getIdByName(rID, contigNamesCache(context(inFile)), chromosome.first))
-      {
-         std::cerr << "ERROR: Reference sequence named " << chromosome.first << " not known.\n";
-         return 1;
-      }
-
-      for(auto block : chromosome.second)
-      {
-         bool hasAlignments = false;
-         if(!jumpToRegion(inFile, hasAlignments, rID, block.first, block.second, baiIndex))
-         {
-            std::cerr << "ERROR: Could not jump to " << block.first << ":" << block.second << "\n";
-            return 1;
-         }
-
-         search(inFile, block, chromosome.first);
-
-         /*
-         cout << "Jumped to region " << chromosome.first << " " << block.first;
-         cout << " " << block.second << endl;
-         cout << "First read " << record.qName << " " << record.beginPos;
-         cout << " " << record.beginPos+length(record.seq) << endl;
-         */
-
-      }
-   }
-
-   return 0;
-}
-
-/*Merges blocks that are close to eachother*/
-void blockMerge(ModifyStringOptions options)
-{
-   map<CharString, vector<pair<unsigned int, unsigned int>>> new_blocks;
-
- //  int merge_distance = 200;
-   for(auto chromosome : blocks)
-   {  
-      int count = 0;
-      pair<unsigned int, unsigned int> current;
-      for(auto block : chromosome.second)
-      {
-         if(count == 0)
-         {
-            current = make_pair(block.first, block.second);
-         }
-         else
-         {
-            if(block.second < current.second+options.merge_distance)
-            {
-               current.second = block.second;
-            }
-            else
-            {
-               new_blocks[chromosome.first].push_back(current);
-               current = make_pair(block.first, block.second);
-            }
-         }
-         
-         count++;
-      }
-      new_blocks[chromosome.first].push_back(current);
-   }
-
-   blocks = new_blocks;
-}
-
-
-/*Deletes blocks that are small*/
-void blockCull(ModifyStringOptions options)
-{
-   //int cull_size = 200;
-   for(auto chromosome : blocks)
-   {
-      for(auto it = chromosome.second.begin(); it != chromosome.second.end();)
-      {
-         if((it->second - it->first) < options.cull_size)
-         {
-            it = chromosome.second.erase(it);
-         }
-         else
-         {
-            ++it;
-         }
-      }
-//      cout << chromosome.first << "\t" << chromosome.second.size() << endl;
-      blocks[chromosome.first] = chromosome.second;
-   }
-}
-
-
-
 int initial_merge(ModifyStringOptions options, GffFileIn &gffIn, vector<GffRecord> &merging)
 {
    GffRecord record;
@@ -333,7 +85,10 @@ int initial_merge(ModifyStringOptions options, GffFileIn &gffIn, vector<GffRecor
       
       if(record.tagValues[pos] == last.tagValues[pos] && record.strand == last.strand && record.ref == last.ref)
       {
-         last.endPos = record.endPos;
+         if(record.endPos > last.endPos)
+            last.endPos = record.endPos;
+         else
+            record.endPos = record.endPos;
       }
       else
       {
@@ -356,9 +111,13 @@ int within_range(ModifyStringOptions options, vector<GffRecord> &merging)
    {
 
       GffRecord record = merging[i];
-      if(record.strand == last.strand && record.ref == last.ref && (record.beginPos-last.endPos) <= 200)
+      if(record.strand == last.strand && record.ref == last.ref && (record.beginPos-last.endPos) <= 50)
       {
          last.endPos = record.endPos;
+         if(record.endPos > last.endPos)
+            last.endPos = record.endPos;
+         else
+            record.endPos = record.endPos;
       }
       else
       {
@@ -398,10 +157,14 @@ int main(int argc, char const ** argv)
    // initial merge which would combine them if they are the same gene_id
    initial_merge(options, gffIn, merging);
 
+   for(auto i : merging)
+      cout << i.ref << "\txftools\ttranscript\t" << i.beginPos << "\t" << i.endPos << "\t.\t" << i.strand << "\t.\t."<< endl;
+
+
    within_range(options, merging);
 
-   for(auto i : merging)
-      cout << i.ref << "\t" << i.beginPos << "\t" << i.endPos << "\t" << endl;
+//   for(auto i : merging)
+  //    cout << i.ref << "\txftools\ttranscript\t" << i.beginPos << "\t" << i.endPos << "\t.\t" << i.strand << "\t.\t."<< endl;
 
    close(outBam);
    return 0;
