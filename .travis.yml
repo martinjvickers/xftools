@@ -126,10 +126,19 @@ script:
   - gunzip example_data/TAIR10_reference.fas
   - ./at_compare -i example_data/TAIR10_reference.fas -1 example_data/TAIR10_GFF3-gene_only_MV.gff -2 example_data/TAIR10_TE_Anno.XF.gff -o1 example_data/TAIR10_gene_at.gff -o2 example_data/TAIR10_TE_at.gff
 
+  # TE_reannotate
   - cd ../TE_reannotate
   - cmake ../TE_reannotate -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
   - make -j2
   - ./TE_reannotate -a example_data/meh.gff -i example_data/meh.bam -o meh.txt > meh.txt
+
+  # max_wba
+  - cd ../max_wba
+  - cmake ../max_wba -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - make -j2
+  - gunzip example_data/*.gz
+  - ./max_wba -i example_data/input_file.w50.gff -a example_data/annotation_file.dmrs.gff -o example_data/new_results.w50.gff
+  - diff example_data/new_results.w50.gff example_data/results.w50.gff
 
   # code coverage and upload
   #- cd ../cov_data
