@@ -140,6 +140,12 @@ script:
   - ./max_wba -i example_data/input_file.w50.gff -a example_data/annotation_file.dmrs.gff -o example_data/new_results.w50.gff
   - diff example_data/new_results.w50.gff example_data/results.w50.gff
 
+  # overlap
+  - cd ../overlap
+  - cmake ../overlap -DCMAKE_MODULE_PATH=../../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
+  - make -j2
+  - ./overlap -i example_data/fileB.gff -a example_data/TAIR10.gff -o meh.gff
+
   # code coverage and upload
   #- cd ../cov_data
   #- for i in `ls -1 *.gcno`; do echo "gcov -n -o . "$i; done |sh > /dev/null
