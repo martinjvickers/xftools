@@ -149,8 +149,62 @@ int main(int argc, char const ** argv)
       readRecord(record, gffInFile);
       String<GffRecord> results;
       findIntervals(results, trees[record.ref], record.beginPos, record.endPos);
-      for(unsigned i = 0; i < length(results); ++i)
-         cout << record.ref << "\t" << record.beginPos << "\t" << record.endPos << "\t" << results[i].ref << "\t" << results[i].beginPos << "\t" << results[i].endPos << endl;
+      if(length(results) > 0)
+      {
+         for(unsigned i = 0; i < length(results); ++i)
+         {
+            cout << record.ref << "\t" << record.source << "\t";
+            cout << record.type << "\t" << record.beginPos << "\t";
+            cout << record.endPos << "\t" << record.score << "\t";
+            cout << record.strand << "\t" << record.phase << "\t";
+
+            //now loop through tags
+            if(record.tagNames[0] != ".")
+            {
+               for(unsigned t = 0; t < length(record.tagNames); t++)
+                  cout << record.tagNames[t] << "=" << record.tagValues[t];
+            }
+            else
+            {
+               cout << record.tagNames[0];
+            }
+
+            cout << "\t";
+
+            cout << results[i].ref << "\t" << results[i].source << "\t";
+            cout << results[i].type << "\t" << results[i].beginPos << "\t"; 
+            cout << results[i].endPos << "\t" << results[i].score << "\t";
+            cout << results[i].strand << "\t" << results[i].phase << "\t";
+
+            if(results[i].tagNames[0] != ".")
+            {
+               for(unsigned t = 0; t < length(results[i].tagNames); t++)
+               {
+                  cout << results[i].tagNames[t] << "=" << (CharString)results[i].tagValues[t];
+                  if(t != length(results[i].tagNames) - 1)
+                     cout << ";";
+               }
+            }
+            cout << endl;
+         }
+      }
+      else
+      {
+         cout << record.ref << "\t" << record.source << "\t";
+         cout << record.type << "\t" << record.beginPos << "\t";
+         cout << record.endPos << "\t" << record.score << "\t";
+         cout << record.strand << "\t" << record.phase << "\t";
+         if(record.tagNames[0] != ".")
+         {
+            for(unsigned t = 0; t < length(record.tagNames); t++)
+               cout << record.tagNames[t] << "=" << record.tagValues[t];
+         }
+         else
+         {
+            cout << record.tagNames[0];
+         }
+         cout << endl;
+      }
    }
 
    close(gffInFile);
