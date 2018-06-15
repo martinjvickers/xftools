@@ -5,22 +5,14 @@
 #include <vector>
 #include <seqan/gff_io.h>
 
-//#include <seqan/sequence.h>
 #include <seqan/stream.h>
 #include <seqan/file.h>
-//#include <seqan/arg_parse.h>
-//#include <seqan/seq_io.h>
-//#include <math.h>
-//#include <vector>
-//#include <ctime>
-//#include <cassert>
-//#include <string>
-//#include <thread>
+#include <seqan/misc/interval_tree.h>
 
 using namespace seqan;
 using namespace std;
 
-// typedef split_interval_map<int, Feature> featuremap;
+typedef IntervalAndCargo<int, GffRecord> TInterval;
 
 struct ModifyStringOptions 
 {
@@ -29,11 +21,6 @@ struct ModifyStringOptions
    CharString outputFileName;
    bool exclude;
    bool lazyRef;
-};
-
-struct Interval 
-{
-   unsigned int start, end;
 };
 
 seqan::ArgumentParser::ParseResult parseCommandLine(
@@ -85,7 +72,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(
    return ArgumentParser::PARSE_OK;
 }
 
-int insertIntervals(vector<Interval> &intervals, GffFileIn &gffInFile) 
+//int insertIntervals(String<TInterval> &intervals, GffFileIn &gffInFile) 
+int insertIntervals(map<CharString, String<TInterval>> &intervals, GffFileIn &gffInFile)
 {
    GffRecord record;
 
@@ -94,7 +82,7 @@ int insertIntervals(vector<Interval> &intervals, GffFileIn &gffInFile)
       while(!atEnd(gffInFile))
       {
          readRecord(record, gffInFile);
-         cout << record.beginPos << "\t" << record.endPos << endl;
+         appendValue(intervals[record.ref], TInterval(record.beginPos, record.endPos, record));
       }
    }
    catch (Exception const & e)
@@ -118,22 +106,55 @@ int main(int argc, char const ** argv)
    if (res != ArgumentParser::PARSE_OK)
       return res == ArgumentParser::PARSE_ERROR;
 
-   // put fileA into RAM
-   GffFileIn gffInFile;
-   if(!open(gffInFile, toCString(options.inputFileName)))
+   // open annotation file
+   GffFileIn gffAnnotInFile;
+   if(!open(gffAnnotInFile, toCString(options.inputAnnotationFileName)))
    {
-      cerr << "ERROR: Could not open output.gff";
+      cerr << "ERROR: Could not open ";
       cerr << options.inputFileName;
       cerr << " for reading.\n";
       return 1;
    }
 
-   vector<Interval> intervals;
-   if(insertIntervals(intervals, gffInFile) != 0)
+   // create interval tree
+   typedef IntervalAndCargo<int, GffRecord> TInterval;
+   String<TInterval> intervals;
+
+   map<CharString, String<TInterval>> full;
+
+   if(insertIntervals(full, gffAnnotInFile) != 0)
    {
       cerr << "ERROR: Cannot put intervals into interval vector " << endl;
       return 1;
    }
+
+   map<CharString, IntervalTree<int, GffRecord>> trees;
+   for(auto i : full)
+      trees[i.first] = i.second;
+
+   // open input file
+   GffFileIn gffInFile;
+   if(!open(gffInFile, toCString(options.inputFileName)))
+   {
+      cerr << "ERROR: Could not open ";
+      cerr << options.inputFileName;
+      cerr << " for reading.\n";
+      return 1;
+   }
+
+   // search for overlaps
+   GffRecord record;
+   while(!atEnd(gffInFile))
+   {
+      readRecord(record, gffInFile);
+      String<GffRecord> results;
+      findIntervals(results, trees[record.ref], record.beginPos, record.endPos);
+      for(unsigned i = 0; i < length(results); ++i)
+         cout << record.ref << "\t" << record.beginPos << "\t" << record.endPos << "\t" << results[i].ref << "\t" << results[i].beginPos << "\t" << results[i].endPos << endl;
+   }
+
+   close(gffInFile);
+   close(gffAnnotInFile);
 
    return 0;
 }
