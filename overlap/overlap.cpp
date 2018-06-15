@@ -49,7 +49,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(
        "Internally it will capitalise both the input and annoation reference \
         names so that chr1, Chr1 and CHR1 will all match. The output GFF will \
         be of the same format as the annoation file."));
-   setShortDescription(parser, "Overlap");
+   setShortDescription(parser, "overlap");
    setVersion(parser, "0.0.6");
    setDate(parser, "November 2017");
    addUsageLine(parser, "-i input.gff -a annotation.gff -o output.gff \
@@ -155,7 +155,12 @@ int main(int argc, char const ** argv)
          {
             cout << record.ref << "\t" << record.source << "\t";
             cout << record.type << "\t" << record.beginPos << "\t";
-            cout << record.endPos << "\t" << record.score << "\t";
+            cout << record.endPos << "\t";
+            if(isnan(record.score))
+               cout << ".\t";
+            else
+               cout << record.score << "\t";
+
             cout << record.strand << "\t" << record.phase << "\t";
 
             //now loop through tags
@@ -173,7 +178,18 @@ int main(int argc, char const ** argv)
 
             cout << results[i].ref << "\t" << results[i].source << "\t";
             cout << results[i].type << "\t" << results[i].beginPos << "\t"; 
-            cout << results[i].endPos << "\t" << results[i].score << "\t";
+            cout << results[i].endPos << "\t";
+
+            //if(results[i].score == results[i].INVALID_SCORE())
+            //   cout << ".\t";
+            //else
+            //   cout << results[i].score << "\t";
+
+            if(isnan(results[i].score))
+               cout << ".\t";
+            else
+               cout << results[i].score << "\t";
+
             cout << results[i].strand << "\t" << results[i].phase << "\t";
 
             if(results[i].tagNames[0] != ".")
@@ -185,6 +201,10 @@ int main(int argc, char const ** argv)
                      cout << ";";
                }
             }
+            else
+            {
+               cout << results[i].tagNames[0];
+            }
             cout << endl;
          }
       }
@@ -192,8 +212,15 @@ int main(int argc, char const ** argv)
       {
          cout << record.ref << "\t" << record.source << "\t";
          cout << record.type << "\t" << record.beginPos << "\t";
-         cout << record.endPos << "\t" << record.score << "\t";
+         cout << record.endPos << "\t";
+
+         if(isnan(record.score))
+            cout << ".\t";
+         else
+            cout << record.score << "\t";
+
          cout << record.strand << "\t" << record.phase << "\t";
+
          if(record.tagNames[0] != ".")
          {
             for(unsigned t = 0; t < length(record.tagNames); t++)
