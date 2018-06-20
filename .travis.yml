@@ -26,7 +26,7 @@ script:
 
   # unique_read_extractor
   - cd unique_read_extractor
-  - cmake ../unique_read_extractor -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - cmake ../unique_read_extractor -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
   - make -j2
   - ./unique_read_extractor -i example_data/subsample.sam -o example_data/new_result.sam
   - diff example_data/result.sam example_data/new_result.sam
@@ -36,7 +36,7 @@ script:
 
   # w50_creator
   - cd ../w50_creator
-  - cmake ../w50_creator -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - cmake ../w50_creator -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
   - make -j2
   - ./w50_tests
   - ./w50_creator -i example_data/GSM952438_TFH39.all.cg-col.gff.gz -s 50 -l window -p dzlab -o result.w50.gff
@@ -52,7 +52,7 @@ script:
 
   # single-c_combine
   - cd ../single-c_combine
-  - cmake ../single-c_combine -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - cmake ../single-c_combine -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
   - make -j2
   - ./single-c_combine -i example_data/example_rep1.w1.gff -i example_data/example_rep2.w1.gff -l CG -o result.gff
   - cat result.gff | awk '{printf $1"\t"$2"\t"$3"\t"$4"\t"$5"\t%.2f\t"$7"\t"$8"\t"$9"\n", $6}' > result_mod.gff
@@ -63,65 +63,65 @@ script:
 
   # bam_2_w1_extractor
   - cd ../bam_2_w1_extractor
-  - cmake ../bam_2_w1_extractor -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - cmake ../bam_2_w1_extractor -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
   - make -j2
   - ./bam_2_w1_extractor -i example_data/test.sam -o test.gff.gz
   - ./bam_2_w1_extractor -i example_data/test.bam -o test2.gff
 
   # gff_feature_merge
   - cd ../gff_feature_merge
-  - cmake ../gff_feature_merge -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - cmake ../gff_feature_merge -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
   - make -j2
   - ./gff_feature_merge -h
 
   # weighted_w1_extractor
   - cd ../weighted_w1_extractor
-  - cmake ../weighted_w1_extractor -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - cmake ../weighted_w1_extractor -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
   - make -j2
   - ./weighted_w1_extractor -i example_data/test.bam -o test.gff
 
   # methyl_coverage
   - cd ../methyl_coverage
-  - cmake ../methyl_coverage -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - cmake ../methyl_coverage -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
   - make -j2
   - ./methyl_coverage
 
   # fasta_insert
   - cd ../fasta_insert
-  - cmake ../fasta_insert -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - cmake ../fasta_insert -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
   - make -j2
   - gunzip example_data/TAIR10_reference_wCM.fa.gz
   - ./fasta_insert -r example_data/TAIR10_reference_wCM.fa -i example_data/example_insert.fasta -o output.fasta -c Chr4 -p 6780927
 
   # bam2bed
   - cd ../bam2bed
-  - cmake ../bam2bed -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - cmake ../bam2bed -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
   - make -j2
   - ./bam2bed
 
   # tss_label
   - cd ../tss_label
-  - cmake ../tss_label -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - cmake ../tss_label -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
   - make -j2
   - ./tss_label
 
   # cytosine_abundance
   - cd ../cytosine_abundance
-  - cmake ../cytosine_abundance -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - cmake ../cytosine_abundance -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
   - make -j2
   - ./cytosine_abundance
   - ./cytosine_abundance -r example_data/region.gff -i example_data/TAIR10_reference_ChrC.fa -o meh.gff
 
   # pausing_index
   - cd ../pausing_index
-  - cmake ../pausing_index -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - cmake ../pausing_index -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
   - make -j2
   - ./pausing_index
   - ./pausing_index -i example_data/example.w1.gff -a example_data/example_annotation.gff -tss 200 -o meh.gff
 
   # at_compare
   - cd ../at_compare
-  - cmake ../at_compare -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - cmake ../at_compare -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
   - make -j2
   - gunzip example_data/TAIR10_reference.fas
   - ./at_compare -i example_data/TAIR10_reference.fas -1 example_data/TAIR10_GFF3-gene_only_MV.gff -2 example_data/TAIR10_TE_Anno.XF.gff -o1 example_data/TAIR10_gene_at.gff -o2 example_data/TAIR10_TE_at.gff
@@ -134,7 +134,7 @@ script:
 
   # max_wba
   - cd ../max_wba
-  - cmake ../max_wba -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+  - cmake ../max_wba -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
   - make -j2
   - gunzip example_data/*.gz
   - ./max_wba -i example_data/input_file.w50.gff -a example_data/annotation_file.dmrs.gff -o example_data/new_results.w50.gff
@@ -142,7 +142,7 @@ script:
 
   # overlap
   - cd ../overlap
-  - cmake ../overlap -DCMAKE_MODULE_PATH=../../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
+  - cmake ../overlap -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
   - make -j2
   - ./overlap -i example_data/fileB.gff -a example_data/TAIR10.gff -o meh.gff
 
@@ -156,7 +156,7 @@ script:
   - bash <(curl -s https://codecov.io/bash) > /dev/null
 
   # now make make the release
-  - tar cvzf xftools.tar.gz gff_feature_merge/gff_feature_merge single-c_combine/single-c_combine weighted_w1_extractor/weighted_w1_extractor bam2bed/bam2bed methyl_coverage/methyl_coverage bam_2_w1_extractor/bam_2_w1_extractor fasta_insert/fasta_insert w50_creator/w50_creator cytosine_abundance/cytosine_abundance tss_label/tss_label pausing_index/pausing_index
+  - tar cvzf xftools.tar.gz gff_feature_merge/gff_feature_merge single-c_combine/single-c_combine weighted_w1_extractor/weighted_w1_extractor bam2bed/bam2bed methyl_coverage/methyl_coverage bam_2_w1_extractor/bam_2_w1_extractor fasta_insert/fasta_insert w50_creator/w50_creator cytosine_abundance/cytosine_abundance tss_label/tss_label pausing_index/pausing_index at_compare/at_compare TE_reannotate/TE_reannotate max_wba/max_wba overlap/overlap
 
 deploy:
   provider: releases
