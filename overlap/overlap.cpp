@@ -21,6 +21,7 @@ struct ModifyStringOptions
    CharString outputFileName;
    bool exclude;
    bool lazyRef;
+   unsigned int extension;
 };
 
 seqan::ArgumentParser::ParseResult parseCommandLine(
@@ -44,6 +45,9 @@ seqan::ArgumentParser::ParseResult parseCommandLine(
                                     "Path to the output file", 
                                     ArgParseArgument::OUTPUT_FILE,
                                     "OUT"));
+   addOption(parser, ArgParseOption("e", "extension", "Extend beyond annotation",
+                                    ArgParseArgument::INTEGER, "INT"));
+   setDefaultValue(parser, "extension", "0");
    //setRequired(parser, "output-file");
    addOption(parser, ArgParseOption("l", "lazy-ref", 
        "Internally it will capitalise both the input and annoation reference \
@@ -51,7 +55,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(
         be of the same format as the annoation file."));
    setShortDescription(parser, "overlap");
    setVersion(parser, "0.0.6");
-   setDate(parser, "November 2017");
+   setDate(parser, "July 2018");
    addUsageLine(parser, "-i input.gff -a annotation.gff -o output.gff \
                          [\\fIOPTIONS\\fP] ");
    addDescription(parser, "Given an annotation/feature file and an input w1 \
@@ -68,12 +72,13 @@ seqan::ArgumentParser::ParseResult parseCommandLine(
                   parser, "input-annotation-file");
    getOptionValue(options.outputFileName, parser, "output-file");
    options.lazyRef = isSet(parser, "lazy-ref");
+   getOptionValue(options.extension, parser, "extension");
 
    return ArgumentParser::PARSE_OK;
 }
 
 //int insertIntervals(String<TInterval> &intervals, GffFileIn &gffInFile) 
-int insertIntervals(map<CharString, String<TInterval>> &intervals, GffFileIn &gffInFile)
+int insertIntervals(map<CharString, String<TInterval>> &intervals, GffFileIn &gffInFile, unsigned int extension)
 {
    GffRecord record;
 
@@ -82,7 +87,8 @@ int insertIntervals(map<CharString, String<TInterval>> &intervals, GffFileIn &gf
       while(!atEnd(gffInFile))
       {
          readRecord(record, gffInFile);
-         appendValue(intervals[record.ref], TInterval(record.beginPos, record.endPos, record));
+         //cout << "Should be " << record.beginPos << ":" << record.endPos << "\tBut is:\t" << record.beginPos-extension << ":" << record.endPos+extension << endl;
+         appendValue(intervals[record.ref], TInterval(record.beginPos-extension, record.endPos+extension, record));
       }
    }
    catch (Exception const & e)
@@ -122,7 +128,7 @@ int main(int argc, char const ** argv)
 
    map<CharString, String<TInterval>> full;
 
-   if(insertIntervals(full, gffAnnotInFile) != 0)
+   if(insertIntervals(full, gffAnnotInFile, options.extension) != 0)
    {
       cerr << "ERROR: Cannot put intervals into interval vector " << endl;
       return 1;
@@ -190,9 +196,37 @@ int main(int argc, char const ** argv)
             relative end
             category
             */
+            
+            // overlap distance
+            int left;
+            int right;
+            if(record.beginPos > results[i].beginPos)
+               left = record.beginPos;
+            else
+               left = results[i].beginPos;
+
+            if(record.endPos < results[i].endPos)
+               right = record.endPos;
+            else
+               right = results[i].endPos;
+
+            int overlap = (right - left) - 1;
+
+            if(overlap < 0)
+               overlap = 0;
+
+            cout << overlap << "\t"; // not sure why minus 1, this is just how Matts works
+
+            int distance = 0;
+            if(overlap == 0)
+               distance = (int)results[i].beginPos-(int)record.endPos;
+
+            cout << distance << "\t";
+
             cout << (int)record.beginPos-(int)results[i].beginPos << "\t";
             cout << (int)record.endPos-(int)results[i].endPos << "\t";
-            
+
+
             // now begin printing what we overlaped with
             cout << results[i].ref << "\t" << results[i].source << "\t";
             cout << results[i].type << "\t" << results[i].beginPos << "\t";
