@@ -149,6 +149,9 @@ int main(int argc, char const ** argv)
       readRecord(record, gffInFile);
       String<GffRecord> results;
       findIntervals(results, trees[record.ref], record.beginPos, record.endPos);
+
+
+      // for each record, find interval. If there is an interval, loop through
       if(length(results) > 0)
       {
          for(unsigned i = 0; i < length(results); ++i)
@@ -176,14 +179,24 @@ int main(int argc, char const ** argv)
 
             cout << "\t";
 
-            cout << results[i].ref << "\t" << results[i].source << "\t";
-            cout << results[i].type << "\t" << results[i].beginPos << "\t"; 
-            cout << results[i].endPos << "\t";
-
             //if(results[i].score == results[i].INVALID_SCORE())
             //   cout << ".\t";
             //else
             //   cout << results[i].score << "\t";
+
+            /*Here is where we do the overlap stats!
+            overlap distance
+            relative start
+            relative end
+            category
+            */
+            cout << (int)record.beginPos-(int)results[i].beginPos << "\t";
+            cout << (int)record.endPos-(int)results[i].endPos << "\t";
+            
+            // now begin printing what we overlaped with
+            cout << results[i].ref << "\t" << results[i].source << "\t";
+            cout << results[i].type << "\t" << results[i].beginPos << "\t";
+            cout << results[i].endPos << "\t";
 
             if(isnan(results[i].score))
                cout << ".\t";
@@ -205,6 +218,7 @@ int main(int argc, char const ** argv)
             {
                cout << results[i].tagNames[0];
             }
+
             cout << endl;
          }
       }
