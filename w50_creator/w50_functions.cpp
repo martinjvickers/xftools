@@ -209,7 +209,7 @@ int insertIntoMap(std::map<int, WindowValues> &bins,
    currWindowVal.score = record.score;
 
    // means we have no n's in the input file, so we add one
-   if(haveN == true)
+   if(haveN == false)
       currWindowVal.n = 1;
 
    // get element in hash table, if not there, just put this one in it
