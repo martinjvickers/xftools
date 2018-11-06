@@ -150,6 +150,13 @@ int main(int argc, char const ** argv)
    if (res != ArgumentParser::PARSE_OK)
       return res == ArgumentParser::PARSE_ERROR;
 
+   GffFileOut gffFileOut;
+   if (!open(gffFileOut, toCString(options.outputFileName)))
+   {
+      cerr << "ERROR: Could not open the file.\n";
+      return 1;
+   }
+
    // I guess the best thing is to load the Gene and TE list into an interval tree for searching
    String<TInterval> intervals;
    map<CharString, String<TInterval>> full;
@@ -221,10 +228,17 @@ int main(int argc, char const ** argv)
       }
       while(length(currentOverlaps) != length(results));
 
-      cout << sequenceName(faiIndex, randChr) << "\t" << randPos << "\t";
-      cout << randPos + (record.endPos - record.beginPos) << "\t";
-      cout << length(currentOverlaps) << endl;
+      GffRecord outRecord;
+      outRecord.source = "xftools";
+      outRecord.type = "randomRegion";
+      outRecord.beginPos = randPos;
+      outRecord.endPos = randPos + (record.endPos - record.beginPos);
+      outRecord.ref = sequenceName(faiIndex, randChr);
+
+      writeRecord(gffFileOut, outRecord);
 
    }
+
+   close(gffFileOut);
    return 0;
 }
