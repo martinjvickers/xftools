@@ -30,4 +30,8 @@ I think it would be BEST to require the fasta file too.
 
 ### Running
 
+```
+./DMR_generator -a genes.gff -f dmrs.gff -g genome.fa -l -e 200 -o mimicked.dmrs.gff
+```
+
 
