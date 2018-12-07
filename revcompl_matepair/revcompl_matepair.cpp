@@ -33,7 +33,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(
                                     ArgParseArgument::OUTPUT_FILE,
                                     "OUT"));
    //setRequired(parser, "output-file");
-   setShortDescription(parser, "Overlap");
+   setShortDescription(parser, "Reverse complements your fastq file.");
    setVersion(parser, "0.0.1");
    setDate(parser, "December 2018");
    addUsageLine(parser, "-i input.fq.gz  -o revcompl.fq.gz \
