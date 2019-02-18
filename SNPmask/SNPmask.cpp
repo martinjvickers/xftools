@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <seqan/arg_parse.h>
+#include <seqan/seq_io.h>
 #include <fstream>
 #include <sstream>
 
@@ -62,30 +63,68 @@ int main(int argc, char const ** argv)
    if (res != ArgumentParser::PARSE_OK)
       return res == ArgumentParser::PARSE_ERROR;
 
+   // load fasta file
+   FaiIndex faiIndex;
+   if(!build(faiIndex, toCString(options.inputFileName)))
+   {
+      cerr << "ERROR: Could not build FAI index for file ";
+      cerr << options.inputFileName << ".\n";
+      return 1;
+   }
+
+   // Masked file to write out
+   SeqFileOut seqFileOut(toCString(options.outputFileName));
+
+   unsigned idx = 0;
+   CharString seq;
+   bool firstTime = true;
+
    fstream file;
    file.open(toCString(options.inputAnnotationFileName));
 
    string line;
    while(getline( file, line,'\n'))
    {
+      string ref, snp, data;
       istringstream templine(line);
-      string data;
       int i = 0;
-      string ref;
       int pos;
-      string snp;
       while (getline( templine, data,'\t'))
       {
-         if(i == 2)
+         if(i == 1)
             ref = data;
-         else if(i == 3)
+         else if(i == 2)
             pos = stoi(data);
-         else if(i == 5)
+         else if(i == 4)
             snp = data;
          i++;
       }
-      cout << ref << "\t" << snp << "\t" << pos << endl;
+
+      unsigned currentIdx;
+      if(!getIdByName(currentIdx, faiIndex, ref))
+         std::cout << "ERROR: FAI index has no entry for " << ref << "\n";
+
+      if(idx != currentIdx && firstTime == false)
+      {
+         writeRecord(seqFileOut, sequenceName(faiIndex, idx), seq);
+      }
+
+      if(idx != currentIdx || firstTime == true)
+      {
+         idx = currentIdx;
+         readSequence(seq, faiIndex, idx);
+         firstTime = false;
+      }
+
+      //if(snp[0] != seq[pos-1])
+      //   cout << ref << "\t" << sequenceName(faiIndex, currentIdx) << "\t" << currentIdx << "\t" << snp << "\t" << pos << "\t" << seq[pos-1] << endl;
+      seq[pos-1]  = 'N';
    }
+
+   // write out the last one
+   writeRecord(seqFileOut, sequenceName(faiIndex, idx), seq);
+
+   close(seqFileOut);
    file.close();
 
    return 0;
