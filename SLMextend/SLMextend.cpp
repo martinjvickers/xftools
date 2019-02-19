@@ -4,6 +4,7 @@
 #include <seqan/arg_parse.h>
 #include <seqan/gff_io.h>
 #include <seqan/misc/interval_tree.h>
+#include <set>
 
 using namespace seqan;
 using namespace std;
@@ -100,6 +101,29 @@ int insertIntervals(map<CharString, String<TInterval>> &intervals,
    return 0;
 }
 
+//create average!
+int bedAverage(GffFileIn &gffS1InFile, GffFileIn &gffS2InFile,
+               GffFileIn &gffS3InFile)
+{
+   
+   return 0;
+}
+
+std::set<CharString> getList(GffFileIn &gffSLMInFile)
+{
+   std::set<CharString> chr;
+   GffRecord record;
+
+   while(!atEnd(gffSLMInFile))
+   {
+      readRecord(record, gffSLMInFile);
+      chr.insert(record.ref);
+   }
+
+   cout << "Unique chrs " << chr.size() << endl;
+
+   return chr;
+}
 
 /*
 Brief from Jimmy
@@ -133,6 +157,20 @@ int main(int argc, char const ** argv)
       cerr << " for reading.\n";
       return 1;
    }
+
+   // get a uniq list of chromosomes?
+   std::set<CharString> chromos = getList(gffSLMInFile);
+   close (gffSLMInFile);
+
+   // reopen - because I'm not sure how else to do this;
+   if(!open(gffSLMInFile, toCString(options.inputSLMFileName)))
+   {
+      cerr << "ERROR: Could not open ";
+      cerr << options.inputSLMFileName;
+      cerr << " for reading.\n";
+      return 1;
+   }
+
 
    // load the sperm and soma files
    GffFileIn gffSpermInFile;
