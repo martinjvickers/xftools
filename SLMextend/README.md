@@ -20,5 +20,5 @@ Getting this to compile on work machine;
 ### Running
 
 ```
-./SLMextend -slm example_data/converted/step5a_avg5_9612_SLM.gff -spm example_data/converted/sperm.CHH.w1.gff.gz -s1 example_data/converted/soma.9DAP_em.CHH.w1.gff.gz -s2 example_data/converted/SRR2079442_earshoot_rmdup_CHH.w1.gff.gz -s3 example_data/converted/SRR2079447_B73_shoot_apex_rmdup_CHH.w1.gff.gz
+./SLMextend -slm example_data/step5a_avg5_9612_SLM.gff -spm example_data/sperm.CHH.w1.100k.gff.gz -s1 example_data/soma.9DAP_em.CHH.w1.100k.gff.gz -s2 example_data/SRR2079442_earshoot_rmdup_CHH.w1.100k.gff.gz -s3 example_data/SRR2079447_B73_shoot_apex_rmdup_CHH.w1.100k.gff.gz
 ```
