@@ -77,39 +77,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(
 
 typedef IntervalAndCargo<int, GffRecord> TInterval;
 
-int insertIntervals(map<CharString, String<TInterval>> &intervals, 
-                    GffFileIn &gffInFile)
-{
-   GffRecord record;
-
-   try
-   {
-      while(!atEnd(gffInFile))
-      {
-         readRecord(record, gffInFile);
-         appendValue(intervals[record.ref], 
-                     TInterval(record.beginPos, record.endPos, record));
-      }
-   }
-   catch (Exception const & e)
-   {
-      cerr << "ERROR: " << e.what() << std::endl;
-      return 1;
-   }
-
-   close(gffInFile);
-   return 0;
-}
-
-//create average!
-int bedAverage(GffFileIn &gffS1InFile, GffFileIn &gffS2InFile,
-               GffFileIn &gffS3InFile)
-{
-   
-   return 0;
-}
-
-std::set<CharString> getList(GffFileIn &gffSLMInFile)
+std::set<CharString> getList(GffFileIn &gffSLMInFile, 
+                             map<CharString, String<TInterval>> &intervals)
 {
    std::set<CharString> chr;
    GffRecord record;
@@ -118,6 +87,8 @@ std::set<CharString> getList(GffFileIn &gffSLMInFile)
    {
       readRecord(record, gffSLMInFile);
       chr.insert(record.ref);
+      appendValue(intervals[record.ref], 
+                  TInterval(record.beginPos, record.endPos, record));
    }
 
    cout << "Unique chrs " << chr.size() << endl;
@@ -159,18 +130,9 @@ int main(int argc, char const ** argv)
    }
 
    // get a uniq list of chromosomes?
-   std::set<CharString> chromos = getList(gffSLMInFile);
+   map<CharString, String<TInterval>> intervals;
+   std::set<CharString> chromos = getList(gffSLMInFile, intervals);
    close (gffSLMInFile);
-
-   // reopen - because I'm not sure how else to do this;
-   if(!open(gffSLMInFile, toCString(options.inputSLMFileName)))
-   {
-      cerr << "ERROR: Could not open ";
-      cerr << options.inputSLMFileName;
-      cerr << " for reading.\n";
-      return 1;
-   }
-
 
    // load the sperm and soma files
    GffFileIn gffSpermInFile;
@@ -208,20 +170,6 @@ int main(int argc, char const ** argv)
       cerr << " for reading.\n";
       return 1;
    }
-      
-   // for each SLM
-
-      // do
-
-         // get <window and >window soma average methylation
-         // get <window and >window sperm average methylation
-
-         // if abs(sperm-soma) > x, extend SLM
-
-      // if SLM extended, loop
-
-
-
 
    return 0;
 }
