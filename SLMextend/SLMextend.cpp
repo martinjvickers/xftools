@@ -15,6 +15,7 @@ struct ModifyStringOptions {
    CharString inputS1FileName;
    CharString inputS2FileName;
    CharString inputS3FileName;
+   CharString chrom;
 };
 
 seqan::ArgumentParser::ParseResult parseCommandLine(
@@ -52,6 +53,11 @@ seqan::ArgumentParser::ParseResult parseCommandLine(
                                     ArgParseArgument::INPUT_FILE,
                                     "IN"));
    setRequired(parser, "soma3-file");
+
+   addOption(parser, ArgParseOption("c", "chr", "Which chromosome to work on",
+                                    ArgParseArgument::STRING, "STR"));
+   getOptionValue(options.chrom, parser, "chr");
+   setDefaultValue(parser, "chr", "1");
 
    setShortDescription(parser, "SLMextend");
    setVersion(parser, "0.0.1");
@@ -94,6 +100,123 @@ std::set<CharString> getList(GffFileIn &gffSLMInFile,
    cout << "Unique chrs " << chr.size() << endl;
 
    return chr;
+}
+
+// test: Can I store, in RAM, one chromosome at a time of payload?
+int giveItAGo(GffFileIn &gffSLMInFile)
+{
+   GffRecord record;
+   while(!atEnd(gffSLMInFile))
+   {
+      readRecord(record, gffSLMInFile);
+   }
+   return 0;
+}
+
+int average(GffFileIn &gffSpermInFile, GffFileIn &s1, GffFileIn &s2, 
+            GffFileIn &s3, CharString chr, map<int, unsigned short int[4]> &average)
+{
+   bool s1Started = false, s2Started = false, s3Started = false, spmStarted = false;
+   GffRecord record;
+
+   while(!atEnd(s1))
+   {
+      readRecord(record, s1);
+
+      if(record.ref == chr)
+         s1Started = true;
+      else if(record.ref != chr && s1Started == true)
+         break;
+
+      int c, t;
+      for(int i = 0; i < length(record.tagNames); i++)
+      {
+         if(record.tagNames[i] == "c")
+            c = stoi(toCString(record.tagValues[i]));
+         else if(record.tagNames[i] == "t")
+            t = stoi(toCString(record.tagValues[i]));
+      }
+
+      average[record.beginPos][0] += c;
+      average[record.beginPos][1] += t;
+   }
+
+   cout << "[Completed S1]" << endl;
+
+   while(!atEnd(s2))
+   {
+      readRecord(record, s2);
+
+      if(record.ref == chr)
+         s2Started = true;
+      else if(record.ref != chr && s2Started == true)
+         break;
+
+      int c, t;
+      for(int i = 0; i < length(record.tagNames); i++)
+      {
+         if(record.tagNames[i] == "c")
+            c = stoi(toCString(record.tagValues[i]));
+         else if(record.tagNames[i] == "t")
+            t = stoi(toCString(record.tagValues[i]));
+      }
+
+      average[record.beginPos][0] += c;
+      average[record.beginPos][1] += t;
+   }
+
+   cout << "[Completed S2]" << endl;
+
+   while(!atEnd(s3))
+   {
+      readRecord(record, s3);
+
+      if(record.ref == chr)
+         s3Started = true;
+      else if(record.ref != chr && s3Started == true)
+         break;
+
+      int c, t;
+      for(int i = 0; i < length(record.tagNames); i++)
+      {
+         if(record.tagNames[i] == "c")
+            c = stoi(toCString(record.tagValues[i]));
+         else if(record.tagNames[i] == "t")
+            t = stoi(toCString(record.tagValues[i]));
+      }
+
+      average[record.beginPos][0] += c;
+      average[record.beginPos][1] += t;
+   }
+
+   cout << "[Completed S3]" << endl;
+
+   while(!atEnd(gffSpermInFile))
+   {
+      readRecord(record, gffSpermInFile);
+
+      if(record.ref == chr)
+         spmStarted = true;
+      else if(record.ref != chr && spmStarted == true)
+         break;
+
+      int c, t;
+      for(int i = 0; i < length(record.tagNames); i++)
+      {
+         if(record.tagNames[i] == "c")
+            c = stoi(toCString(record.tagValues[i]));
+         else if(record.tagNames[i] == "t")
+            t = stoi(toCString(record.tagValues[i]));
+      }
+
+      average[record.beginPos][2] += c;
+      average[record.beginPos][3] += t;
+
+      cout << record.beginPos << " " << average[record.beginPos][0] << " " << average[record.beginPos][1] << " " << average[record.beginPos][2] << " " << average[record.beginPos][3] << endl;
+
+   }
+
+   return 0;
 }
 
 /*
@@ -170,6 +293,11 @@ int main(int argc, char const ** argv)
       cerr << " for reading.\n";
       return 1;
    }
+
+   //giveItAGo(gffS1InFile);
+   map<int, unsigned short int[4]> data;
+   average(gffSpermInFile, gffS1InFile, gffS2InFile, gffS3InFile, 
+           options.chrom, data);
 
    return 0;
 }
