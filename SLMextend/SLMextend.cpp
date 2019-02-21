@@ -114,10 +114,14 @@ int giveItAGo(GffFileIn &gffSLMInFile)
 }
 
 int average(GffFileIn &gffSpermInFile, GffFileIn &s1, GffFileIn &s2, 
-            GffFileIn &s3, CharString chr, map<int, unsigned short int[4]> &average)
+            GffFileIn &s3, CharString chr, 
+            map<int, unsigned short int[4]> &average)
 {
-   bool s1Started = false, s2Started = false, s3Started = false, spmStarted = false;
+   bool s1Started = false, s2Started = false;
+   bool s3Started = false, spmStarted = false;
    GffRecord record;
+
+   cout << "[Starting S1]" << endl;
 
    while(!atEnd(s1))
    {
@@ -128,20 +132,31 @@ int average(GffFileIn &gffSpermInFile, GffFileIn &s1, GffFileIn &s2,
       else if(record.ref != chr && s1Started == true)
          break;
 
-      int c, t;
-      for(int i = 0; i < length(record.tagNames); i++)
+      if(record.ref == chr)
       {
-         if(record.tagNames[i] == "c")
-            c = stoi(toCString(record.tagValues[i]));
-         else if(record.tagNames[i] == "t")
-            t = stoi(toCString(record.tagValues[i]));
+         //cout << "A match " << record.ref << " " << chr << endl;
+         int c, t;
+         for(int i = 0; i < length(record.tagNames); i++)
+         {
+            if(record.tagNames[i] == "c")
+               c = stoi(toCString(record.tagValues[i]));
+            else if(record.tagNames[i] == "t")
+               t = stoi(toCString(record.tagValues[i]));
+         }
+         average[record.beginPos][0] += c;
+         average[record.beginPos][1] += t;
+         //if(record.beginPos % 1000 == 0)
+         //   cout << "[Done " << record.beginPos << "]" << endl;
+      } 
+      else
+      {
+         //cout << "Didn't match record " << record.ref << " ref " << chr << endl;
       }
-
-      average[record.beginPos][0] += c;
-      average[record.beginPos][1] += t;
    }
 
    cout << "[Completed S1]" << endl;
+
+   cout << "[Starting S2]" << endl;
 
    while(!atEnd(s2))
    {
@@ -152,20 +167,24 @@ int average(GffFileIn &gffSpermInFile, GffFileIn &s1, GffFileIn &s2,
       else if(record.ref != chr && s2Started == true)
          break;
 
-      int c, t;
-      for(int i = 0; i < length(record.tagNames); i++)
+      if(record.ref == chr)
       {
-         if(record.tagNames[i] == "c")
-            c = stoi(toCString(record.tagValues[i]));
-         else if(record.tagNames[i] == "t")
-            t = stoi(toCString(record.tagValues[i]));
-      }
+         int c, t;
+         for(int i = 0; i < length(record.tagNames); i++)
+         {
+            if(record.tagNames[i] == "c")
+               c = stoi(toCString(record.tagValues[i]));
+            else if(record.tagNames[i] == "t")
+               t = stoi(toCString(record.tagValues[i]));
+         }
 
-      average[record.beginPos][0] += c;
-      average[record.beginPos][1] += t;
+         average[record.beginPos][0] += c;
+         average[record.beginPos][1] += t;
+      }
    }
 
    cout << "[Completed S2]" << endl;
+   cout << "[Starting S3]" << endl;
 
    while(!atEnd(s3))
    {
@@ -176,20 +195,24 @@ int average(GffFileIn &gffSpermInFile, GffFileIn &s1, GffFileIn &s2,
       else if(record.ref != chr && s3Started == true)
          break;
 
-      int c, t;
-      for(int i = 0; i < length(record.tagNames); i++)
+      if(record.ref == chr)
       {
-         if(record.tagNames[i] == "c")
-            c = stoi(toCString(record.tagValues[i]));
-         else if(record.tagNames[i] == "t")
-            t = stoi(toCString(record.tagValues[i]));
-      }
+         int c, t;
+         for(int i = 0; i < length(record.tagNames); i++)
+         {
+            if(record.tagNames[i] == "c")
+               c = stoi(toCString(record.tagValues[i]));
+            else if(record.tagNames[i] == "t")
+               t = stoi(toCString(record.tagValues[i]));
+         }
 
-      average[record.beginPos][0] += c;
-      average[record.beginPos][1] += t;
+         average[record.beginPos][0] += c;
+         average[record.beginPos][1] += t;
+      }
    }
 
    cout << "[Completed S3]" << endl;
+   cout << "[Started spm]" << endl;
 
    while(!atEnd(gffSpermInFile))
    {
@@ -200,21 +223,25 @@ int average(GffFileIn &gffSpermInFile, GffFileIn &s1, GffFileIn &s2,
       else if(record.ref != chr && spmStarted == true)
          break;
 
-      int c, t;
-      for(int i = 0; i < length(record.tagNames); i++)
+      if(record.ref == chr)
       {
-         if(record.tagNames[i] == "c")
-            c = stoi(toCString(record.tagValues[i]));
-         else if(record.tagNames[i] == "t")
-            t = stoi(toCString(record.tagValues[i]));
+         int c, t;
+         for(int i = 0; i < length(record.tagNames); i++)
+         {
+            if(record.tagNames[i] == "c")
+               c = stoi(toCString(record.tagValues[i]));
+            else if(record.tagNames[i] == "t")
+               t = stoi(toCString(record.tagValues[i]));
+         }
+
+         average[record.beginPos][2] += c;
+         average[record.beginPos][3] += t;
+
+        // cout << record.beginPos << " " << average[record.beginPos][0] << " " << average[record.beginPos][1] << " " << average[record.beginPos][2] << " " << average[record.beginPos][3] << endl;
       }
-
-      average[record.beginPos][2] += c;
-      average[record.beginPos][3] += t;
-
-      cout << record.beginPos << " " << average[record.beginPos][0] << " " << average[record.beginPos][1] << " " << average[record.beginPos][2] << " " << average[record.beginPos][3] << endl;
-
    }
+
+   cout << "[Completed spm]" << endl;
 
    return 0;
 }
@@ -294,10 +321,12 @@ int main(int argc, char const ** argv)
       return 1;
    }
 
+   CharString meh = options.chrom;
+
    //giveItAGo(gffS1InFile);
    map<int, unsigned short int[4]> data;
    average(gffSpermInFile, gffS1InFile, gffS2InFile, gffS3InFile, 
-           options.chrom, data);
+           "1", data);
 
    return 0;
 }
