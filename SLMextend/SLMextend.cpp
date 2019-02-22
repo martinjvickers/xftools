@@ -102,17 +102,6 @@ std::set<CharString> getList(GffFileIn &gffSLMInFile,
    return chr;
 }
 
-// test: Can I store, in RAM, one chromosome at a time of payload?
-int giveItAGo(GffFileIn &gffSLMInFile)
-{
-   GffRecord record;
-   while(!atEnd(gffSLMInFile))
-   {
-      readRecord(record, gffSLMInFile);
-   }
-   return 0;
-}
-
 int average(GffFileIn &gffSpermInFile, GffFileIn &s1, GffFileIn &s2, 
             GffFileIn &s3, CharString chr, 
             map<int, unsigned short int[4]> &average)
@@ -134,7 +123,6 @@ int average(GffFileIn &gffSpermInFile, GffFileIn &s1, GffFileIn &s2,
 
       if(record.ref == chr)
       {
-         //cout << "A match " << record.ref << " " << chr << endl;
          int c, t;
          for(int i = 0; i < length(record.tagNames); i++)
          {
@@ -145,17 +133,10 @@ int average(GffFileIn &gffSpermInFile, GffFileIn &s1, GffFileIn &s2,
          }
          average[record.beginPos][0] += c;
          average[record.beginPos][1] += t;
-         //if(record.beginPos % 1000 == 0)
-         //   cout << "[Done " << record.beginPos << "]" << endl;
       } 
-      else
-      {
-         //cout << "Didn't match record " << record.ref << " ref " << chr << endl;
-      }
    }
 
    cout << "[Completed S1]" << endl;
-
    cout << "[Starting S2]" << endl;
 
    while(!atEnd(s2))
@@ -236,12 +217,25 @@ int average(GffFileIn &gffSpermInFile, GffFileIn &s1, GffFileIn &s2,
 
          average[record.beginPos][2] += c;
          average[record.beginPos][3] += t;
-
-        // cout << record.beginPos << " " << average[record.beginPos][0] << " " << average[record.beginPos][1] << " " << average[record.beginPos][2] << " " << average[record.beginPos][3] << endl;
       }
    }
 
    cout << "[Completed spm]" << endl;
+
+   return 0;
+}
+
+int perform_extend(GffFileIn &gffSLMInFile,
+                   map<int, unsigned short int[4]> data,
+                   float ratio, int window, CharString chrom)
+{
+   GffRecord record;
+   while(!atEnd(gffSLMInFile))
+   {
+      readRecord(record, gffSLMInFile);
+      if(record.ref == chrom)
+         cout << record.beginPos << "\t" << record.endPos << endl;
+   }
 
    return 0;
 }
@@ -279,10 +273,12 @@ int main(int argc, char const ** argv)
       return 1;
    }
 
+/*
    // get a uniq list of chromosomes?
    map<CharString, String<TInterval>> intervals;
    std::set<CharString> chromos = getList(gffSLMInFile, intervals);
    close (gffSLMInFile);
+*/
 
    // load the sperm and soma files
    GffFileIn gffSpermInFile;
@@ -323,10 +319,13 @@ int main(int argc, char const ** argv)
 
    CharString meh = options.chrom;
 
-   //giveItAGo(gffS1InFile);
    map<int, unsigned short int[4]> data;
    average(gffSpermInFile, gffS1InFile, gffS2InFile, gffS3InFile, 
            "1", data);
+
+   float ratio = 0.5;
+   int distance = 100;
+   perform_extend(gffSLMInFile, data, ratio, distance, "1");
 
    return 0;
 }
