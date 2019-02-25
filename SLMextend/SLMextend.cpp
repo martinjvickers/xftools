@@ -16,6 +16,8 @@ struct ModifyStringOptions {
    CharString inputS2FileName;
    CharString inputS3FileName;
    CharString chrom;
+   double ratio;
+   int window;
 };
 
 seqan::ArgumentParser::ParseResult parseCommandLine(
@@ -54,6 +56,13 @@ seqan::ArgumentParser::ParseResult parseCommandLine(
                                     "IN"));
    setRequired(parser, "soma3-file");
 
+   addOption(parser, ArgParseOption("s", "window-size", "Size of window",
+                                    ArgParseArgument::INTEGER, "INT"));
+   setDefaultValue(parser, "window-size", "100");
+   addOption(parser, ArgParseOption("r", "ratio", "Ratio",
+                                    ArgParseArgument::DOUBLE, "DOUBLE"));
+   setDefaultValue(parser, "ratio", "0.2");
+
    addOption(parser, ArgParseOption("c", "chr", "Which chromosome to work on",
                                     ArgParseArgument::STRING, "STR"));
    getOptionValue(options.chrom, parser, "chr");
@@ -77,6 +86,9 @@ seqan::ArgumentParser::ParseResult parseCommandLine(
    getOptionValue(options.inputS1FileName, parser, "soma1-file");
    getOptionValue(options.inputS2FileName, parser, "soma2-file");
    getOptionValue(options.inputS3FileName, parser, "soma3-file");
+
+   getOptionValue(options.window, parser, "window-size");
+   getOptionValue(options.ratio, parser, "ratio");
 
    return ArgumentParser::PARSE_OK;
 }
@@ -227,14 +239,73 @@ int average(GffFileIn &gffSpermInFile, GffFileIn &s1, GffFileIn &s2,
 
 int perform_extend(GffFileIn &gffSLMInFile,
                    map<int, unsigned short int[4]> data,
-                   float ratio, int window, CharString chrom)
+                   double ratio, int window, CharString chrom)
 {
    GffRecord record;
    while(!atEnd(gffSLMInFile))
    {
       readRecord(record, gffSLMInFile);
       if(record.ref == chrom)
-         cout << record.beginPos << "\t" << record.endPos << endl;
+      {
+         cout << "[START]\t" << record.beginPos << "\t" << record.endPos << endl;
+         
+         bool front = false, back = false; // record if stopping
+         int front_pos = record.beginPos;
+         int back_pos = record.endPos;
+
+         while(front == false)
+         {
+
+            int distance = window;
+            int front_c_soma = 0, front_t_soma = 0;
+            int front_c_spm = 0, front_t_spm = 0;
+            for(int i = front_pos-distance; i < front_pos-distance+window; i++)
+            {
+               front_c_soma += data[i][0];
+               front_t_soma += data[i][1];
+               front_c_spm += data[i][2];
+               front_t_spm += data[i][3];
+            }
+            double soma = (double)front_c_soma/((double)front_c_soma+(double)front_t_soma);
+            double spm = (double)front_c_spm/((double)front_c_spm+(double)front_t_spm);
+            if(abs(soma - spm) >= ratio)
+            {
+               front_pos -= distance;
+               cout << "Extending" << endl;
+            }
+            else
+            {
+               front = true;
+            }
+         }
+
+         while(back == false)
+         {
+            int back_c_soma = 0, back_t_soma = 0;
+            int back_c_spm = 0, back_t_spm = 0;
+            int distance = window;
+
+            for(int i = back_pos; i < back_pos+distance; i++)
+            {
+               back_c_soma += data[i][0];
+               back_t_soma += data[i][1];
+               back_c_spm += data[i][2];
+               back_t_spm += data[i][3];
+            }
+            double soma = (double)back_c_soma/((double)back_c_soma+(double)back_t_soma);
+            double spm = (double)back_c_spm/((double)back_c_spm+(double)back_t_spm);
+            if(abs(soma - spm) >= ratio)
+            {
+               back_pos += distance;
+               cout << "Extending" << endl;
+            }
+            else
+            {
+               back = true;
+            }
+         }
+         cout << "[END]\t"<< record.ref << "\t" << front_pos << "\t" << back_pos << endl;
+      }
    }
 
    return 0;
@@ -272,13 +343,6 @@ int main(int argc, char const ** argv)
       cerr << " for reading.\n";
       return 1;
    }
-
-/*
-   // get a uniq list of chromosomes?
-   map<CharString, String<TInterval>> intervals;
-   std::set<CharString> chromos = getList(gffSLMInFile, intervals);
-   close (gffSLMInFile);
-*/
 
    // load the sperm and soma files
    GffFileIn gffSpermInFile;
@@ -323,9 +387,7 @@ int main(int argc, char const ** argv)
    average(gffSpermInFile, gffS1InFile, gffS2InFile, gffS3InFile, 
            "1", data);
 
-   float ratio = 0.5;
-   int distance = 100;
-   perform_extend(gffSLMInFile, data, ratio, distance, "1");
+   perform_extend(gffSLMInFile, data, options.ratio, options.window, "1");
 
    return 0;
 }
