@@ -56,7 +56,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(
                                     "IN"));
    setRequired(parser, "soma3-file");
 
-   addOption(parser, ArgParseOption("s", "window-size", "Size of window",
+   addOption(parser, ArgParseOption("w", "window-size", "Size of window",
                                     ArgParseArgument::INTEGER, "INT"));
    setDefaultValue(parser, "window-size", "100");
    addOption(parser, ArgParseOption("r", "ratio", "Ratio",
@@ -87,6 +87,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(
    getOptionValue(options.inputS2FileName, parser, "soma2-file");
    getOptionValue(options.inputS3FileName, parser, "soma3-file");
 
+   getOptionValue(options.chrom, parser, "chr");
    getOptionValue(options.window, parser, "window-size");
    getOptionValue(options.ratio, parser, "ratio");
 
@@ -94,25 +95,6 @@ seqan::ArgumentParser::ParseResult parseCommandLine(
 }
 
 typedef IntervalAndCargo<int, GffRecord> TInterval;
-
-std::set<CharString> getList(GffFileIn &gffSLMInFile, 
-                             map<CharString, String<TInterval>> &intervals)
-{
-   std::set<CharString> chr;
-   GffRecord record;
-
-   while(!atEnd(gffSLMInFile))
-   {
-      readRecord(record, gffSLMInFile);
-      chr.insert(record.ref);
-      appendValue(intervals[record.ref], 
-                  TInterval(record.beginPos, record.endPos, record));
-   }
-
-   cout << "Unique chrs " << chr.size() << endl;
-
-   return chr;
-}
 
 int average(GffFileIn &gffSpermInFile, GffFileIn &s1, GffFileIn &s2, 
             GffFileIn &s3, CharString chr, 
@@ -245,9 +227,11 @@ int perform_extend(GffFileIn &gffSLMInFile,
    while(!atEnd(gffSLMInFile))
    {
       readRecord(record, gffSLMInFile);
-      if(record.ref == chrom)
+
+      //cout << "[Checking]\tRef = " << record.ref << "\tChrom = " << chrom << endl;
+      if(isEqual(record.ref, chrom))
       {
-         cout << "[START]\t" << record.beginPos << "\t" << record.endPos << endl;
+         //cout << "[START]\t" << record.beginPos << "\t" << record.endPos << endl;
          
          bool front = false, back = false; // record if stopping
          int front_pos = record.beginPos;
@@ -255,7 +239,6 @@ int perform_extend(GffFileIn &gffSLMInFile,
 
          while(front == false)
          {
-
             int distance = window;
             int front_c_soma = 0, front_t_soma = 0;
             int front_c_spm = 0, front_t_spm = 0;
@@ -271,7 +254,6 @@ int perform_extend(GffFileIn &gffSLMInFile,
             if(abs(soma - spm) >= ratio)
             {
                front_pos -= distance;
-               cout << "Extending" << endl;
             }
             else
             {
@@ -297,14 +279,13 @@ int perform_extend(GffFileIn &gffSLMInFile,
             if(abs(soma - spm) >= ratio)
             {
                back_pos += distance;
-               cout << "Extending" << endl;
             }
             else
             {
                back = true;
             }
          }
-         cout << "[END]\t"<< record.ref << "\t" << front_pos << "\t" << back_pos << endl;
+         cout << record.ref << "\t" << front_pos << "\t" << back_pos << endl;
       }
    }
 
@@ -381,13 +362,11 @@ int main(int argc, char const ** argv)
       return 1;
    }
 
-   CharString meh = options.chrom;
-
    map<int, unsigned short int[4]> data;
    average(gffSpermInFile, gffS1InFile, gffS2InFile, gffS3InFile, 
-           "1", data);
+           options.chrom, data);
 
-   perform_extend(gffSLMInFile, data, options.ratio, options.window, "1");
+   perform_extend(gffSLMInFile, data, options.ratio, options.window, options.chrom);
 
    return 0;
 }
