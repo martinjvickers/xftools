@@ -20,12 +20,12 @@ Getting this to compile on work machine;
 ### Running
 
 ```
-./SLMextend -slm example_data/step5a_avg5_9612_SLM.gff -spm example_data/sperm.CHH.w1.100k.gff.gz -s1 example_data/soma.9DAP_em.CHH.w1.100k.gff.gz -s2 example_data/SRR2079442_earshoot_rmdup_CHH.w1.100k.gff.gz -s3 example_data/SRR2079447_B73_shoot_apex_rmdup_CHH.w1.100k.gff.gz -r 0.1 -w 100
+./SLMextend -slm example_data/step5a_avg5_9612_SLM.gff -spm example_data/sperm.CHH.w1.100k.gff.gz -s1 example_data/soma.9DAP_em.CHH.w1.100k.gff.gz -s2 example_data/SRR2079442_earshoot_rmdup_CHH.w1.100k.gff.gz -s3 example_data/SRR2079447_B73_shoot_apex_rmdup_CHH.w1.100k.gff.gz -r 0.1 -w 100 -c 1
 ```
 
 
 ## For the real version for testing;
 
 ```
-make -j4 && ./SLMextend -slm example_data/step5a_avg5_9612_SLM.gff -spm example_data/real/sperm.CHH.w1.gff.gz -s1 example_data/real/soma.9DAP_em.CHH.w1.gff.gz -s2 example_data/real/SRR2079442_earshoot_rmdup_CHH.w1.gff.gz -s3 example_data/real/SRR2079447_B73_shoot_apex_rmdup_CHH.w1.gff.gz -r 0.1 -w 100
+make -j4 && ./SLMextend -slm example_data/step5a_avg5_9612_SLM.gff -spm example_data/real/sperm.CHH.w1.gff.gz -s1 example_data/real/soma.9DAP_em.CHH.w1.gff.gz -s2 example_data/real/SRR2079442_earshoot_rmdup_CHH.w1.gff.gz -s3 example_data/real/SRR2079447_B73_shoot_apex_rmdup_CHH.w1.gff.gz -r 0.1 -w 100 -c 1
 ```
