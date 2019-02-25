@@ -285,7 +285,33 @@ int perform_extend(GffFileIn &gffSLMInFile,
                back = true;
             }
          }
-         cout << record.ref << "\t" << front_pos << "\t" << back_pos << endl;
+
+         // calc average 
+         int avg_c_soma = 0, avg_t_soma = 0;
+         int avg_c_spm = 0, avg_t_spm = 0;
+         for(int i = front_pos; i < back_pos; i++)
+         {
+            avg_c_soma += data[i][0];
+            avg_t_soma += data[i][1];
+            avg_c_spm += data[i][2];
+            avg_t_spm += data[i][3];
+         }
+
+         double soma_meth = (double)avg_c_soma/((double)avg_c_soma+(double)avg_t_soma);
+         double spm_meth = (double)avg_c_spm/((double)avg_c_spm+(double)avg_t_spm);
+
+         cout << record.ref << "\t.\t.\t" << front_pos << "\t" << back_pos;
+         cout << "\t.\t.\t.\t";
+         cout << "soma_c=" << avg_c_soma << ";";
+         cout << "soma_t=" << avg_t_soma << ";";
+         cout << "soma_meth=" << soma_meth << ";";
+         cout << "spm_c=" << avg_c_spm << ";";
+         cout << "spm_t=" << avg_t_spm << ";";
+         cout << "spm_meth=" << spm_meth << ";";
+         cout << "abs_diff=" << abs(spm_meth-soma_meth) << ";";
+         cout << "5_prime_ext=" << abs((int)front_pos-(int)record.beginPos) << ";";
+         cout << "3_prime_ext=" << abs((int)back_pos-(int)record.endPos);
+         cout << endl;
       }
    }
 
