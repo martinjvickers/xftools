@@ -214,6 +214,20 @@ int main(int argc, char const ** argv)
 		cout << iter->first << " " << iter->second << " " << runningtotal << " " << (double)iter->second / (double)total << " " << (double)runningtotal / (double)total << endl;
 	}
 
+        //now we have the running total, we can calculate the median coverage.
+        int stop_pos = runningtotal / 2;
+        int current_pos = 0;
+        int last_coverage = 0;
+        for(auto i : all) {
+           if(current_pos > stop_pos)
+           {
+              cout << "Median Cytosine Coverage = " << last_coverage << endl;
+              break;
+           }
+           current_pos = current_pos + i.second;
+           last_coverage = i.first;
+        }
+
 	close(gffCGFileIn), close(gffCHGFileIn), close(gffCHHFileIn), close(referenceFileIn);
 
 	return 0;
