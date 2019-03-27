@@ -207,7 +207,7 @@ int main(int argc, char const ** argv)
 		}
 	}
 
-	cout << "Combined histogram " << endl;
+        cout << "Cov\tC's\tC's>=Cov\t(%)C's\t(%)C's>=Cov" << endl;
 	long long int runningtotal = 0;
 	for (auto iter = all.rbegin(); iter != all.rend(); ++iter) {
 		runningtotal = runningtotal + iter->second;
