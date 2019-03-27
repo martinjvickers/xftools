@@ -211,7 +211,7 @@ int main(int argc, char const ** argv)
 	long long int runningtotal = 0;
 	for (auto iter = all.rbegin(); iter != all.rend(); ++iter) {
 		runningtotal = runningtotal + iter->second;
-		cout << iter->first << " " << iter->second << " " << runningtotal << " " << (double)iter->second / (double)total << " " << (double)runningtotal / (double)total << endl;
+		cout << iter->first << "\t" << iter->second << "\t" << runningtotal << "\t" << (double)iter->second / (double)total << "\t" << (double)runningtotal / (double)total << endl;
 	}
 
         //now we have the running total, we can calculate the median coverage.
