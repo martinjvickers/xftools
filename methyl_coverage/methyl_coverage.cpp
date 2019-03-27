@@ -36,7 +36,7 @@ struct ModifyStringOptions
 
 seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
 {
-	seqan::ArgumentParser parser("single-c_combine");
+	seqan::ArgumentParser parser("methyl_coverage");
 	addOption(parser, seqan::ArgParseOption("cg", "cg-input-file", "Path to the CG input file", seqan::ArgParseArgument::INPUT_FILE, "IN", true));
 	setRequired(parser, "cg-input-file");
 	addOption(parser, seqan::ArgParseOption("chg", "chg-input-file", "Path to the CHG input file", seqan::ArgParseArgument::INPUT_FILE, "IN", true));
@@ -46,11 +46,11 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	addOption(parser, seqan::ArgParseOption("r", "ref", "Path to the Genome Reference input file", seqan::ArgParseArgument::INPUT_FILE, "IN", true));
         setRequired(parser, "ref");
 	setShortDescription(parser, "XFTOOLS");
-	setVersion(parser, "0.0.6");
-	setDate(parser, "November 2017");
+	setVersion(parser, "0.0.4");
+	setDate(parser, "March 2019");
 	addUsageLine(parser, "--cg sample.cg.w1.gff --chg sample.chg.w1.gff --chh sample.chh.w1.gff -r ref.fasta  [\\fIOPTIONS\\fP] ");
 
-	addDescription(parser, "Calculate coverage");
+	addDescription(parser, "Calculates methylation coverage histogram");
 	seqan::ArgumentParser::ParseResult res = seqan::parse(parser, argc, argv);
 
 	// If parsing was not successful then exit with code 1 if there were errors.
