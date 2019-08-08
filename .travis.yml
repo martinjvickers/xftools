@@ -166,11 +166,17 @@ script:
   - cmake ../SNPmask -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
   - make -j2
 
-# SNPmask
+  # SLMextend
   - cd ../SLMextend
   - cmake ../SLMextend -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
   - make -j2
   - ./SLMextend
+  
+  #RPKM_maker
+  - cd ../RPKM_maker
+  - cmake ../RPKM_maker -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
+  - make -j2
+  - ./RPKM_maker
 
   # code coverage and upload
   #- cd ../cov_data
@@ -182,7 +188,7 @@ script:
   - bash <(curl -s https://codecov.io/bash) > /dev/null
 
   # now make make the release
-  - tar cvzf xftools.tar.gz gff_feature_merge/gff_feature_merge single-c_combine/single-c_combine weighted_w1_extractor/weighted_w1_extractor bam2bed/bam2bed methyl_coverage/methyl_coverage bam_2_w1_extractor/bam_2_w1_extractor fasta_insert/fasta_insert w50_creator/w50_creator cytosine_abundance/cytosine_abundance tss_label/tss_label pausing_index/pausing_index at_compare/at_compare TE_reannotate/TE_reannotate max_wba/max_wba overlap/overlap DMR_generator/DMR_generator
+  - tar cvzf xftools.tar.gz gff_feature_merge/gff_feature_merge single-c_combine/single-c_combine weighted_w1_extractor/weighted_w1_extractor bam2bed/bam2bed methyl_coverage/methyl_coverage bam_2_w1_extractor/bam_2_w1_extractor fasta_insert/fasta_insert w50_creator/w50_creator cytosine_abundance/cytosine_abundance tss_label/tss_label pausing_index/pausing_index at_compare/at_compare TE_reannotate/TE_reannotate max_wba/max_wba overlap/overlap DMR_generator/DMR_generator RPKM_maker/RPKM_maker
 
 deploy:
   provider: releases
