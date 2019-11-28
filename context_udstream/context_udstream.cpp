@@ -85,7 +85,7 @@ void getInfo(ModifyStringOptions &options, GffRecord &r,
    unsigned idx = 0;
    if(!getIdByName(idx, faiIndex, r.ref))
    {
-      if(options.suppress == true)
+      if(options.suppress == false)
       {
          cerr << "ERROR: FAI index has no entry for ";
          cerr << r.ref << endl;
