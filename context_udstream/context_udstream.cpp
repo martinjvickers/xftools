@@ -16,6 +16,7 @@ struct ModifyStringOptions
    CharString outputFileName;
    CharString refFileName;
    int upstream, downstream;
+   bool suppress;
 };
 
 ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, 
@@ -53,6 +54,9 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
                                     ArgParseArgument::INTEGER, "INT"));
    setDefaultValue(parser, "downstream", "3");
 
+   addOption(parser, ArgParseOption("s", "suppress-errors", 
+             "Suppress error messages."));
+
    ArgumentParser::ParseResult res = parse(parser, argc, argv);
 
    // If parsing was not successful then exit with code 1 if there were errors.
@@ -68,6 +72,8 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    getOptionValue(options.upstream, parser, "upstream");
    getOptionValue(options.downstream, parser, "downstream");
 
+   options.suppress = isSet(parser, "suppress-errors");
+
    return ArgumentParser::PARSE_OK;
 }
 
@@ -79,8 +85,11 @@ void getInfo(ModifyStringOptions &options, GffRecord &r,
    unsigned idx = 0;
    if(!getIdByName(idx, faiIndex, r.ref))
    {
-      cerr << "ERROR: FAI index has no entry for ";
-      cerr << r.ref << endl;
+      if(options.suppress == true)
+      {
+         cerr << "ERROR: FAI index has no entry for ";
+         cerr << r.ref << endl;
+      }
    }
    else
    {
@@ -108,6 +117,9 @@ void getInfo(ModifyStringOptions &options, GffRecord &r,
 
          downstream_seq = prefix(span_seq, options.downstream);
          upstream_seq   = suffix(span_seq, length(span_seq)-options.upstream);
+         reverseComplement(downstream_seq);
+         reverseComplement(upstream_seq);
+         reverseComplement(span_seq);
       }
       else
       {
