@@ -185,7 +185,8 @@ script:
   - cd example_data
   - gunzip *.gz
   - cd ../
-  - ./context_udstream -r example_data/ref.fa -i example_data/cg.w1.gff -o meh.gff -d 6 -u 3 > meh.txt
+  - ./context_udstream --suppress-errors -r example_data/ref.fa -i example_data/cg.w1.gff -o meh.gff -d 6 -u 3 > meh.tsv
+  - head meh.tsv
 
   # code coverage and upload
   #- cd ../cov_data
