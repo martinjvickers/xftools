@@ -338,7 +338,8 @@ int main(int argc, char const ** argv)
          reverseComplement(reference_seq);
          total_C = total_C + count_Cs(reference_seq);
 					
-         if(region.beginPos > 0 && (region.endPos+2 < sequenceLength(faiIndex, idx)) )
+         if( region.beginPos > 0 && 
+            (region.endPos+2 < sequenceLength(faiIndex, idx)) )
          {
             readRegion(reference_seq, faiIndex, idx, region.beginPos-2, 
                        region.endPos+2);
