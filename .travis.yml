@@ -145,6 +145,7 @@ script:
   - cmake ../overlap -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_ARGS="-DSEQAN_DISABLE_VERSION_CHECK=YES"
   - make -j2
   - ./overlap -i example_data/fileB.gff -a example_data/TAIR10.gff -o meh.gff > meh_done.gff
+  - head meh_done.gff
 
   # DMR generator
   - cd ../DMR_generator
