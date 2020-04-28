@@ -2,6 +2,10 @@
 
 The purpose of this program is to create a GFF file containing the (weighted) number of times a base is covered by a read. A GFF which contains information about each base in our lab is known as a w1 file (AKA window of size 1). A regular w1 file is would simply count the number of times a base is covered by a read, if this is the functionality you desire, then use the bam_2_w1_extractor program. The weighted part of this is that if your alignment file contains reads which have mapped multiple times, e.g. for when looking at sRNA using bowtie2 searching and reporting all results, you may have a read that has mapped in several locations. If you have a read that maps to three locations, rather than counting that as +1 to each location, it will be counted as +(1/3) to each location. 
 
+# IMPORTANT NOTE
+
+This should be run on an unsorted BAM. It will produce incorrect results if you don't.
+
 ## Usage
 
 ```
